@@ -58,6 +58,183 @@ declare namespace Blockly {
         [index: string]: BlockDefinition;
     }
 
+    class Generator {
+
+        [index: string]: any;
+        
+        /**
+         * Class for a code generator that translates the blocks into a language.
+         * @param {string} name Language name of this generator.
+         * @constructor
+         */
+        constructor(name: string);
+
+        /**
+         * Arbitrary code to inject into locations that risk causing infinite loops.
+         * Any instances of '%1' will be replaced by the block ID that failed.
+         * E.g. '  checkTimeout(%1);\n'
+         * @type {?string}
+         */
+        INFINITE_LOOP_TRAP: string;
+
+        /**
+         * Arbitrary code to inject before every statement.
+         * Any instances of '%1' will be replaced by the block ID of the statement.
+         * E.g. 'highlight(%1);\n'
+         * @type {?string}
+         */
+        STATEMENT_PREFIX: string;
+
+        /**
+         * Generate code for all blocks in the workspace to the specified language.
+         * @param {Blockly.Workspace} workspace Workspace to generate code from.
+         * @return {string} Generated code.
+         */
+        workspaceToCode(workspace: Blockly.Workspace): string;
+
+        /**
+         * Prepend a common prefix onto each line of code.
+         * @param {string} text The lines of code.
+         * @param {string} prefix The common prefix.
+         * @return {string} The prefixed lines of code.
+         */
+        prefixLines(text: string, prefix: string): string;
+
+        /**
+         * Recursively spider a tree of blocks, returning all their comments.
+         * @param {!Blockly.Block} block The block from which to start spidering.
+         * @return {string} Concatenated list of comments.
+         */
+        allNestedComments(block: Blockly.Block): string;
+
+        /**
+         * Generate code for the specified block (and attached blocks).
+         * @param {Blockly.Block} block The block to generate code for.
+         * @return {string|!Array} For statement blocks, the generated code.
+         *     For value blocks, an array containing the generated code and an
+         *     operator order value.  Returns '' if block is null.
+         */
+        blockToCode(block: Blockly.Block): string | any[];
+
+        /**
+         * Generate code representing the specified value input.
+         * @param {!Blockly.Block} block The block containing the input.
+         * @param {string} name The name of the input.
+         * @param {number} order The maximum binding strength (minimum order value)
+         *     of any operators adjacent to "block".
+         * @return {string} Generated code or '' if no blocks are connected or the
+         *     specified input does not exist.
+         */
+        valueToCode(block: Blockly.Block, name: string, order: number): string;
+
+        /**
+         * Generate code representing the statement.  Indent the code.
+         * @param {!Blockly.Block} block The block containing the input.
+         * @param {string} name The name of the input.
+         * @return {string} Generated code or '' if no blocks are connected.
+         */
+        statementToCode(block: Blockly.Block, name: string): string;
+
+        /**
+         * Add an infinite loop trap to the contents of a loop.
+         * If loop is empty, add a statment prefix for the loop block.
+         * @param {string} branch Code for loop contents.
+         * @param {string} id ID of enclosing block.
+         * @return {string} Loop contents, with infinite loop trap added.
+         */
+        addLoopTrap(branch: string, id: string): string;
+
+        /**
+         * The method of indenting.  Defaults to two spaces, but language generators
+         * may override this to increase indent or change to tabs.
+         * @type {string}
+         */
+        INDENT: string;
+
+        /**
+         * Comma-separated list of reserved words.
+         * @type {string}
+         * @private
+         */
+        RESERVED_WORDS_: string;
+
+        /**
+         * Add one or more words to the list of reserved words for this language.
+         * @param {string} words Comma-separated list of words to add to the list.
+         *     No spaces.  Duplicates are ok.
+         */
+        addReservedWords(words: string): void;
+
+        /**
+         * This is used as a placeholder in functions defined using
+         * Blockly.Generator.provideFunction_.  It must not be legal code that could
+         * legitimately appear in a function definition (or comment), and it must
+         * not confuse the regular expression parser.
+         * @type {string}
+         * @private
+         */
+        FUNCTION_NAME_PLACEHOLDER_: string;
+
+        /**
+         * Define a function to be included in the generated code.
+         * The first time this is called with a given desiredName, the code is
+         * saved and an actual name is generated.  Subsequent calls with the
+         * same desiredName have no effect but have the same return value.
+         *
+         * It is up to the caller to make sure the same desiredName is not
+         * used for different code values.
+         *
+         * The code gets output when Blockly.Generator.finish() is called.
+         *
+         * @param {string} desiredName The desired name of the function (e.g., isPrime).
+         * @param {!Array.<string>} code A list of Python statements.
+         * @return {string} The actual name of the new function.  This may differ
+         *     from desiredName if the former has already been taken by the user.
+         * @private
+         */
+        provideFunction_(desiredName: string, code: string[]): string;
+
+    }
+
+    class JavaScriptGenerator extends Generator {
+        ORDER_ATOMIC: number;
+        ORDER_NEW: number;
+        ORDER_MEMBER: number;
+        ORDER_FUNCTION_CALL: number;
+        ORDER_INCREMENT: number;
+        ORDER_DECREMENT: number;
+        ORDER_BITWISE_NOT: number;
+        ORDER_UNARY_PLUS: number;
+        ORDER_UNARY_NEGATION: number;
+        ORDER_LOGICAL_NOT: number;
+        ORDER_TYPEOF: number;
+        ORDER_VOID: number;
+        ORDER_DELETE: number;
+        ORDER_DIVISION: number;
+        ORDER_MULTIPLICATION: number;
+        ORDER_MODULUS: number;
+        ORDER_SUBTRACTION: number;
+        ORDER_ADDITION: number;
+        ORDER_BITWISE_SHIFT: number;
+        ORDER_RELATIONAL: number;
+        ORDER_IN: number;
+        ORDER_INSTANCEOF: number;
+        ORDER_EQUALITY: number;
+        ORDER_BITWISE_AND: number;
+        ORDER_BITWISE_XOR: number;
+        ORDER_BITWISE_OR: number;
+        ORDER_LOGICAL_AND: number;
+        ORDER_LOGICAL_OR: number;
+        ORDER_CONDITIONAL: number;
+        ORDER_ASSIGNMENT: number;
+        ORDER_COMMA: number;
+        ORDER_NONE: number;
+    }
+
+    const JavaScript: Generator;
+
+
+
     class Field {
         name: string;
         EDITABLE: boolean;
@@ -417,4 +594,5 @@ declare namespace Blockly {
             setSelectedItem(t: TreeNode): void;
         }
     }
+
 }

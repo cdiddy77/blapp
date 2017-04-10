@@ -121,13 +121,19 @@ module.exports = {
         }
       },
       // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
-      { test: /\.ts(x?)$/, loader: "ts-loader" },
+      {
+        test: /\.ts(x?)$/,
+        // loader: 'ts-loader'
+        loader: 'babel-loader?presets[]=es2016&presets[]=es2015&presets[]=react!ts-loader'
+      },
       // Process JS with Babel.
       {
         test: /\.(js|jsx)$/,
         include: paths.appSrc,
         loader: 'babel',
-
+        query: {
+          presets: ['es2016', 'es2015', 'react']
+        }
       },
       // The notation here is somewhat confusing.
       // "postcss" loader applies autoprefixer to our CSS.

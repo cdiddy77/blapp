@@ -4,7 +4,7 @@ import { AppModel } from './models/AppModel';
 import App from './components/App';
 import './index.css';
 
-const appModel: AppModel = {};
+const appModel: AppModel = new AppModel();
 
 ReactDOM.render(
   <App model={appModel} />,

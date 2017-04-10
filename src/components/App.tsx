@@ -11,33 +11,16 @@ import { AppModel } from '../models/AppModel';
 interface AppProps {
   model: AppModel;
 }
+
 class App extends React.Component<AppProps, {}> {
   blocksArea: HTMLElement;
+  previewArea: HTMLElement;
 
   componentDidMount() {
-    const options = {
-      toolbox: document.getElementById('toolbox'),
-      collapse: true,
-      comments: true,
-      disable: true,
-      maxBlocks: Infinity,
-      trashcan: true,
-      horizontalLayout: false,
-      toolboxPosition: 'start',
-      css: true,
-      media: 'https://blockly-demo.appspot.com/static/media/',
-      rtl: false,
-      scrollbars: true,
-      sounds: true,
-      oneBasedIndex: true,
-      // grid: {
-      //   spacing: 20,
-      //   length: 0,
-      //   colour: '#ccc',
-      //   snap: true
-      // }
-    };
-    var workspace = Blockly.inject(this.blocksArea, options);
+    this.props.model.initializeBlockly(
+      this.blocksArea,
+      this.previewArea);
+
   }
   render() {
     return (
@@ -49,7 +32,9 @@ class App extends React.Component<AppProps, {}> {
         </div>
         <div className='row'>
           <div id='blocksArea' ref={(elem) => { this.blocksArea = elem; }} className="col-sm-8"></div>
-          <div id='previewArea' className="col-sm-4">preview area</div>
+          <div id='previewArea' ref={(elem) => { this.previewArea = elem; }} className="col-sm-4">
+            <pre id='codearea' value='preview area'></pre>
+          </div>
         </div>
       </div>
 
