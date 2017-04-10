@@ -1,0 +1,24 @@
+.App {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.App-header {
+  background-color: #222;
+  padding: 5px;
+  color: white;
+}
+
+.App-intro {
+  font-size: large;
+}
+
+#blocksArea {
+  height: 500px;
+}
+
+#previewArea {
+  background-color: green;
+  color: white;
+  height: 500px;
+}
