@@ -3,16 +3,21 @@
 
 
 import * as jsutil from '../util/jsutil';
+import {ModelBase} from './ModelBase';
 
-export class AppModel {
+// these are the events that we fire
+type AppModelEvent = 'code_change';
+
+export class AppModel extends ModelBase {
 
     constructor() {
+        super();
     }
 
     workspace: Blockly.Workspace;
-    initializeBlockly(
-        container: HTMLElement,
-        preview: HTMLElement): Promise<void> {
+    code:string;
+
+    initializeBlockly(container: HTMLElement): Promise<void> {
         let result: Promise<void> = jsutil.requestURL({
             url: '/toolbox.xml'
         }).then(txt => {
@@ -42,9 +47,8 @@ export class AppModel {
             };
             this.workspace = Blockly.inject(container, options);
             this.workspace.addChangeListener((e) => {
-                var code = Blockly.JavaScript.workspaceToCode(this.workspace);
-                console.log(code);
-                document.getElementById('codearea').innerHTML = code;
+                this.code = Blockly.JavaScript.workspaceToCode(this.workspace);
+                this.fireEvent('code_change',this.code);
             });
             this.initBlockDefinitions();
             this.initCodeGenerators();
@@ -52,6 +56,10 @@ export class AppModel {
 
         return result;
     }
+    private fireEvent(ev:AppModelEvent,args?:any){
+        super.fire(ev,args);
+    }
+
     private initBlockDefinitions(): void {
         Blockly.Blocks['user_interface'] = {
             init: function () {
