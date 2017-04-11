@@ -3,7 +3,7 @@
 
 
 import * as jsutil from '../util/jsutil';
-import {ModelBase} from './ModelBase';
+import { ModelBase } from './ModelBase';
 
 // these are the events that we fire
 type AppModelEvent = 'code_change';
@@ -15,7 +15,7 @@ export class AppModel extends ModelBase {
     }
 
     workspace: Blockly.Workspace;
-    code:string;
+    code: string;
 
     initializeBlockly(container: HTMLElement): Promise<void> {
         let result: Promise<void> = jsutil.requestURL({
@@ -48,7 +48,7 @@ export class AppModel extends ModelBase {
             this.workspace = Blockly.inject(container, options);
             this.workspace.addChangeListener((e) => {
                 this.code = Blockly.JavaScript.workspaceToCode(this.workspace);
-                this.fireEvent('code_change',this.code);
+                this.fireEvent('code_change', this.code);
             });
             this.initBlockDefinitions();
             this.initCodeGenerators();
@@ -56,8 +56,8 @@ export class AppModel extends ModelBase {
 
         return result;
     }
-    private fireEvent(ev:AppModelEvent,args?:any){
-        super.fire(ev,args);
+    private fireEvent(ev: AppModelEvent, args?: any) {
+        super.fire(ev, args);
     }
 
     private initBlockDefinitions(): void {
@@ -110,7 +110,12 @@ export class AppModel extends ModelBase {
         Blockly.JavaScript['user_interface'] = (block: Blockly.Block) => {
             var statements_elements = Blockly.JavaScript.statementToCode(block, 'elements');
             // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = '\nvar elem = React.createElement;'
+            // create an array that will serve as the childlist
+            code += '{\nlet cl=[];\n';
+            code += statements_elements;
+            code += '\nTarget.renderProc = () => {';
+            code += '\nreturn elem("View", null, ...cl);\n};\n}';
             return code;
         };
 
@@ -124,7 +129,8 @@ export class AppModel extends ModelBase {
         Blockly.JavaScript['text_element'] = (block: Blockly.Block) => {
             var value_text_value = Blockly.JavaScript.valueToCode(block, 'text value', Blockly.JavaScript.ORDER_ATOMIC);
             // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = 'let n=elem("Text",null,'
+            code += '"' + value_text_value + '");\ncl.push_back(n);';
             return code;
         };
 

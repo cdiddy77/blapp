@@ -3,10 +3,10 @@
 
 
 import * as React from 'react';
-var logo = require<string>('../logo.svg');
 import '../App.css';
 import { AppModel } from '../models/AppModel';
 import { TabbedArea, TabPane } from './TabbedArea';
+import {Target} from './Target';
 // import * as Blockly from '../localtypings/blockly';
 
 interface AppProps {
@@ -42,14 +42,14 @@ class App extends React.Component<AppProps, AppState> {
         <div className='row'>
           <div id='blocksArea' ref={(elem) => { this.blocksArea = elem; }} className="col-sm-8"></div>
           <div id='previewArea' ref={(elem) => { this.previewArea = elem; }} className="col-sm-4">
-            <TabbedArea>
+            <TabbedArea activeIndex={1}>
               <TabPane display="Code">
                 <div>
                   <pre>{this.state.code}</pre>
                 </div>
               </TabPane>
               <TabPane display="Preview">
-                <div>Contents of Tab 2.</div>
+                <div><Target model={this.props.model} /></div>
               </TabPane>
             </TabbedArea>
           </div>
