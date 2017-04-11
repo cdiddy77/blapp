@@ -49,12 +49,27 @@ export class AppModel extends ModelBase {
             this.workspace.addChangeListener((e) => {
                 this.code = Blockly.JavaScript.workspaceToCode(this.workspace);
                 this.fireEvent('code_change', this.code);
+                this.backupWorkspace();
             });
             this.initBlockDefinitions();
             this.initCodeGenerators();
+            setTimeout(this.restoreWorkspace(), 0);
         });
 
         return result;
+    }
+    private restoreWorkspace() {
+        var url = window.location.href.split('#')[0];
+        if ('localStorage' in window && window.localStorage[url]) {
+            var xml = Blockly.Xml.textToDom(window.localStorage[url]);
+            Blockly.Xml.domToWorkspace(xml, this.workspace);
+        }
+    }
+    private backupWorkspace() {
+        var xml = Blockly.Xml.workspaceToDom(this.workspace);
+        // Gets the current URL, not including the hash.
+        var url = window.location.href.split('#')[0];
+        window.localStorage.setItem(url, Blockly.Xml.domToText(xml));
     }
     private fireEvent(ev: AppModelEvent, args?: any) {
         super.fire(ev, args);
@@ -65,7 +80,7 @@ export class AppModel extends ModelBase {
             init: function () {
                 this.appendStatementInput("elements")
                     .setCheck(null)
-                    .appendField("user interface");
+                    .appendField("UI");
                 this.setColour(285);
                 this.setTooltip('insert the elements of the UI');
                 this.setHelpUrl('');
@@ -76,8 +91,15 @@ export class AppModel extends ModelBase {
             init: function () {
                 this.appendDummyInput()
                     .appendField("container UI");
+                this.appendValueInput("style")
+                    .setCheck(null)
+                    .setAlign(Blockly.ALIGN_RIGHT)
+                    .appendField("style");
                 this.appendStatementInput("child elements")
                     .setCheck(null);
+                this.setInputsInline(false);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
                 this.setColour(285);
                 this.setTooltip('');
                 this.setHelpUrl('');
@@ -89,6 +111,8 @@ export class AppModel extends ModelBase {
                 this.appendValueInput("text value")
                     .setCheck("String")
                     .appendField("text UI");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
                 this.setColour(285);
                 this.setTooltip('');
                 this.setHelpUrl('');
@@ -100,6 +124,20 @@ export class AppModel extends ModelBase {
                 this.appendValueInput("NAME")
                     .setCheck("String")
                     .appendField("image UI");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(285);
+                this.setTooltip('');
+                this.setHelpUrl('');
+            }
+        };
+        Blockly.Blocks['styleprop_aligncontent'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField("align content")
+                    .appendField(new Blockly.FieldDropdown([["start", "flex-start"], ["end", "flex-end"], ["center", "center"], ["stretch", "stretch"], ["space between", "space-between"], ["space around", "space-around"]]), "VALUE");
+                this.setPreviousStatement(true, "STYLEPROP");
+                this.setNextStatement(true, "STYLEPROP");
                 this.setColour(285);
                 this.setTooltip('');
                 this.setHelpUrl('');
@@ -107,35 +145,43 @@ export class AppModel extends ModelBase {
         };
     }
     private initCodeGenerators(): void {
+
         Blockly.JavaScript['user_interface'] = (block: Blockly.Block) => {
             var statements_elements = Blockly.JavaScript.statementToCode(block, 'elements');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '\nvar elem = React.createElement;'
-            // create an array that will serve as the childlist
-            code += '{\nlet cl=[];\n';
+            let code = '{\nCgRt.pushCont();\n';
             code += statements_elements;
-            code += '\nTarget.renderProc = () => {';
-            code += '\nreturn elem("View", null, ...cl);\n};\n}';
+            code += '\nlet cl=CgRt.popCont();'
+            code += '\nCgRt.setTargetRenderProc(() => {';
+            code += '\nreturn React.createElement("View", null, ...cl);\n});\n}';
             return code;
         };
 
         Blockly.JavaScript['container_element'] = (block: Blockly.Block) => {
             var statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            let code = '{\nCgRt.pushCont();\n';
+            code += statements_child_elements;
+            code += '\nlet cl=CgRt.popCont();'
+            code += '\nCgRt.pushElem(React.createElement("View", null, ...cl));\n}';
             return code;
         };
 
         Blockly.JavaScript['text_element'] = (block: Blockly.Block) => {
             var value_text_value = Blockly.JavaScript.valueToCode(block, 'text value', Blockly.JavaScript.ORDER_ATOMIC);
-            // TODO: Assemble JavaScript into code variable.
-            var code = 'let n=elem("Text",null,'
-            code += '"' + value_text_value + '");\ncl.push_back(n);';
+            var code = '\nCgRt.pushElem(React.createElement("Text",null,'
+            code += value_text_value && value_text_value !== '' ? value_text_value : "''";
+            code += '));';
             return code;
         };
 
         Blockly.JavaScript['image_element'] = (block: Blockly.Block) => {
-            var value_name = Blockly.JavaScript.valueToCode(block, 'NAME', Blockly.JavaScript.ORDER_ATOMIC);
+            var value_name = Blockly.JavaScript.valueToCode(block, 'NAME', Blockly.JavaScript.ORDER_ASSIGNMENT);
+            var code = '\nCgRt.pushElem(React.createElement(RnImage,{style:{width:100,height:100},source:{uri:'
+            code += value_name && value_name !== '' ? value_name : "''";
+            code += '}}));';
+            return code;
+        };
+        Blockly.JavaScript['styleprop_aligncontent'] = function (block: Blockly.Block) {
+            var dropdown_value = block.getFieldValue('VALUE');
             // TODO: Assemble JavaScript into code variable.
             var code = '...;\n';
             return code;

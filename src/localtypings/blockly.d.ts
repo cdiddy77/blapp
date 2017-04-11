@@ -61,7 +61,7 @@ declare namespace Blockly {
     class Generator {
 
         [index: string]: any;
-        
+
         /**
          * Class for a code generator that translates the blocks into a language.
          * @param {string} name Language name of this generator.
@@ -231,9 +231,7 @@ declare namespace Blockly {
         ORDER_NONE: number;
     }
 
-    const JavaScript: Generator;
-
-
+    const JavaScript: JavaScriptGenerator;
 
     class Field {
         name: string;
@@ -486,6 +484,24 @@ declare namespace Blockly {
         function domToWorkspace(dom: Element, workspace: Workspace): void;
         function textToDom(text: string): Element;
         function workspaceToDom(workspace: Workspace): Element;
+    }
+
+    namespace Extensions {
+        var MUTATOR_PROPERTIES_:string[];
+        function register(a: any, b: any):any;
+        function registerMixin(a: any, b: any):any;
+        function registerMutator(a: any, b: any, c: any, d: any):any;
+        function apply(a: any, b: any, c: any):any;
+        function checkHasFunction_(a: any, b: any, c: any):any;
+        function checkNoMutatorProperties_(a: any, b: any):any;
+        function checkMutatorDialog_(a: any, b: any): boolean;
+        function checkBlockHasMutatorProperties_(a: any, b: any):any;
+        function getMutatorProperties_(a: any): any;
+        function mutatorPropertiesMatch_(a: any, b: any): boolean;
+        function buildTooltipForDropdown(a: any, b: any): any;
+        function checkDropdownOptionsInTable_(a: any, b: any, c: any):any;
+        function buildTooltipWithFieldValue(a: any, b: any): any;
+        function extensionParentTooltip_():any;
     }
 
     interface Options {

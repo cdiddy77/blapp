@@ -4,6 +4,9 @@
     <block type="container_element"/>
     <block type="text_element"/>
     <block type="image_element"/>
+    <category name="Visual" colour="#935ba5">
+      <block type="styleprop_aligncontent"/>
+    </category>
   </category>
   <category name="Logic" colour="#5C81A6">
     <block type="controls_if"/>

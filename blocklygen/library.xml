@@ -10,7 +10,7 @@
         <field name="ALIGN">LEFT</field>
         <statement name="FIELDS">
           <block type="field_static" id="QWn0q+.a4tfY_+j@fpaA">
-            <field name="TEXT">user interface</field>
+            <field name="TEXT">UI</field>
           </block>
         </statement>
         <value name="TYPE">
@@ -163,6 +163,254 @@
     </value>
     <value name="COLOUR">
       <block type="colour_hue" id="CD8,%6cW8B}^N=f*CkFZ">
+        <mutation colour="#935ba5"/>
+        <field name="HUE">285</field>
+      </block>
+    </value>
+  </block>
+  <block type="factory_base" id="j21XT306(XYuh.A^4A#," deletable="false" movable="false" x="0" y="0">
+    <mutation connections="BOTH"/>
+    <field name="NAME">styleprop_aligncontent</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">BOTH</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="^k7s*.0T*n?%]:pXVb},">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="?=0mF5LdOx%`39yF7D]h">
+            <field name="TEXT">align content</field>
+            <next>
+              <block type="field_dropdown" id=":Kxf#ZKXOV_HX..FBnQ_">
+                <mutation options="[&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;,&quot;text&quot;]"/>
+                <field name="FIELDNAME">VALUE</field>
+                <field name="USER0">start</field>
+                <field name="CPU0">flex-start</field>
+                <field name="USER1">end</field>
+                <field name="CPU1">flex-end</field>
+                <field name="USER2">center</field>
+                <field name="CPU2">center</field>
+                <field name="USER3">stretch</field>
+                <field name="CPU3">stretch</field>
+                <field name="USER4">space between</field>
+                <field name="CPU4">space-between</field>
+                <field name="USER5">space around</field>
+                <field name="CPU5">space-around</field>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="QcRsrDKV#$Y?gCy%o=eB" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="XZLhfz+tDjvmn0=::OgJ" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="TOPTYPE">
+      <shadow type="type_null" id="_qwQ(8^lD2O?-dv.m]vE"/>
+      <block type="type_other" id="ZCK!N%-YVm}Oaa[caJ7B">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
+    </value>
+    <value name="BOTTOMTYPE">
+      <shadow type="type_null" id="F}^zWC-ewje$wIVf?1eU"/>
+      <block type="type_other" id="h021@iw}gY$Ku3FbXVMa">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="lE,N!O,q=V2w|Eh99j:R">
+        <mutation colour="#935ba5"/>
+        <field name="HUE">285</field>
+      </block>
+    </value>
+  </block>
+  <block type="factory_base" id="b=Z^X0Qj*!kF~6Twj_O[" deletable="false" movable="false" x="0" y="0">
+    <mutation connections="LEFT"/>
+    <field name="NAME">styledef</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">LEFT</field>
+    <statement name="INPUTS">
+      <block type="input_statement" id="dRmGGjAtYRXbEU)No$v7">
+        <field name="INPUTNAME">NAME</field>
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="n7LlS(IXb_a,7[jY,$EV">
+            <field name="TEXT">styles</field>
+          </block>
+        </statement>
+        <value name="TYPE">
+          <shadow type="type_null" id="Lfox[m~hob8{i9n?O|AO"/>
+          <block type="type_other" id="lp,v.%vAL,86rl}PB^He">
+            <field name="TYPE">STYLEPROP</field>
+          </block>
+        </value>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="I9;PYl=]Kofd+VN`*Yxp" deletable="false" movable="false">
+        <field name="TEXT">define visual appearance</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id=";xnFytz6RKSaZ[zG@ZDJ" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="OUTPUTTYPE">
+      <shadow type="type_null" id=");?@ks(t-uMONUxRDN_V"/>
+      <block type="type_other" id="!Sg^5$r*V1.iy$Moa8ik">
+        <field name="TYPE">STYLE</field>
+      </block>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="R|cpiZABPv+K/9!*NhbV">
+        <mutation colour="#5b67a5"/>
+        <field name="HUE">230</field>
+      </block>
+    </value>
+  </block>
+  <block type="factory_base" id="N0*8B)-{g$`(,nxf6HRp" deletable="false" movable="false" x="0" y="0">
+    <mutation connections="BOTH"/>
+    <field name="NAME">styleprop_aspectratio</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">BOTH</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="B-p?=m=I9#t$LZIFzMml">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="34|Qg.)EyeN^]eiap#?f">
+            <field name="TEXT">aspect ratio</field>
+            <next>
+              <block type="field_number" id="P;at/$=^wVbmX{.7Z0EL">
+                <field name="VALUE">1</field>
+                <field name="FIELDNAME">VALUE</field>
+                <field name="MIN">0</field>
+                <field name="MAX">1000</field>
+                <field name="PRECISION">2</field>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="zs6lp8K*7M+IrqCz*?M/" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="QVbOaYXz_l%{)7=T18Q5" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="TOPTYPE">
+      <shadow type="type_null" id="`qF|54[53%y0J:6J6=Hc"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
+    </value>
+    <value name="BOTTOMTYPE">
+      <shadow type="type_null" id="54nB4BX;Im.wD@h(Vy33"/>
+      <block type="type_other" id="2FBR%@nw|M6+3`QZ}3vq">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="jjcom1!BY(/[ehnVj-%K">
+        <mutation colour="#935ba5"/>
+        <field name="HUE">285</field>
+      </block>
+    </value>
+  </block>
+  <block type="factory_base" id="Mn7pZwrv?U-`#f_s)f*=" deletable="false" movable="false" x="0" y="0">
+    <mutation connections="BOTH"/>
+    <field name="NAME">styleprop_backgroundcolor</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">BOTH</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="C-f?Rdmx@P/Y{5PVo|zE">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="q-6QaUUp3C`it*l`iX^H">
+            <field name="TEXT">background color</field>
+            <next>
+              <block type="field_colour" id="qAyoqAkQ|{mys0n:X3*+">
+                <field name="COLOUR">#ff0000</field>
+                <field name="FIELDNAME">VALUE</field>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id=")y{9RUZ5eB@w?dJ2DPl;" deletable="false" movable="false">
+        <field name="TEXT">background color for the UI element</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="N7htO/aud4S0(UTfuQh3" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="TOPTYPE">
+      <shadow type="type_null" id="kr|dd$K*6.gPRgz@-KiK"/>
+    </value>
+    <value name="BOTTOMTYPE">
+      <shadow type="type_null" id=":buM+l=I:$Tf)@.0*@j$"/>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="S_wqzoa=HiDp$JrMkg/#">
+        <mutation colour="#935ba5"/>
+        <field name="HUE">285</field>
+      </block>
+    </value>
+  </block>
+  <block type="factory_base" id="Mn7pZwrv?U-`#f_s)f*=" deletable="false" movable="false" x="0" y="0">
+    <mutation connections="BOTH"/>
+    <field name="NAME">styleprop_borderbottomcolor</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">BOTH</field>
+    <statement name="INPUTS">
+      <block type="input_dummy" id="C-f?Rdmx@P/Y{5PVo|zE">
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="q-6QaUUp3C`it*l`iX^H">
+            <field name="TEXT">border bottom color</field>
+            <next>
+              <block type="field_colour" id="qAyoqAkQ|{mys0n:X3*+">
+                <field name="COLOUR">#ff0000</field>
+                <field name="FIELDNAME">VALUE</field>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id=")y{9RUZ5eB@w?dJ2DPl;" deletable="false" movable="false">
+        <field name="TEXT">color of the bottom border for the UI element</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id="N7htO/aud4S0(UTfuQh3" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="TOPTYPE">
+      <shadow type="type_null" id="kr|dd$K*6.gPRgz@-KiK"/>
+    </value>
+    <value name="BOTTOMTYPE">
+      <shadow type="type_null" id=":buM+l=I:$Tf)@.0*@j$"/>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="S_wqzoa=HiDp$JrMkg/#">
         <mutation colour="#935ba5"/>
         <field name="HUE">285</field>
       </block>

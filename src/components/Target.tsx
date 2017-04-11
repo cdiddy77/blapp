@@ -1,7 +1,8 @@
 import * as React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text,Image } from 'react-native';
 
 import { AppModel } from '../models/AppModel';
+import {CodegenRuntime} from '../util/CodegenRuntime';
 
 interface TargetProps {
     model: AppModel;
@@ -30,6 +31,9 @@ export class Target extends React.Component<TargetProps, TargetState>{
     }
 
     onCodeChange(newCode: string) {
+        let CgRt = CodegenRuntime;
+        let RnImage = Image;
+        Target.renderProc=null;
         try {
             eval(newCode);
             this.setState({ evalErrMsg: null });
@@ -65,7 +69,7 @@ export class Target extends React.Component<TargetProps, TargetState>{
                 return this.renderErrorMessage(e);
             }
         }
-        const someText = 'No renderee';
+        const someText = 'No UI';
         return (
             <View>
                 <Text>{someText}</Text>
