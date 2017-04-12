@@ -42,10 +42,6 @@ declare namespace Blockly {
 
     let ALIGN_RIGHT: number;
 
-    class FieldImage {
-        constructor(url: string, width: number, height: number, def: string);
-    }
-
     interface BlockDefinition {
         codeCard?: any;
         init: () => void;
@@ -260,7 +256,16 @@ declare namespace Blockly {
     class FieldDropdown extends Field {
         constructor(val: string[][]);
     }
-
+    class FieldImage extends Field {
+        constructor(url: string, width: number, height: number, def: string);
+    }
+    class FieldNumber extends Field {
+        constructor(v: number, min?: number, max?: number, precision?: number);
+    }
+    class FieldColour extends Field {
+        constructor(v: string);
+    }
+    
     class Block {
         static obtain(workspace: Workspace, prototypeName?: string): Block;
 
@@ -487,21 +492,21 @@ declare namespace Blockly {
     }
 
     namespace Extensions {
-        var MUTATOR_PROPERTIES_:string[];
-        function register(a: any, b: any):any;
-        function registerMixin(a: any, b: any):any;
-        function registerMutator(a: any, b: any, c: any, d: any):any;
-        function apply(a: any, b: any, c: any):any;
-        function checkHasFunction_(a: any, b: any, c: any):any;
-        function checkNoMutatorProperties_(a: any, b: any):any;
+        var MUTATOR_PROPERTIES_: string[];
+        function register(a: any, b: any): any;
+        function registerMixin(a: any, b: any): any;
+        function registerMutator(a: any, b: any, c: any, d: any): any;
+        function apply(a: any, b: any, c: any): any;
+        function checkHasFunction_(a: any, b: any, c: any): any;
+        function checkNoMutatorProperties_(a: any, b: any): any;
         function checkMutatorDialog_(a: any, b: any): boolean;
-        function checkBlockHasMutatorProperties_(a: any, b: any):any;
+        function checkBlockHasMutatorProperties_(a: any, b: any): any;
         function getMutatorProperties_(a: any): any;
         function mutatorPropertiesMatch_(a: any, b: any): boolean;
         function buildTooltipForDropdown(a: any, b: any): any;
-        function checkDropdownOptionsInTable_(a: any, b: any, c: any):any;
+        function checkDropdownOptionsInTable_(a: any, b: any, c: any): any;
         function buildTooltipWithFieldValue(a: any, b: any): any;
-        function extensionParentTooltip_():any;
+        function extensionParentTooltip_(): any;
     }
 
     interface Options {

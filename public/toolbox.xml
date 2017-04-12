@@ -2,10 +2,62 @@
   <category name="UI" colour="#935ba5">
     <block type="user_interface"/>
     <block type="container_element"/>
-    <block type="text_element"/>
-    <block type="image_element"/>
-    <category name="Visual" colour="#935ba5">
+    <block type="text_element">
+      <value name="text value">
+        <shadow type="text">
+          <field name="text value"/>
+        </shadow>
+      </value>
+    </block>
+    <block type="image_element">
+      <value name="URL">
+        <shadow type="text">
+          <field name="URL">favicon.ico</field>
+        </shadow>
+      </value>
+    </block>
+  </category>
+  <category name="Styles" colour="#935ba5">
+    <block type="styledef"/>
+    <block type="styleprop_generic"/>
+    <category name="Layout">
       <block type="styleprop_aligncontent"/>
+      <block type="styleprop_alignitems"/>
+      <block type="styleprop_alignself"/>
+      <block type="styleprop_flexdirection"/>
+      <block type="styleprop_justifycontent"/>
+      <block type="styleprop_flexwrap"/>
+      <block type="styleprop_position"/>
+      <block type="styleprop_size"/>
+      <block type="styleprop_flexvalues"/>
+      <block type="styleprop_aspectratio"/>
+      <block type="styleprop_overflow"/>
+    </category>
+    <category name="Color">
+      <block type="styleprop_opacity"/>
+      <block type="styleprop_backgroundcolor"/>
+    </category>
+    <category name="Box">
+      <block type="styleprop_bordercolor"/>
+      <block type="styleprop_borderradius"/>
+      <block type="styleprop_borderwidth"/>
+      <block type="styleprop_borderstyle"/>
+      <block type="styleprop_margin"/>
+      <block type="styleprop_padding"/>
+    </category>
+    <category name="Text">
+      <block type="styleprop_text_color"/>
+      <block type="styleprop_text_fontfamily"/>
+      <block type="styleprop_text_fontsize"/>
+      <block type="styleprop_text_fontstyle"/>
+      <block type="styleprop_text_fontweight"/>
+      <block type="styleprop_text_lineheight"/>
+      <block type="styleprop_text_textalign"/>
+      <block type="styleprop_text_textdecorationline"/>
+    </category>
+    <category name="Image">
+      <block type="styleprop_image_resizemode"/>
+      <block type="styleprop_image_tintcolor"/>
     </category>
   </category>
   <category name="Logic" colour="#5C81A6">
