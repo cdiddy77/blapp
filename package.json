@@ -5,6 +5,7 @@
   "devDependencies": {
     "@types/react": "^15.0.21",
     "@types/react-dom": "^0.14.23",
+    "@types/react-native": "^0.43.0",
     "autoprefixer": "6.7.2",
     "babel-core": "6.22.1",
     "babel-eslint": "7.1.1",
@@ -50,8 +51,9 @@
     "whatwg-fetch": "2.0.2"
   },
   "dependencies": {
-    "react": "^15.5.1",
-    "react-dom": "^15.5.1"
+    "react": "~15.4.1",
+    "react-dom": "~15.4.1",
+    "react-native-web": "0.0.81"
   },
   "scripts": {
     "start": "node scripts/start.js",

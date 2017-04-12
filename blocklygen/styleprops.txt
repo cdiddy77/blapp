@@ -1,0 +1,237 @@
+SORTED/CATEGORIZED
+-------
+general
+-------
+0,align items,alignItems
+1,align self,alignSelf
+2,backface visibility,backfaceVisibility
+3,background color,backgroundColor
+4,border bottom color,borderBottomColor
+5,border bottom left radius,borderBottomLeftRadius
+6,border bottom right radius,borderBottomRightRadius
+7,border bottom width,borderBottomWidth
+8,border color,borderColor
+9,border left color,borderLeftColor
+10,border left width,borderLeftWidth
+11,border radius,borderRadius
+12,border right color,borderRightColor
+13,border right width,borderRightWidth
+14,border style,borderStyle
+15,border top color,borderTopColor
+16,border top left radius,borderTopLeftRadius
+17,border top right radius,borderTopRightRadius
+18,border top width,borderTopWidth
+19,border width,borderWidth
+20,direction,direction
+21,display,display
+22,flex,flex
+23,flex basis,flexBasis
+24,flex direction,flexDirection
+25,flex grow, flexGrow
+26,flex shrink,flexShrink
+27,flex wrap,flexWrap
+28,height,height
+29,justify content,justifyContent
+30,left,left
+31,margin,margin
+32,margin bottom,marginBottom
+33,margin horizontal,marginHorizontal
+34,margin left,marginLeft
+35,margin right,marginRight
+36,margin top,marginTop
+37,margin vertical,marginVertical
+38,max height,maxHeight
+39,max width,maxWidth
+40,min height,minHeight
+41,min width,minWidth
+42,opacity,opacity
+43,overflow,overflow
+44,padding,padding
+45,padding bottom,paddingBottom
+46,padding horizontal,paddingHorizontal
+47,padding left,paddingLeft
+48,padding right,paddingRight
+49,padding top,paddingTop
+50,padding vertical,paddingVertical
+51,position,position
+52,right,right
+53,top,top
+54,width,width
+55,z-index,zIndex
+----
+text
+----
+0,color,color
+1,font family,fontFamily
+2,font size,fontSize
+3,font style,fontStyle
+4,font weight,fontWeight
+5,line height,lineHeight
+6,text align,textAlign
+7,text decoration line,textDecorationLine
+
+8,text shadow color,textShadowColor
+9,text shadow offset,textShadowOffset
+10,text shadow radius,textShadowRadius
+
+-----
+image
+-----
+0,resize mode,resizeMode
+1,tint color,tintColor
+
+
+
+
+
+
+
+
+
+SELECTED
+
+numeric
+=======
+border radius,borderRadius
+border width,borderWidth
+flex,flex
+height,height
+left,left
+margin,margin
+max height,maxHeight
+max width,maxWidth
+min height,minHeight
+min width,minWidth
+opacity,opacity
+padding,padding
+right,right
+top,top
+width,width
+
+font size,fontSize(text)
+
+====
+enum
+====
+align items,alignItems
+align self,alignSelf
+flex direction,flexDirection
+flex wrap,flexWrap
+justify content,justifyContent
+overflow,overflow
+position,position
+
+resize mode,resizeMode(image)
+
+font style,fontStyle(text)
+font weight,fontWeight(text)
+text align,textAlign(text)
+text decoration line,textDecorationLine(text)
+=====
+color
+=====
+background color,backgroundColor
+border color,borderColor
+
+color,color(text)
+
+======
+string
+======
+font family,fontFamily(text)
+
+
+
+
+
+SCRATCH
+
+// XML for color property ////////////
+
+/////////////////////////////////////
+
+::alignment/layout (enum)
+["align content","alignContent"],
+["align items","alignItems"],
+["align self","alignSelf"],
+["flex direction","flexDirection"],
+["justify content","justifyContent"],
+["flex wrap","flexWrap"],
+["position","position"],
+
+::background color
+["background color","backgroundColor"],
+
+::border color (color)
+["border color","borderColor"],
+["border bottom color","borderBottomColor"],
+["border left color","borderLeftColor"],
+["border right color","borderRightColor"],
+["border top color","borderTopColor"],
+
+
+::border radius (number)
+["border radius","borderRadius"],
+["border bottom left radius","borderBottomLeftRadius"],
+["border bottom right radius","borderBottomRightRadius"],
+["border top left radius","borderTopLeftRadius"],
+["border top right radius","borderTopRightRadius"],
+
+::border width (number)
+["border width","borderWidth"],
+["border bottom width","borderBottomWidth"],
+["border left width","borderLeftWidth"],
+["border right width","borderRightWidth"],
+["border top width","borderTopWidth"],
+
+::border style(enum)
+["border style","borderStyle"],
+
+::DEADZONE
+["direction","direction"],
+["display","display"],
+["aspect ratio","aspectRatio"],
+["backface visibility","backfaceVisibility"],
+
+::flex layout values(number)
+["flex","flex"],
+["flex basis","flexBasis"],
+["flex grow," "flexGrow"],
+["flex shrink","flexShrink"],
+
+::position/dimension(number)
+["bottom","bottom"],
+["left","left"],
+["right","right"],
+["top","top"],
+["max height","maxHeight"],
+["max width","maxWidth"],
+["min height","minHeight"],
+["min width","minWidth"],
+["height","height"],
+["width","width"],
+["z-index","zIndex"]
+
+::margin(number)
+["margin","margin"],
+["margin bottom","marginBottom"],
+["margin horizontal","marginHorizontal"],
+["margin left","marginLeft"],
+["margin right","marginRight"],
+["margin top","marginTop"],
+["margin vertical","marginVertical"],
+
+::opacity
+["opacity","opacity"],
+
+["overflow","overflow"],
+
+::padding(number)
+["padding","padding"],
+["padding bottom","paddingBottom"],
+["padding horizontal","paddingHorizontal"],
+["padding left","paddingLeft"],
+["padding right","paddingRight"],
+["padding top","paddingTop"],
+["padding vertical","paddingVertical"],
+
