@@ -16,12 +16,29 @@
         </shadow>
       </value>
     </block>
+    <category name="Icons">
+      <block type="icon_action"/>
+      <block type="icon_alert"/>
+      <block type="icon_av"/>
+      <block type="icon_communication"/>
+      <block type="icon_content"/>
+      <block type="icon_device"/>
+      <block type="icon_editor"/>
+      <block type="icon_file"/>
+      <block type="icon_hardware"/>
+      <block type="icon_image"/>
+      <block type="icon_maps"/>
+      <block type="icon_navigation"/>
+      <block type="icon_notification"/>
+      <block type="icon_places"/>
+      <block type="icon_social"/>
+      <block type="icon_toggle"/>
+    </category>
   </category>
   <category name="Styles" colour="#935ba5">
     <block type="styledef"/>
-     <block type="stylejoindef"/>
-    <block type="styleprop_generic"/>
-    <category name="Layout">
+    <block type="stylejoindef"/>
+   <category name="Layout">
       <block type="styleprop_aligncontent"/>
       <block type="styleprop_alignitems"/>
       <block type="styleprop_alignself"/>

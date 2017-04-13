@@ -798,10 +798,10 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="kr|dd$K*6.gPRgz@-KiK"/>
-       <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
         <field name="TYPE">STYLEPROP</field>
       </block>
-   </value>
+    </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=":buM+l=I:$Tf)@.0*@j$"/>
       <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
@@ -1103,10 +1103,10 @@
     </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=",$GMWG*Y0A$WgW/D-EBm"/>
-     <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
         <field name="TYPE">STYLEPROP</field>
       </block>
-     </value>
+    </value>
     <value name="COLOUR">
       <block type="colour_hue" id="}!(H|,N1@kbn@iJ_6ox^">
         <mutation colour="#5b67a5"/>
@@ -1171,10 +1171,10 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="-aF6MS5e2%.sv@mCea/K"/>
-     <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
         <field name="TYPE">STYLEPROP</field>
       </block>
-     </value>
+    </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=",$GMWG*Y0A$WgW/D-EBm"/>
       <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
@@ -1299,10 +1299,10 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="-aF6MS5e2%.sv@mCea/K"/>
-     <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
         <field name="TYPE">STYLEPROP</field>
       </block>
-     </value>
+    </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=",$GMWG*Y0A$WgW/D-EBm"/>
       <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
@@ -1375,10 +1375,10 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="-aF6MS5e2%.sv@mCea/K"/>
-       <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
         <field name="TYPE">STYLEPROP</field>
       </block>
-   </value>
+    </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=",$GMWG*Y0A$WgW/D-EBm"/>
       <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
@@ -1850,16 +1850,16 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="kr|dd$K*6.gPRgz@-KiK"/>
-       <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
         <field name="TYPE">STYLEPROP</field>
       </block>
-   </value>
+    </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=":buM+l=I:$Tf)@.0*@j$"/>
-       <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
         <field name="TYPE">STYLEPROP</field>
       </block>
-   </value>
+    </value>
     <value name="COLOUR">
       <block type="colour_hue" id="S_wqzoa=HiDp$JrMkg/#">
         <mutation colour="#935ba5"/>
@@ -2214,6 +2214,49 @@
       <block type="colour_hue" id="jjcom1!BY(/[ehnVj-%K">
         <mutation colour="#935ba5"/>
         <field name="HUE">285</field>
+      </block>
+    </value>
+  </block>
+  <block type="factory_base" id="b=Z^X0Qj*!kF~6Twj_O[" deletable="false" movable="false" x="0" y="0">
+    <mutation connections="LEFT"/>
+    <field name="NAME">stylejoindef</field>
+    <field name="INLINE">AUTO</field>
+    <field name="CONNECTIONS">LEFT</field>
+    <statement name="INPUTS">
+      <block type="input_value" id="h(ZY2~.=Bx-l$_Q0M248">
+        <field name="INPUTNAME">STYLEARRAY</field>
+        <field name="ALIGN">LEFT</field>
+        <statement name="FIELDS">
+          <block type="field_static" id="*RLaoLyoOE{E((Vom.=w">
+            <field name="TEXT">styles</field>
+          </block>
+        </statement>
+        <value name="TYPE">
+          <shadow type="type_null" id="0n}oHLt~)[Yv-z9SY?@9"/>
+          <block type="type_list" id="`%ID/S1WHf@~70lVuu2Z"/>
+        </value>
+      </block>
+    </statement>
+    <value name="TOOLTIP">
+      <block type="text" id="I9;PYl=]Kofd+VN`*Yxp" deletable="false" movable="false">
+        <field name="TEXT">define visual appearance by combining other styles</field>
+      </block>
+    </value>
+    <value name="HELPURL">
+      <block type="text" id=";xnFytz6RKSaZ[zG@ZDJ" deletable="false" movable="false">
+        <field name="TEXT"/>
+      </block>
+    </value>
+    <value name="OUTPUTTYPE">
+      <shadow type="type_null" id=");?@ks(t-uMONUxRDN_V"/>
+      <block type="type_other" id="!Sg^5$r*V1.iy$Moa8ik">
+        <field name="TYPE">STYLE</field>
+      </block>
+    </value>
+    <value name="COLOUR">
+      <block type="colour_hue" id="R|cpiZABPv+K/9!*NhbV">
+        <mutation colour="#5b67a5"/>
+        <field name="HUE">230</field>
       </block>
     </value>
   </block>

@@ -51,7 +51,7 @@ class App extends React.Component<AppProps, AppState> {
         <div className='row'>
           <div id='blocksArea' ref={(elem) => { this.blocksArea = elem; }} className="col-sm-8"></div>
           <div id='previewArea' ref={(elem) => { this.previewArea = elem; }} className="col-sm-4">
-            <TabbedArea activeIndex={0}>
+            <TabbedArea activeIndex={1}>
               <TabPane display="Code">
                 <div className='codeWrapper'>
                   <pre>{this.state.code}</pre>

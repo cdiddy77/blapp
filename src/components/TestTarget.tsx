@@ -41,60 +41,35 @@ export class TestTarget extends React.Component<{}, {}>{
             </View>
         );*/
 let CgRt = CodegenRuntime;
-        var bluesquare;
-
-
-bluesquare = 0;
-
-
-// function (){
-// let result:any={};
-//   result.backgroundColor="#33ccff";
-//   result.height=50;
-//   result.width=50;
-// return result;
-// }();
-
-
-CgRt.pushCont();
+var __f,result={};
+ CgRt.pushCont();
   {
   CgRt.beginProps();
 
-  CgRt.addProp("style",(
-  function(){
-  let result:any={};
-    result.backgroundColor="#ff9900";
-    result.borderColor="#ff0000";
-    result.borderWidth=2;
-    result.padding=10;
-    result.minHeight=500;
-    result.alignContent="flex-start";
-  return result;
-  }()));
   let p=CgRt.getProps();
   CgRt.pushCont();
-  {  {
+  {
     CgRt.beginProps();
 
+    CgRt.addProp("source",{uri:'favicon.ico'});
+    CgRt.addProp("style",(
+    __f= function(){
+    let result:any={};
+      result.height=50;
+      result.width=50;
+    return result;
+    }()));
     let p=CgRt.getProps();
-    CgRt.pushCont();
-    {  {
-      CgRt.beginProps();
-      (
-      function(){
-      let result:any={};
-        result.backgroundColor="#c0c0c0";
-        result.padding=10;
-        result.minHeight=500;
-      return result;
-      }())
-      CgRt.addProp("style",CgRt.getStyles());
-      let p=CgRt.getProps();
-      CgRt.pushElem(CgRt.createElement(CgRt.Textr,CgRt.getProps(),'dfdfd'));
-      }
-    }
-    let cl=CgRt.popCont();
-    CgRt.pushElem(CgRt.createElement(CgRt.Viewr, p,...cl));
+    CgRt.pushElem(CgRt.createElement(CgRt.Imager,p));{
+    CgRt.beginProps();
+
+    CgRt.addProp("style",(
+    __f= function(){
+    let result={};
+    return result;
+    }()));
+    let p=CgRt.getProps();
+    CgRt.pushElem(CgRt.createElement(CgRt.Textr,p,'Math homework takes 10^3 times longer when using your phone as your calculator'));
     }
   }
   let cl=CgRt.popCont();
@@ -102,7 +77,6 @@ CgRt.pushCont();
   }
 
 let cl=CgRt.popCont();
-return CgRt.createElement(CgRt.Viewr, {style:{height:600}}, ...cl);
-
+return CgRt.createElement(CgRt.Viewr, {style:{backgroundColor:"white",height:600}}, ...cl);
     }
 }

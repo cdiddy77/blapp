@@ -43,7 +43,7 @@ export namespace CodegenRuntime {
         return curprops;
     }
     export function createElement(...args:any[]){
-        console.log('createElement',args[0],JSON.stringify(args[1]));
+        // console.log('createElement',args[0],JSON.stringify(args[1]));
         return React.createElement(args[0],args[1],...args.slice(2));
     }
     // export var createElement = React.createElement;

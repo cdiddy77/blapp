@@ -1,3 +1,6 @@
+/// <reference path="../localtypings/blockly.d.ts" />
+import { iconData } from './IconData';
+
 export namespace BlocklyConfig {
     export function initBlockDefinitions(): void {
         Blockly.Blocks['user_interface'] = {
@@ -14,13 +17,14 @@ export namespace BlocklyConfig {
         Blockly.Blocks['container_element'] = {
             init: function () {
                 this.appendDummyInput()
-                    .appendField("container UI");
+                    .appendField(new Blockly.FieldImage("media/av/ic_web_white_48dp.png", 16, 16, "*"))
+                    .appendField("container");
+                this.appendStatementInput("child elements")
+                    .setCheck(null);
                 this.appendValueInput("style")
                     .setCheck("STYLE")
                     .setAlign(Blockly.ALIGN_RIGHT)
-                    .appendField("formatting");
-                this.appendStatementInput("child elements")
-                    .setCheck(null);
+                    .appendField("appearance");
                 this.setPreviousStatement(true, null);
                 this.setNextStatement(true, null);
                 this.setColour(285);
@@ -32,15 +36,16 @@ export namespace BlocklyConfig {
         Blockly.Blocks['text_element'] = {
             init: function () {
                 this.appendDummyInput()
-                    .appendField("text UI");
-                this.appendValueInput("style")
-                    .setCheck("STYLE")
-                    .setAlign(Blockly.ALIGN_RIGHT)
-                    .appendField("formatting");
+                    .appendField(new Blockly.FieldImage("media/content/ic_font_download_white_48dp.png", 16, 16, "*"))
+                    .appendField("text");
                 this.appendValueInput("text value")
                     .setCheck("String")
                     .setAlign(Blockly.ALIGN_RIGHT)
                     .appendField("value");
+                this.appendValueInput("style")
+                    .setCheck("STYLE")
+                    .setAlign(Blockly.ALIGN_RIGHT)
+                    .appendField("formatting");
                 this.setPreviousStatement(true, null);
                 this.setNextStatement(true, null);
                 this.setColour(285);
@@ -52,15 +57,16 @@ export namespace BlocklyConfig {
         Blockly.Blocks['image_element'] = {
             init: function () {
                 this.appendDummyInput()
-                    .appendField("image UI");
-                this.appendValueInput("style")
-                    .setCheck("STYLE")
-                    .setAlign(Blockly.ALIGN_RIGHT)
-                    .appendField("formatting");
+                    .appendField(new Blockly.FieldImage("media/image/ic_photo_white_48dp.png", 16, 16, "*"))
+                    .appendField("image");
                 this.appendValueInput("URL")
                     .setCheck("String")
                     .setAlign(Blockly.ALIGN_RIGHT)
                     .appendField("URL");
+                this.appendValueInput("style")
+                    .setCheck("STYLE")
+                    .setAlign(Blockly.ALIGN_RIGHT)
+                    .appendField("visuals");
                 this.setPreviousStatement(true, null);
                 this.setNextStatement(true, null);
                 this.setColour(285);
@@ -361,7 +367,7 @@ export namespace BlocklyConfig {
             init: function () {
                 this.appendDummyInput()
                     .appendField("opacity")
-                    .appendField(new Blockly.FieldNumber(1, 0, 1, 2), "VALUE");
+                    .appendField(new Blockly.FieldNumber(1, 0, 1, 0), "VALUE");
                 this.setPreviousStatement(true, "STYLEPROP");
                 this.setNextStatement(true, "STYLEPROP");
                 this.setColour(285);
@@ -500,6 +506,39 @@ export namespace BlocklyConfig {
             }
         };
     }
+    export function initIconBlockDefinitions(): void {
+        for (let k in iconData) {
+            if (!iconData.hasOwnProperty(k)) {
+                continue;
+            }
+            let vals = iconData[k];
+            let mappedVals = vals.map((v, i, arr) => {
+                return [
+                    {
+                        "src": "media/" + k + "/ic_" + v + "_black_48dp.png",
+                        "width": 16,
+                        "height": 16,
+                        "alt": v
+                    }, v
+                ];
+            });
+            Blockly.Blocks['icon_' + k] = {
+                init: function () {
+                    this.appendDummyInput()
+                        .appendField(k)
+                        .appendField(new Blockly.FieldDropdown(mappedVals), "VALUE")
+                        .appendField("size")
+                        .appendField(new Blockly.FieldNumber(24, 8, 184), "SIZE")
+                        .appendField(new Blockly.FieldDropdown([["dark", "black"], ["light", "white"]]), "SHADE");
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour(285);
+                    this.setTooltip('');
+                    this.setHelpUrl('');
+                }
+            };
+        }
+    }
     export function initCodeGenerators(): void {
 
         Blockly.JavaScript['user_interface'] = (block: Blockly.Block) => {
@@ -508,7 +547,7 @@ export namespace BlocklyConfig {
             code += '\nCgRt.pushCont();\n';
             code += statements_elements;
             code += '\nlet cl=CgRt.popCont();'
-            code += '\nreturn CgRt.createElement(CgRt.Viewr, {style:{height:600}}, ...cl);\n});';
+            code += '\nreturn CgRt.createElement(CgRt.Viewr, {style:{backgroundColor:"white",height:600}}, ...cl);\n});';
             return code;
         };
 
@@ -570,7 +609,7 @@ export namespace BlocklyConfig {
             //endprops
             code += '\nlet p=CgRt.getProps();';
 
-            code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Imager,p))';
+            code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Imager,p));';
             return code;
         };
         Blockly.JavaScript['styledef'] = (block: Blockly.Block) => {
@@ -786,5 +825,34 @@ export namespace BlocklyConfig {
             var code = genStyleStringProp('textDecorationLine', dropdown_value);
             return code;
         };
+    }
+    export function initIconBlockCodeGenerators(): void {
+        for (let k in iconData) {
+            if (!iconData.hasOwnProperty(k)) {
+                continue;
+            }
+
+            Blockly.JavaScript['icon_' + k] = (block: Blockly.Block) => {
+                var dropdown_value = block.getFieldValue('VALUE');
+                var number_size = block.getFieldValue('SIZE');
+                var dropdown_shade = block.getFieldValue('SHADE');
+                //properties
+                let code = '\n{\nCgRt.beginProps();\n';
+
+                code += '\nCgRt.addProp("source",{uri:"';
+                code += dropdown_value && dropdown_value !== ''
+                    ? ("media/" + k + "/ic_" + dropdown_value + "_" + dropdown_shade + "_48dp.png")
+                    : "''";
+                code += '"});'
+                code += '\nCgRt.addProp("style",{width:' + number_size + ',height:' + number_size + '});';
+
+                //endprops
+                code += '\nlet p=CgRt.getProps();';
+
+                code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Imager,p));\n}';
+                return code;
+            };
+        }
+
     }
 }

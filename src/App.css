@@ -14,11 +14,11 @@
 }
 
 #blocksArea {
-  height: 700px;
+  height: 600px;
 }
 
 #previewArea {
-  height: 700px;
+  height: 600px;
   padding: 0px;
   background: #f7f7f7;
   overflow: scroll;

@@ -73,6 +73,8 @@ export class AppModel extends ModelBase {
             BlocklyConfig.initCodeGenerators();
             BlocklyConfig.initStyleBlockDefinitions();
             BlocklyConfig.initStyleBlockCodeGenerators();
+            BlocklyConfig.initIconBlockDefinitions();
+            BlocklyConfig.initIconBlockCodeGenerators();
             setTimeout(this.restoreWorkspace(), 0);
         });
 
