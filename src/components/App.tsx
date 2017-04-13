@@ -6,7 +6,7 @@ import * as React from 'react';
 import '../App.css';
 import { AppModel } from '../models/AppModel';
 import { TabbedArea, TabPane } from './TabbedArea';
-import {Target} from './Target';
+import { Target } from './Target';
 // import * as Blockly from '../localtypings/blockly';
 
 interface AppProps {
@@ -14,6 +14,7 @@ interface AppProps {
 }
 interface AppState {
   code: string;
+  isInErrorState: boolean;
 }
 
 class App extends React.Component<AppProps, AppState> {
@@ -22,12 +23,16 @@ class App extends React.Component<AppProps, AppState> {
 
   constructor(props: AppProps) {
     super(props);
-    this.state = { code: '' };
+    this.state = { code: '', isInErrorState: false };
   }
   componentDidMount() {
     this.props.model.initializeBlockly(this.blocksArea);
     this.props.model.on('code_change', newCode => {
       this.setState({ code: newCode });
+    });
+    this.props.model.on('evalstatus_change', () => {
+      console.log('evalstatuschange');
+      this.setState({ isInErrorState: this.props.model.lastEvalError != null });
     });
   }
 
@@ -42,13 +47,13 @@ class App extends React.Component<AppProps, AppState> {
         <div className='row'>
           <div id='blocksArea' ref={(elem) => { this.blocksArea = elem; }} className="col-sm-8"></div>
           <div id='previewArea' ref={(elem) => { this.previewArea = elem; }} className="col-sm-4">
-            <TabbedArea activeIndex={1}>
+            <TabbedArea activeIndex={0}>
               <TabPane display="Code">
-                <div>
+                <div className='codeWrapper'>
                   <pre>{this.state.code}</pre>
                 </div>
               </TabPane>
-              <TabPane display="Preview">
+              <TabPane display={this.state.isInErrorState?'Preview(ERR)':'Preview'}>
                 <div><Target model={this.props.model} /></div>
               </TabPane>
             </TabbedArea>

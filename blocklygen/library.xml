@@ -49,12 +49,29 @@
           </block>
         </statement>
         <next>
-          <block type="input_statement" id="P(2+23?d%bX[Ome-n{w4">
-            <field name="INPUTNAME">child elements</field>
-            <field name="ALIGN">LEFT</field>
+          <block type="input_value" id="k|O.I_r*YA^vG?pFo:-.">
+            <field name="INPUTNAME">style</field>
+            <field name="ALIGN">RIGHT</field>
+            <statement name="FIELDS">
+              <block type="field_static" id="6z*sIzj)z3m=l!uw7,`O">
+                <field name="TEXT">formatting</field>
+              </block>
+            </statement>
             <value name="TYPE">
-              <shadow type="type_null" id="|AkF[Z3TJVNXClMWf.hJ"/>
+              <shadow type="type_null" id="?.:%XG_uhg?3amVztA@b"/>
+              <block type="type_other" id="0mZ(xYGh[Wsn^X`X[s{m">
+                <field name="TYPE">STYLE</field>
+              </block>
             </value>
+            <next>
+              <block type="input_statement" id="P(2+23?d%bX[Ome-n{w4">
+                <field name="INPUTNAME">child elements</field>
+                <field name="ALIGN">LEFT</field>
+                <value name="TYPE">
+                  <shadow type="type_null" id="|AkF[Z3TJVNXClMWf.hJ"/>
+                </value>
+              </block>
+            </next>
           </block>
         </next>
       </block>
@@ -88,18 +105,45 @@
     <field name="INLINE">AUTO</field>
     <field name="CONNECTIONS">BOTH</field>
     <statement name="INPUTS">
-      <block type="input_value" id="Nfrct$GXurE}BjJeRJqj">
-        <field name="INPUTNAME">text value</field>
+      <block type="input_dummy" id="3jZ:X:d80*/.5mv[}o6,">
         <field name="ALIGN">LEFT</field>
         <statement name="FIELDS">
           <block type="field_static" id="w%sey{/k54r?SXRk)Sb[">
             <field name="TEXT">text UI</field>
           </block>
         </statement>
-        <value name="TYPE">
-          <shadow type="type_null" id="@`qIm.c]*1?,M--GOPcV"/>
-          <block type="type_string" id="@|NRXoW}khA]J)=mMm!G"/>
-        </value>
+        <next>
+          <block type="input_value" id="l|47At~)15IX6E/O$A`p">
+            <field name="INPUTNAME">style</field>
+            <field name="ALIGN">RIGHT</field>
+            <statement name="FIELDS">
+              <block type="field_static" id=".wjRMo)M|-T{93.LX2[:">
+                <field name="TEXT">formatting</field>
+              </block>
+            </statement>
+            <value name="TYPE">
+              <shadow type="type_null" id="DmHF#$Per8,rq2.lg_$R"/>
+              <block type="type_other" id=")6FsJ#*giW=Sh~JuXb/!">
+                <field name="TYPE">STYLE</field>
+              </block>
+            </value>
+            <next>
+              <block type="input_value" id="Nfrct$GXurE}BjJeRJqj">
+                <field name="INPUTNAME">text value</field>
+                <field name="ALIGN">RIGHT</field>
+                <statement name="FIELDS">
+                  <block type="field_static" id="zlKK.b+)sVb7R-$v/nx~">
+                    <field name="TEXT">value</field>
+                  </block>
+                </statement>
+                <value name="TYPE">
+                  <shadow type="type_null" id="@`qIm.c]*1?,M--GOPcV"/>
+                  <block type="type_string" id="@|NRXoW}khA]J)=mMm!G"/>
+                </value>
+              </block>
+            </next>
+          </block>
+        </next>
       </block>
     </statement>
     <value name="TOOLTIP">
@@ -131,18 +175,45 @@
     <field name="INLINE">AUTO</field>
     <field name="CONNECTIONS">BOTH</field>
     <statement name="INPUTS">
-      <block type="input_value" id="i4ZN9kxS$cA6]KeGhAp.">
-        <field name="INPUTNAME">URL</field>
+      <block type="input_dummy" id=")|[j^tkeT#O0$|plmR+l">
         <field name="ALIGN">LEFT</field>
         <statement name="FIELDS">
           <block type="field_static" id="2yX3Qa}j?r{Prl5R[qFf">
             <field name="TEXT">image UI</field>
           </block>
         </statement>
-        <value name="TYPE">
-          <shadow type="type_null" id="zj*gOz{%E6gUr6A~65Qw"/>
-          <block type="type_string" id="ctRkcivA+W%rUdnY`k%U"/>
-        </value>
+        <next>
+          <block type="input_value" id="hog{*8xi8r~e)vq5IZ{,">
+            <field name="INPUTNAME">style</field>
+            <field name="ALIGN">RIGHT</field>
+            <statement name="FIELDS">
+              <block type="field_static" id="b]VTj[Jl$3zftceDMCb3">
+                <field name="TEXT">formatting</field>
+              </block>
+            </statement>
+            <value name="TYPE">
+              <shadow type="type_null" id="CzLiAHD{uHR.,xl!~TCk"/>
+              <block type="type_other" id="%g185b[AOT#,7@}La`KY">
+                <field name="TYPE">STYLE</field>
+              </block>
+            </value>
+            <next>
+              <block type="input_value" id="i4ZN9kxS$cA6]KeGhAp.">
+                <field name="INPUTNAME">URL</field>
+                <field name="ALIGN">RIGHT</field>
+                <statement name="FIELDS">
+                  <block type="field_static" id="Z0mmNhF(]*Aj=mkLWaer">
+                    <field name="TEXT">URL</field>
+                  </block>
+                </statement>
+                <value name="TYPE">
+                  <shadow type="type_null" id="zj*gOz{%E6gUr6A~65Qw"/>
+                  <block type="type_string" id="ctRkcivA+W%rUdnY`k%U"/>
+                </value>
+              </block>
+            </next>
+          </block>
+        </next>
       </block>
     </statement>
     <value name="TOOLTIP">
@@ -175,11 +246,11 @@
     <field name="CONNECTIONS">LEFT</field>
     <statement name="INPUTS">
       <block type="input_statement" id="dRmGGjAtYRXbEU)No$v7">
-        <field name="INPUTNAME">NAME</field>
+        <field name="INPUTNAME">STYLES</field>
         <field name="ALIGN">LEFT</field>
         <statement name="FIELDS">
           <block type="field_static" id="n7LlS(IXb_a,7[jY,$EV">
-            <field name="TEXT">styles</field>
+            <field name="TEXT">style</field>
           </block>
         </statement>
         <value name="TYPE">

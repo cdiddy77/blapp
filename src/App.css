@@ -14,13 +14,14 @@
 }
 
 #blocksArea {
-  height: 500px;
+  height: 700px;
 }
 
 #previewArea {
-  height: 500px;
+  height: 700px;
   padding: 0px;
   background: #f7f7f7;
+  overflow: scroll;
 }
 
 #codearea {

@@ -1,8 +1,7 @@
 import * as React from 'react';
-import { View, Text,Image } from 'react-native';
+import { View, Text, Image } from 'react-native';
 
 import { AppModel } from '../models/AppModel';
-import {CodegenRuntime} from '../util/CodegenRuntime';
 
 interface TargetProps {
     model: AppModel;
@@ -31,22 +30,7 @@ export class Target extends React.Component<TargetProps, TargetState>{
     }
 
     onCodeChange(newCode: string) {
-        let CgRt = CodegenRuntime;
-        let RnImage = Image;
-        Target.renderProc=null;
-        try {
-            eval(newCode);
-            this.setState({ evalErrMsg: null });
-        } catch (e) {
-            this.setState({ evalErrMsg: e.toString() });
-        }
     }
-    // setRenderProc(newRenderProc: () => any) {
-    //     console.log('setRenderProc', this);
-    //     this.setState({
-    //         renderProc: newRenderProc.bind(this)
-    //     });
-    // }
 
     renderErrorMessage(errMsg: string) {
         return (
