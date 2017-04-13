@@ -7,6 +7,7 @@ import '../App.css';
 import { AppModel } from '../models/AppModel';
 import { TabbedArea, TabPane } from './TabbedArea';
 import { Target } from './Target';
+import { TestTarget } from './TestTarget';
 // import * as Blockly from '../localtypings/blockly';
 
 interface AppProps {
@@ -28,7 +29,10 @@ class App extends React.Component<AppProps, AppState> {
   componentDidMount() {
     this.props.model.initializeBlockly(this.blocksArea);
     this.props.model.on('code_change', newCode => {
-      this.setState({ code: newCode });
+      this.setState({
+        code: newCode,
+        isInErrorState: this.props.model.lastEvalError != null
+      });
     });
     this.props.model.on('evalstatus_change', () => {
       console.log('evalstatuschange');
@@ -53,10 +57,13 @@ class App extends React.Component<AppProps, AppState> {
                   <pre>{this.state.code}</pre>
                 </div>
               </TabPane>
-              <TabPane display={this.state.isInErrorState?'Preview(ERR)':'Preview'}>
+              <TabPane display={this.state.isInErrorState ? 'Preview(ERR)' : 'Preview'}>
                 <div><Target model={this.props.model} /></div>
               </TabPane>
-            </TabbedArea>
+             <TabPane display="Test">
+                <div><TestTarget/></div>
+              </TabPane>
+             </TabbedArea>
           </div>
         </div>
       </div>

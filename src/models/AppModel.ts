@@ -17,17 +17,16 @@ export class AppModel extends ModelBase {
     }
 
     private _workspace: Blockly.Workspace;
-    private _lastEvalError: any;
+    private _lastEvalError: Error;
     private _code: string;
 
-    get lastEvalError(): any {
+    get lastEvalError(): Error {
         return this._lastEvalError;
     }
-    set lastEvalError(e: any) {
-        console.log('set lastEvalError', e);
+    set lastEvalError(e: Error) {
         if (this._lastEvalError !== e) {
             this._lastEvalError = e;
-            this.fireEvent('evalstatus_change',e);
+            this.fireEvent('evalstatus_change', e);
         }
     }
 
@@ -84,7 +83,6 @@ export class AppModel extends ModelBase {
         let CgRt = CodegenRuntime;
         CgRt.setTargetRenderProc(null);
         try {
-            console.log('eval');
             eval(this._code);
             this.lastEvalError = null;
         } catch (e) {

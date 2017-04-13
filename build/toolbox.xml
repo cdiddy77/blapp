@@ -19,6 +19,7 @@
   </category>
   <category name="Styles" colour="#935ba5">
     <block type="styledef"/>
+     <block type="stylejoindef"/>
     <block type="styleprop_generic"/>
     <category name="Layout">
       <block type="styleprop_aligncontent"/>

@@ -42,9 +42,13 @@ export namespace CodegenRuntime {
     export function getProps(): any {
         return curprops;
     }
-    export var createElement = React.createElement;
+    export function createElement(...args:any[]){
+        console.log('createElement',args[0],JSON.stringify(args[1]));
+        return React.createElement(args[0],args[1],...args.slice(2));
+    }
+    // export var createElement = React.createElement;
 
-    export var View = 'View';
+    export var Viewr = View;
     export var Imager = Image;
-    export var Text = 'Text';
+    export var Textr = Text;
 }

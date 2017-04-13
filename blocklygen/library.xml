@@ -695,9 +695,15 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="-aF6MS5e2%.sv@mCea/K"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=",$GMWG*Y0A$WgW/D-EBm"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="COLOUR">
       <block type="colour_hue" id="}!(H|,N1@kbn@iJ_6ox^">
@@ -792,9 +798,15 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="kr|dd$K*6.gPRgz@-KiK"/>
-    </value>
+       <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
+   </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=":buM+l=I:$Tf)@.0*@j$"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="COLOUR">
       <block type="colour_hue" id="S_wqzoa=HiDp$JrMkg/#">
@@ -1011,9 +1023,15 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="L?)=V2J[h@.LTR/)9{,F"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id="oNsIW~}KS$%`]sX_n44r"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="COLOUR">
       <block type="colour_hue" id="_k|O}f7W|E`T8iAP)Fp_">
@@ -1079,10 +1097,16 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="-aF6MS5e2%.sv@mCea/K"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=",$GMWG*Y0A$WgW/D-EBm"/>
-    </value>
+     <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
+     </value>
     <value name="COLOUR">
       <block type="colour_hue" id="}!(H|,N1@kbn@iJ_6ox^">
         <mutation colour="#5b67a5"/>
@@ -1147,9 +1171,15 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="-aF6MS5e2%.sv@mCea/K"/>
-    </value>
+     <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
+     </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=",$GMWG*Y0A$WgW/D-EBm"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="COLOUR">
       <block type="colour_hue" id="}!(H|,N1@kbn@iJ_6ox^">
@@ -1269,9 +1299,15 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="-aF6MS5e2%.sv@mCea/K"/>
-    </value>
+     <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
+     </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=",$GMWG*Y0A$WgW/D-EBm"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="COLOUR">
       <block type="colour_hue" id="}!(H|,N1@kbn@iJ_6ox^">
@@ -1339,9 +1375,15 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="-aF6MS5e2%.sv@mCea/K"/>
-    </value>
+       <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
+   </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=",$GMWG*Y0A$WgW/D-EBm"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="COLOUR">
       <block type="colour_hue" id="}!(H|,N1@kbn@iJ_6ox^">
@@ -1411,9 +1453,15 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="-aF6MS5e2%.sv@mCea/K"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=",$GMWG*Y0A$WgW/D-EBm"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="COLOUR">
       <block type="colour_hue" id="}!(H|,N1@kbn@iJ_6ox^">
@@ -1483,9 +1531,15 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="-aF6MS5e2%.sv@mCea/K"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=",$GMWG*Y0A$WgW/D-EBm"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="COLOUR">
       <block type="colour_hue" id="}!(H|,N1@kbn@iJ_6ox^">
@@ -1696,9 +1750,15 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="kr|dd$K*6.gPRgz@-KiK"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=":buM+l=I:$Tf)@.0*@j$"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="COLOUR">
       <block type="colour_hue" id="S_wqzoa=HiDp$JrMkg/#">
@@ -1740,9 +1800,15 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="kr|dd$K*6.gPRgz@-KiK"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=":buM+l=I:$Tf)@.0*@j$"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="COLOUR">
       <block type="colour_hue" id="S_wqzoa=HiDp$JrMkg/#">
@@ -1784,10 +1850,16 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="kr|dd$K*6.gPRgz@-KiK"/>
-    </value>
+       <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
+   </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=":buM+l=I:$Tf)@.0*@j$"/>
-    </value>
+       <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
+   </value>
     <value name="COLOUR">
       <block type="colour_hue" id="S_wqzoa=HiDp$JrMkg/#">
         <mutation colour="#935ba5"/>
@@ -2010,9 +2082,15 @@
     </value>
     <value name="TOPTYPE">
       <shadow type="type_null" id="-aF6MS5e2%.sv@mCea/K"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="BOTTOMTYPE">
       <shadow type="type_null" id=",$GMWG*Y0A$WgW/D-EBm"/>
+      <block type="type_other" id="lp8rp=@B+-zS3+l}?w*(">
+        <field name="TYPE">STYLEPROP</field>
+      </block>
     </value>
     <value name="COLOUR">
       <block type="colour_hue" id="}!(H|,N1@kbn@iJ_6ox^">

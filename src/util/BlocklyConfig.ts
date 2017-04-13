@@ -68,8 +68,6 @@ export namespace BlocklyConfig {
                 this.setHelpUrl('');
             }
         };
-    }
-    export function initStyleBlockDefinitions(): void {
         Blockly.Blocks['styledef'] = {
             init: function () {
                 this.appendStatementInput("STYLES")
@@ -81,6 +79,19 @@ export namespace BlocklyConfig {
                 this.setHelpUrl('');
             }
         };
+        Blockly.Blocks['stylejoindef'] = {
+            init: function () {
+                this.appendValueInput("STYLEARRAY")
+                    .setCheck("Array")
+                    .appendField("combine styles");
+                this.setOutput(true, "STYLE");
+                this.setColour(230);
+                this.setTooltip('define visual appearance by combining other styles');
+                this.setHelpUrl('');
+            }
+        };
+    }
+    export function initStyleBlockDefinitions(): void {
 
         Blockly.Blocks['styleprop_aligncontent'] = {
             init: function () {
@@ -167,8 +178,8 @@ export namespace BlocklyConfig {
                     .appendField(new Blockly.FieldDropdown([["bottom", "bottom"], ["left", "left"], ["right", "right"], ["top", "top"], ["z-index", "zIndex"]]), "NAME")
                     .appendField("value")
                     .appendField(new Blockly.FieldNumber(0), "VALUE");
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
+                this.setPreviousStatement(true, "STYLEPROP");
+                this.setNextStatement(true, "STYLEPROP");
                 this.setColour(230);
                 this.setTooltip('');
                 this.setHelpUrl('');
@@ -193,8 +204,8 @@ export namespace BlocklyConfig {
                 this.appendDummyInput()
                     .appendField("background color")
                     .appendField(new Blockly.FieldColour("#ff0000"), "VALUE");
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
+                this.setPreviousStatement(true, "STYLEPROP");
+                this.setNextStatement(true, "STYLEPROP");
                 this.setColour(285);
                 this.setTooltip('background color for the UI element');
                 this.setHelpUrl('');
@@ -207,8 +218,8 @@ export namespace BlocklyConfig {
                     .setCheck(null)
                     .appendField("style property")
                     .appendField(new Blockly.FieldDropdown([["align items", "alignItems"], ["align self", "alignSelf"], ["backface visibility", "backfaceVisibility"], ["background color", "backgroundColor"], ["border bottom color", "borderBottomColor"], ["border bottom left radius", "borderBottomLeftRadius"], ["border bottom right radius", "borderBottomRightRadius"], ["border bottom width", "borderBottomWidth"], ["border color", "borderColor"], ["border left color", "borderLeftColor"], ["border left width", "borderLeftWidth"], ["border radius", "borderRadius"], ["border right color", "borderRightColor"], ["border right width", "borderRightWidth"], ["border style", "borderStyle"], ["border top color", "borderTopColor"], ["border top left radius", "borderTopLeftRadius"], ["border top right radius", "borderTopRightRadius"], ["border top width", "borderTopWidth"], ["border width", "borderWidth"], ["direction", "direction"], ["display", "display"], ["flex", "flex"], ["flex basis", "flexBasis"], ["flex direction", "flexDirection"], ["flex grow,", "flexGrow"], ["flex shrink", "flexShrink"], ["flex wrap", "flexWrap"], ["height", "height"], ["justify content", "justifyContent"], ["left", "left"], ["margin", "margin"], ["margin bottom", "marginBottom"], ["margin horizontal", "marginHorizontal"], ["margin left", "marginLeft"], ["margin right", "marginRight"], ["margin top", "marginTop"], ["margin vertical", "marginVertical"], ["max height", "maxHeight"], ["max width", "maxWidth"], ["min height", "minHeight"], ["min width", "minWidth"], ["opacity", "opacity"], ["overflow", "overflow"], ["padding", "padding"], ["padding bottom", "paddingBottom"], ["padding horizontal", "paddingHorizontal"], ["padding left", "paddingLeft"], ["padding right", "paddingRight"], ["padding top", "paddingTop"], ["padding vertical", "paddingVertical"], ["position", "position"], ["right", "right"], ["top", "top"], ["width", "width"]]), "PROPNAME");
-                this.setPreviousStatement(true);
-                this.setNextStatement(true);
+                this.setPreviousStatement(true, "STYLEPROP");
+                this.setNextStatement(true, "STYLEPROP");
                 this.setColour(230);
                 this.setTooltip('');
                 this.setHelpUrl('');
@@ -222,8 +233,8 @@ export namespace BlocklyConfig {
                     .appendField(new Blockly.FieldDropdown([["all", "borderColor"], ["bottom", "borderBottomColor"], ["top", "borderTopColor"], ["left", "borderLeftColor"], ["right", "borderRightColor"]]), "NAME")
                     .appendField("color")
                     .appendField(new Blockly.FieldColour("#ff0000"), "VALUE");
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
+                this.setPreviousStatement(true, "STYLEPROP");
+                this.setNextStatement(true, "STYLEPROP");
                 this.setColour(230);
                 this.setTooltip('');
                 this.setHelpUrl('');
@@ -237,8 +248,8 @@ export namespace BlocklyConfig {
                     .appendField(new Blockly.FieldDropdown([["all", "borderRadius"], ["bottom left", "borderBottomLeftRadius"], ["bottom right", "borderBottomRightRadius"], ["top left", "borderTopLeftRadius"], ["top right", "borderTopRightRadius"]]), "NAME")
                     .appendField("radius")
                     .appendField(new Blockly.FieldNumber(0), "VALUE");
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
+                this.setPreviousStatement(true, "STYLEPROP");
+                this.setNextStatement(true, "STYLEPROP");
                 this.setColour(230);
                 this.setTooltip('');
                 this.setHelpUrl('');
@@ -249,11 +260,11 @@ export namespace BlocklyConfig {
             init: function () {
                 this.appendDummyInput()
                     .appendField("border")
-                    .appendField(new Blockly.FieldDropdown([["all", "borderRadius"], ["bottom", "borderBottomWidth"], ["left", "borderLeftWidth"], ["top", "borderTopWidth"], ["right", "borderRightWidth"]]), "NAME")
+                    .appendField(new Blockly.FieldDropdown([["all", "borderWidth"], ["bottom", "borderBottomWidth"], ["left", "borderLeftWidth"], ["top", "borderTopWidth"], ["right", "borderRightWidth"]]), "NAME")
                     .appendField("width")
                     .appendField(new Blockly.FieldNumber(0), "VALUE");
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
+                this.setPreviousStatement(true, "STYLEPROP");
+                this.setNextStatement(true, "STYLEPROP");
                 this.setColour(230);
                 this.setTooltip('');
                 this.setHelpUrl('');
@@ -280,8 +291,8 @@ export namespace BlocklyConfig {
                     .appendField(new Blockly.FieldDropdown([["---", "flex"], ["basis", "flexBasis"], ["grow", "flexGrow"], ["shrink", "flexShrink"]]), "NAME")
                     .appendField("value")
                     .appendField(new Blockly.FieldNumber(0), "VALUE");
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
+                this.setPreviousStatement(true, "STYLEPROP");
+                this.setNextStatement(true, "STYLEPROP");
                 this.setColour(230);
                 this.setTooltip('');
                 this.setHelpUrl('');
@@ -295,8 +306,8 @@ export namespace BlocklyConfig {
                     .appendField(new Blockly.FieldDropdown([["height", "height"], ["width", "width"], ["max height", "maxHeight"], ["max width", "maxWidth"], ["min height", "minHeight"], ["min width", "minWidth"]]), "NAME")
                     .appendField("value")
                     .appendField(new Blockly.FieldNumber(0), "VALUE");
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
+                this.setPreviousStatement(true, "STYLEPROP");
+                this.setNextStatement(true, "STYLEPROP");
                 this.setColour(230);
                 this.setTooltip('');
                 this.setHelpUrl('');
@@ -310,8 +321,8 @@ export namespace BlocklyConfig {
                     .appendField(new Blockly.FieldDropdown([["all", "margin"], ["bottom", "marginBottom"], ["horizontal", "marginHorizontal"], ["left", "marginLeft"], ["right", "marginRight"], ["top", "marginTop"], ["vertical", "marginVertical"]]), "NAME")
                     .appendField("value")
                     .appendField(new Blockly.FieldNumber(0), "VALUE");
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
+                this.setPreviousStatement(true, "STYLEPROP");
+                this.setNextStatement(true, "STYLEPROP");
                 this.setColour(230);
                 this.setTooltip('');
                 this.setHelpUrl('');
@@ -325,8 +336,8 @@ export namespace BlocklyConfig {
                     .appendField(new Blockly.FieldDropdown([["all", "padding"], ["bottom", "paddingBottom"], ["horizontal", "paddingHorizontal"], ["left", "paddingLeft"], ["right", "paddingRight"], ["top", "paddingTop"], ["vertical", "paddingVertical"]]), "NAME")
                     .appendField("value")
                     .appendField(new Blockly.FieldNumber(0), "VALUE");
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
+                this.setPreviousStatement(true, "STYLEPROP");
+                this.setNextStatement(true, "STYLEPROP");
                 this.setColour(230);
                 this.setTooltip('');
                 this.setHelpUrl('');
@@ -377,8 +388,8 @@ export namespace BlocklyConfig {
                 this.appendDummyInput()
                     .appendField("image tint color")
                     .appendField(new Blockly.FieldColour("#ff0000"), "VALUE");
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
+                this.setPreviousStatement(true, "STYLEPROP");
+                this.setNextStatement(true, "STYLEPROP");
                 this.setColour(285);
                 this.setTooltip('tint the image');
                 this.setHelpUrl('');
@@ -390,8 +401,8 @@ export namespace BlocklyConfig {
                 this.appendDummyInput()
                     .appendField("text color")
                     .appendField(new Blockly.FieldColour("#ff0000"), "VALUE");
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
+                this.setPreviousStatement(true, "STYLEPROP");
+                this.setNextStatement(true, "STYLEPROP");
                 this.setColour(285);
                 this.setTooltip('');
                 this.setHelpUrl('');
@@ -403,8 +414,8 @@ export namespace BlocklyConfig {
                 this.appendDummyInput()
                     .appendField("font family")
                     .appendField(new Blockly.FieldTextInput("sans-serif", null), "VALUE");
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
+                this.setPreviousStatement(true, "STYLEPROP");
+                this.setNextStatement(true, "STYLEPROP");
                 this.setColour(285);
                 this.setTooltip('');
                 this.setHelpUrl('');
@@ -493,11 +504,11 @@ export namespace BlocklyConfig {
 
         Blockly.JavaScript['user_interface'] = (block: Blockly.Block) => {
             var statements_elements = Blockly.JavaScript.statementToCode(block, 'elements');
-            let code = '\nCgRt.setTargetRenderProc(() => {';
+            let code = '\nvar __f,result={};\nCgRt.setTargetRenderProc(() => {';
             code += '\nCgRt.pushCont();\n';
             code += statements_elements;
             code += '\nlet cl=CgRt.popCont();'
-            code += '\nreturn CgRt.createElement("View", null, ...cl);\n});';
+            code += '\nreturn CgRt.createElement(CgRt.Viewr, {style:{height:600}}, ...cl);\n});';
             return code;
         };
 
@@ -509,7 +520,7 @@ export namespace BlocklyConfig {
             //styles
             let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
             if (value_style && value_style !== '') {
-                code += value_style + '\nCgRt.addProp("style",CgRt.getStyles());'
+                code += '\nCgRt.addProp("style",' + value_style + ');';
             }
             //endprops
             code += '\nlet p=CgRt.getProps();';
@@ -519,7 +530,7 @@ export namespace BlocklyConfig {
             code += statements_child_elements;
 
             code += '}\nlet cl=CgRt.popCont();';
-            code += '\nCgRt.pushElem(CgRt.createElement(CgRt.View, p,...cl));\n}\n';
+            code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Viewr, p,...cl));\n}\n';
             return code;
         };
 
@@ -531,12 +542,12 @@ export namespace BlocklyConfig {
             //styles
             let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
             if (value_style && value_style !== '') {
-                code += value_style + '\nCgRt.addProp("style",CgRt.getStyles());'
+                code += '\nCgRt.addProp("style",' + value_style + ');';
             }
             //endprops
             code += '\nlet p=CgRt.getProps();';
 
-            code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Text,CgRt.getProps(),'
+            code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Textr,p,'
             code += value_text_value && value_text_value !== '' ? value_text_value : "''";
             code += '));\n}\n';
             return code;
@@ -544,97 +555,100 @@ export namespace BlocklyConfig {
 
         Blockly.JavaScript['image_element'] = (block: Blockly.Block) => {
             var value_name = Blockly.JavaScript.valueToCode(block, 'URL', Blockly.JavaScript.ORDER_ASSIGNMENT);
-            let code = '\nCgRt.beginProps();\n';
             //properties
-            code += '\nCgRt.beginProps();\n';
+            let code = '\nCgRt.beginProps();\n';
 
+            code += '\nCgRt.addProp("source",{uri:';
+            code += value_name && value_name !== '' ? value_name : "''";
+            code += '});'
             //styles
             let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
             if (value_style && value_style !== '') {
-                code += value_style + '\nCgRt.addProp("style",CgRt.getStyles());'
+                code += '\nCgRt.addProp("style",' + value_style + ');';
             }
 
-            code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Imager,{style:{width:100,height:100},source:{uri:'
-            code += value_name && value_name !== '' ? value_name : "''";
-            code += '}}));';
+            //endprops
+            code += '\nlet p=CgRt.getProps();';
+
+            code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Imager,p))';
             return code;
         };
-
-    }
-    function genStyleProp(name: string, value: string): string {
-        return `CgRt.addStyle({name},{value});`;
-    }
-    export function initStyleBlockCodeGenerators(): void {
         Blockly.JavaScript['styledef'] = (block: Blockly.Block) => {
             let statements_name = Blockly.JavaScript.statementToCode(block, 'STYLES');
-            let code = '\nCgRt.beginStyles();';
+            let code = '\n__f= function(){\nlet result={};';
             code += statements_name;
-            code += '\n';
-            // TODO: Change ORDER_NONE to the correct strength.
-            return [code, Blockly.JavaScript.ORDER_ATOMIC];
+            code += '\nreturn result;\n}()';
+            return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
         };
 
+        Blockly.JavaScript['stylejoindef'] = function (block: Blockly.Block) {
+            var value_stylearray = Blockly.JavaScript.valueToCode(block, 'STYLEARRAY', Blockly.JavaScript.ORDER_ATOMIC);
+            var code = value_stylearray;
+            return [code, Blockly.JavaScript.ORDER_ATOMIC];
+        };
+    }
+
+    function genStyleStringProp(name: string, value: string): string {
+        return '\nresult.' + name + '="' + value + '";';
+    }
+
+    function genStyleNumberProp(name: string, value: string): string {
+        return '\nresult.' + name + '=' + value + ';';
+    }
+
+    export function initStyleBlockCodeGenerators(): void {
         Blockly.JavaScript['styleprop_aligncontent'] = (block: Blockly.Block) => {
             var dropdown_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = genStyleProp('alignContent',dropdown_value);
+            var code = genStyleStringProp('alignContent', dropdown_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_alignitems'] = (block: Blockly.Block) => {
             var dropdown_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('alignItems', dropdown_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_alignself'] = (block: Blockly.Block) => {
             var dropdown_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('alignSelf', dropdown_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_flexdirection'] = (block: Blockly.Block) => {
             var dropdown_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('flexDirection', dropdown_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_justifycontent'] = (block: Blockly.Block) => {
             var dropdown_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('justifyContent', dropdown_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_flexwrap'] = (block: Blockly.Block) => {
             var dropdown_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('flexWrap', dropdown_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_position'] = (block: Blockly.Block) => {
             var dropdown_name = block.getFieldValue('NAME');
             var number_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleNumberProp(dropdown_name, number_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_aspectratio'] = (block: Blockly.Block) => {
             var number_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleNumberProp('aspectRatio', number_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_backgroundcolor'] = (block: Blockly.Block) => {
             var colour_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('backgroundColor', colour_value);
             return code;
         };
 
@@ -649,147 +663,127 @@ export namespace BlocklyConfig {
         Blockly.JavaScript['styleprop_bordercolor'] = (block: Blockly.Block) => {
             var dropdown_name = block.getFieldValue('NAME');
             var colour_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp(dropdown_name, colour_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_borderradius'] = (block: Blockly.Block) => {
             var dropdown_name = block.getFieldValue('NAME');
             var number_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleNumberProp(dropdown_name, number_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_borderwidth'] = (block: Blockly.Block) => {
             var dropdown_name = block.getFieldValue('NAME');
             var number_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleNumberProp(dropdown_name, number_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_borderstyle'] = (block: Blockly.Block) => {
             var dropdown_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('borderStyle', dropdown_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_flexvalues'] = (block: Blockly.Block) => {
             var dropdown_name = block.getFieldValue('NAME');
             var number_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleNumberProp(dropdown_name, number_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_size'] = (block: Blockly.Block) => {
             var dropdown_name = block.getFieldValue('NAME');
             var number_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleNumberProp(dropdown_name, number_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_margin'] = (block: Blockly.Block) => {
             var dropdown_name = block.getFieldValue('NAME');
             var number_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleNumberProp(dropdown_name, number_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_padding'] = (block: Blockly.Block) => {
             var dropdown_name = block.getFieldValue('NAME');
             var number_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleNumberProp(dropdown_name, number_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_overflow'] = (block: Blockly.Block) => {
             var dropdown_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('overflow', dropdown_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_opacity'] = (block: Blockly.Block) => {
             var number_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleNumberProp('opacity', number_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_image_resizemode'] = (block: Blockly.Block) => {
             var dropdown_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('resizeMode', dropdown_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_image_tintcolor'] = (block: Blockly.Block) => {
             var colour_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('tintColor', colour_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_text_color'] = (block: Blockly.Block) => {
             var colour_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('color', colour_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_text_fontfamily'] = (block: Blockly.Block) => {
             var text_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('fontFamily', text_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_text_fontsize'] = (block: Blockly.Block) => {
             var number_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleNumberProp('fontSize', number_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_text_fontstyle'] = (block: Blockly.Block) => {
             var dropdown_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('fontStyle', dropdown_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_text_fontweight'] = (block: Blockly.Block) => {
             var dropdown_value = block.getFieldValue('value');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('fontWeight', dropdown_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_text_lineheight'] = (block: Blockly.Block) => {
             var number_value = block.getFieldValue('VALUE');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleNumberProp('lineHeight', number_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_text_textalign'] = (block: Blockly.Block) => {
             var dropdown_value = block.getFieldValue('value');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('textAlign', dropdown_value);
             return code;
         };
 
         Blockly.JavaScript['styleprop_text_textdecorationline'] = (block: Blockly.Block) => {
             var dropdown_value = block.getFieldValue('value');
-            // TODO: Assemble JavaScript into code variable.
-            var code = '...;\n';
+            var code = genStyleStringProp('textDecorationLine', dropdown_value);
             return code;
         };
     }

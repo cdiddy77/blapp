@@ -8,7 +8,7 @@ interface TargetProps {
 }
 interface TargetState {
     // renderProc: () => any;
-    evalErrMsg: string;
+    evalErrMsg: Error;
 }
 export class Target extends React.Component<TargetProps, TargetState>{
     static renderProc: () => any;
@@ -18,24 +18,27 @@ export class Target extends React.Component<TargetProps, TargetState>{
             // renderProc: null,
             evalErrMsg: null
         };
-        this.onCodeChange = this.onCodeChange.bind(this);
+        this.onErrMsgChange = this.onErrMsgChange.bind(this);
         //this.setRenderProc = this.setRenderProc.bind(this);
     }
     componentDidMount() {
-        this.props.model.on('code_change', this.onCodeChange);
-        this.onCodeChange(this.props.model.code);
+        this.props.model.on('evalstatus_change', this.onErrMsgChange);
+        this.onErrMsgChange(this.props.model.lastEvalError);
     }
     componentWillUnmount() {
-        this.props.model.off('code_change', this.onCodeChange);
+        this.props.model.off('evalstatus_change', this.onErrMsgChange);
     }
 
-    onCodeChange(newCode: string) {
+    onErrMsgChange(err: Error) {
+        if (this.state.evalErrMsg !== err) {
+            this.setState({ evalErrMsg: err });
+        }
     }
 
-    renderErrorMessage(errMsg: string) {
+    renderErrorMessage(err: Error) {
         return (
             <View>
-                <Text>{errMsg}</Text>
+                <Text>{err.name} : {err.message}</Text>
             </View>
         );
     }
@@ -50,6 +53,12 @@ export class Target extends React.Component<TargetProps, TargetState>{
                 result = Target.renderProc();
                 return result;
             } catch (e) {
+                // this will trigger a re-render, so 
+                // we wait until we are done rendering.
+                setTimeout(() => {
+                    this.setState({ evalErrMsg: e });
+                    this.props.model.lastEvalError = e;
+                });
                 return this.renderErrorMessage(e);
             }
         }
