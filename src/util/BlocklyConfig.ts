@@ -18,7 +18,8 @@ export namespace BlocklyConfig {
             init: function () {
                 this.appendDummyInput()
                     .appendField(new Blockly.FieldImage("media/av/ic_web_white_48dp.png", 16, 16, "*"))
-                    .appendField("container");
+                    .appendField("container")
+                    .appendField(new Blockly.FieldTextInput("", null), "NAME");
                 this.appendStatementInput("child elements")
                     .setCheck(null);
                 this.appendValueInput("style")
@@ -48,7 +49,7 @@ export namespace BlocklyConfig {
                     .appendField("formatting");
                 this.setPreviousStatement(true, null);
                 this.setNextStatement(true, null);
-                this.setColour(285);
+                this.setColour(195);
                 this.setTooltip('');
                 this.setHelpUrl('');
             }
@@ -69,7 +70,7 @@ export namespace BlocklyConfig {
                     .appendField("visuals");
                 this.setPreviousStatement(true, null);
                 this.setNextStatement(true, null);
-                this.setColour(285);
+                this.setColour(135);
                 this.setTooltip('');
                 this.setHelpUrl('');
             }
@@ -530,9 +531,13 @@ export namespace BlocklyConfig {
                         .appendField("size")
                         .appendField(new Blockly.FieldNumber(24, 8, 184), "SIZE")
                         .appendField(new Blockly.FieldDropdown([["dark", "black"], ["light", "white"]]), "SHADE");
+                    this.appendValueInput("style")
+                        .setCheck("STYLE")
+                        .setAlign(Blockly.ALIGN_RIGHT)
+                        .appendField("visuals");
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
-                    this.setColour(285);
+                    this.setColour(75);
                     this.setTooltip('');
                     this.setHelpUrl('');
                 }
@@ -595,7 +600,7 @@ export namespace BlocklyConfig {
         Blockly.JavaScript['image_element'] = (block: Blockly.Block) => {
             var value_name = Blockly.JavaScript.valueToCode(block, 'URL', Blockly.JavaScript.ORDER_ASSIGNMENT);
             //properties
-            let code = '\nCgRt.beginProps();\n';
+            let code = '\n{\nCgRt.beginProps();\n';
 
             code += '\nCgRt.addProp("source",{uri:';
             code += value_name && value_name !== '' ? value_name : "''";
@@ -609,7 +614,7 @@ export namespace BlocklyConfig {
             //endprops
             code += '\nlet p=CgRt.getProps();';
 
-            code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Imager,p));';
+            code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Imager,p));\n}';
             return code;
         };
         Blockly.JavaScript['styledef'] = (block: Blockly.Block) => {
@@ -839,12 +844,23 @@ export namespace BlocklyConfig {
                 //properties
                 let code = '\n{\nCgRt.beginProps();\n';
 
+
                 code += '\nCgRt.addProp("source",{uri:"';
                 code += dropdown_value && dropdown_value !== ''
                     ? ("media/" + k + "/ic_" + dropdown_value + "_" + dropdown_shade + "_48dp.png")
                     : "''";
                 code += '"});'
-                code += '\nCgRt.addProp("style",{width:' + number_size + ',height:' + number_size + '});';
+
+                //styles
+                let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
+                let default_style = '[{width:' + number_size + ',height:' + number_size;
+
+                if (value_style && value_style !== '') {
+                    default_style += '},' + value_style + ']';
+                } else {
+                    default_style += '}]';
+                }
+                code += '\nCgRt.addProp("style",' + default_style + ');';
 
                 //endprops
                 code += '\nlet p=CgRt.getProps();';
