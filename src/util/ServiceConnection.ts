@@ -46,3 +46,7 @@ export function init(appModel: AppModel) {
     });
 }
 
+export function getPairingCode():string{
+    return sessionId;
+}
+

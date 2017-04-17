@@ -30,10 +30,13 @@ export class Target extends React.Component<TargetProps, TargetState>{
     }
 
     onModelPropChange(prop: string) {
-        if (prop === 'lastEvalError')
+        if (prop === 'lastEvalError') {
             if (this.state.evalErrMsg !== this.props.model.lastEvalError) {
                 this.setState({ evalErrMsg: this.props.model.lastEvalError });
             }
+        }else if(prop==='code'){
+            // nothing to do. The re-render is caused at the App level
+        }
     }
 
     renderErrorMessage(err: Error) {

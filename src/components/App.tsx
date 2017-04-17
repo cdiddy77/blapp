@@ -8,6 +8,7 @@ import { AppModel } from '../models/AppModel';
 import { TabbedArea, TabPane } from './TabbedArea';
 import { Target } from './Target';
 import { TestTarget } from './TestTarget';
+import * as svcConn from '../util/ServiceConnection';
 // import * as Blockly from '../localtypings/blockly';
 
 interface AppProps {
@@ -46,6 +47,7 @@ class App extends React.Component<AppProps, AppState> {
         <div className='row'>
           <div className="App-header">
             <h2>Blapp</h2>
+            <p>{svcConn.getPairingCode()}</p>
           </div>
         </div>
         <div className='row'>

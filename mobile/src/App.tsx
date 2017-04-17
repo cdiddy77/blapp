@@ -42,6 +42,7 @@ export default class mobile extends React.Component<AppProps, AppState> {
     console.log('onSettingsOk');
     this.model.saveSettings();
     this.setState({ isSettingsShown: false });
+    svcConn.resetConnection(this.model);
   }
   render() {
     console.log('appRENDER');

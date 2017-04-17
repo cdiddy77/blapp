@@ -44,6 +44,11 @@ export function resetConnection(appModel: AppModel) {
         });
         socket.on('simctrlmsg', (data: any) => {
             console.log('simctrlmsg', JSON.stringify(data));
+            if (data.type === 'code_change') {
+                appModel.setProperty('code', data.code);
+            } else if (data.type === 'evalstatus_change') {
+                appModel.setProperty('lastEvalError', data.code);
+            }
         });
         socket.on('disconnect', () => {
             console.log('disconnect');
