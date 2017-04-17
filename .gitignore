@@ -2,5 +2,3 @@ node_modules
 temp/
 .vscode/
 npm-debug.log
-src/**/*.js
-src/**/*.js.map

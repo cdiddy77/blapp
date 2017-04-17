@@ -1,0 +1,31 @@
+{
+  "name": "mobile",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "test": "jest",
+    "start": "node node_modules/react-native/local-cli/cli.js start --transformer node_modules/react-native-sm-transformer --skipflow",
+    "android": "adb reverse tcp:8081 tcp:8081 && node node_modules/react-native/local-cli/cli.js run-android",
+    "ios": "node node_modules/react-native/local-cli/cli.js run-ios",
+    "prebuild": "rm -rf build",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "react": "16.0.0-alpha.6",
+    "react-native": "0.43.3",
+    "socket.io-client": "^1.7.3"
+  },
+  "devDependencies": {
+    "@types/socket.io-client": "^1.4.29",
+    "babel-jest": "19.0.0",
+    "babel-preset-react-native": "1.9.1",
+    "jest": "19.0.2",
+    "react-native-sm-transformer": "^1.0.3",
+    "react-test-renderer": "16.0.0-alpha.6",
+    "tslint": "^5.1.0",
+    "typescript": "^2.2.2"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
+}

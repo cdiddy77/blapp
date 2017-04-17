@@ -6,6 +6,9 @@
     "@types/react": "^15.0.21",
     "@types/react-dom": "^0.14.23",
     "@types/react-native": "^0.43.0",
+    "@types/socket.io": "^1.4.29",
+    "@types/socket.io-client": "^1.4.29",
+    "@types/uuid": "^2.0.29",
     "autoprefixer": "6.7.2",
     "babel-core": "6.22.1",
     "babel-eslint": "7.1.1",
@@ -53,7 +56,10 @@
   "dependencies": {
     "react": "~15.4.1",
     "react-dom": "~15.4.1",
-    "react-native-web": "0.0.81"
+    "react-native-web": "0.0.81",
+    "socket.io": "^1.7.3",
+    "socket.io-client": "^1.7.3",
+    "uuid": "^3.0.1"
   },
   "scripts": {
     "start": "node scripts/start.js",

@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "target": "es2015",
+        "module": "es2015",
+        "jsx": "react",
+        "outDir": "build",
+        "rootDir": "src",
+        "allowSyntheticDefaultImports": true,
+        "noImplicitAny": true,
+        "experimentalDecorators": true,
+        "preserveConstEnums": true,
+        "allowJs": true,
+        "sourceMap": true,
+        "typeRoots": [
+            "node_modules/@types"
+        ]
+    },
+    "filesGlob": [
+        "src/**/*.ts",
+        "src/**/*.tsx"
+    ],
+    "exclude": [
+        "index.android.js",
+        "index.ios.js",
+        "build",
+        "__tests__",
+        "node_modules"
+    ]
+}

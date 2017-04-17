@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "sourceMap": true,
+        "target": "es5",
+        "allowJs": false,
+        "noImplicitAny": true,
+        "types": [
+            "node",
+            "socket.io-client",
+            "uuid"
+        ]
+    },
+    "files": [
+        "./src/server.ts"
+    ],
+    "include": [
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "**/*.js",
+        "node_modules"
+    ]
+}

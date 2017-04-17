@@ -5,7 +5,13 @@
         "target": "es6",
         "allowJs": false,
         "jsx": "react",
-        "noImplicitAny": true
+        "noImplicitAny": true,
+        "types": [
+            "react",
+            "react-dom",
+            "react-native",
+            "socket.io-client"
+        ]
     },
     "include": [
         "src/**/*.ts",
@@ -14,5 +20,5 @@
     "exclude": [
         "node_modules/",
         "**/*.js"
-    ]
+     ]
 }
