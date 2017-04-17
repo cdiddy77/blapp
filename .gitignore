@@ -1,4 +1,4 @@
 node_modules
 temp/
-.vscode/
+# .vscode/
 npm-debug.log
