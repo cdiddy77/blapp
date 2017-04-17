@@ -1,6 +1,6 @@
 import * as React from 'react';
 import '../App.css';
-import * as jsutil from '../util/jsutil';
+import * as jsutil from '../../../shared/src/util/jsutil';
 
 interface TabbedAreaProps {
     activeIndex?: number;

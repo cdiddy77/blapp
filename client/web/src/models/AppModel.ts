@@ -2,7 +2,7 @@
 /// <reference path="../localtypings/blockly.d.ts" />
 
 
-import * as jsutil from '../util/jsutil';
+import * as jsutil from '../../../shared/src/util/jsutil';
 import { ModelBase } from './ModelBase';
 import { BlocklyConfig } from '../util/BlocklyConfig';
 import { CodegenRuntime } from '../util/CodegenRuntime';

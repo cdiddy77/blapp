@@ -1,4 +1,4 @@
-import * as jsutil from './jsutil';
+import * as jsutil from '../../../shared/src/util/jsutil';
 import { Target } from '../components/Target';
 import * as React from 'react';
 import { View, Text, Image } from 'react-native';

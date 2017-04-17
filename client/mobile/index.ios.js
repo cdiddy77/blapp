@@ -12,6 +12,6 @@ import {
   View
 } from 'react-native';
 
-import mobile from './build/App';
+import mobile from './build/mobile/src/App';
 
 AppRegistry.registerComponent('mobile', () => mobile);

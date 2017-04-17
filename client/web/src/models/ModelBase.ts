@@ -1,4 +1,4 @@
-import * as jsutil from '../util/jsutil';
+import * as jsutil from '../../../shared/src/util/jsutil';
 
 type ModelEventCallback = (args: any) => void;
 
