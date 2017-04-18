@@ -36,16 +36,75 @@ export class AppModel extends ModelBase {
         CgRt.setTargetRenderProc(null);
         try {
             eval(this.code);
+            // eval(this.testCode());
             this.setProperty('lastEvalError', null);
         } catch (e) {
             this.setProperty('lastEvalError', e);
         }
     }
 
+    private testCode(): string {
+        // React.createElement()
+        return `
+var rowstyle, colstyle;
 
+
+
+var __f,result={};
+CgRt.setTargetRenderProc(function(){
+CgRt.pushCont();
+  {
+  CgRt.beginProps();
+
+  CgRt.addProp("style",rowstyle);
+  var p113=CgRt.getProps();
+  CgRt.pushCont();
+  {  {
+    CgRt.beginProps();
+
+    var p111=CgRt.getProps();
+    CgRt.pushElem(CgRt.createElement(CgRt.Textr,p111,['jhjhjh']));
+    }
+    {
+    CgRt.beginProps();
+
+    var p112=CgRt.getProps();
+    CgRt.pushElem(CgRt.createElement(CgRt.Textr,p112,['line 2']));
+    }
+  }
+  var cl114=CgRt.popCont();
+  CgRt.pushElem(CgRt.createElement(CgRt.Viewr, p113,cl114));
+  }
+  {
+  CgRt.beginProps();
+
+  var p115=CgRt.getProps();
+  CgRt.pushElem(CgRt.createElement(CgRt.Textr,p115,['line 3']));
+  }
+
+var cl=CgRt.popCont();
+return CgRt.createElement(CgRt.Viewr, {style:{backgroundColor:"white",height:600}}, cl);
+});
+rowstyle =
+__f= function(){
+var result={};
+  result.flexDirection="row";
+  result.backgroundColor="#ff0000";
+return result;
+}();
+
+colstyle =
+__f= function(){
+var result={};
+  result.flexDirection="column";
+return result;
+}();
+`;
+
+    }
     setProperty<T>(prop: keyof AppModel, v: T) {
         (<any>this)[prop] = v;
-        if(prop=='code'){
+        if (prop == 'code') {
             this.evalCode();
         }
         this.fire("change", prop);

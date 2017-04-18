@@ -45,7 +45,7 @@ export const styles = StyleSheet.create({
     marginTop: (Platform.OS === 'ios') ? 20 : 0
   },
   textInput: {
-    height: 20,
+    height: (Platform.OS == 'ios') ? 20: 60,
     fontSize: 18,
     marginTop: 5,
     marginBottom: 10,
@@ -67,4 +67,7 @@ export const styles = StyleSheet.create({
     color: '#333333',
     marginBottom: 5,
   },
+  targetErrorText:{
+    fontSize:18
+  }
 });

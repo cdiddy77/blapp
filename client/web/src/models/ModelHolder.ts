@@ -2,7 +2,25 @@ import * as jsutil from '../../../shared/src/util/jsutil';
 
 type ModelEventCallback = (args: any) => void;
 
-export class ModelBase {
+export class ModelHolder<T> {
+
+    constructor(m: T) {
+        this._data = m;
+
+    }
+
+    private _data: T;
+
+    setProperty<P>(prop: keyof T, v: P) {
+        (<any>this._data)[prop] = v;
+        this.onPropertySet(prop);
+        this.fire("change", prop);
+    }
+
+    get data(): Readonly<T> {
+        return this._data;
+    }
+
     eventHandlers: jsutil.Map<ModelEventCallback[]> = {};
 
     // this is what is known as a "self-serve" model. You can subscribe to 
@@ -25,6 +43,11 @@ export class ModelBase {
                 console.log('could not find event-handler to remove', eventName);
         }
     }
+
+    // meant to be overridden by derived class
+    protected onPropertySet<P>(prop: keyof T) {
+    }
+
     protected fire(eventName: string, args?: any) {
         if (this.eventHandlers[eventName]) {
             this.eventHandlers[eventName].forEach((v: any, i: number, arr: any[]) => {

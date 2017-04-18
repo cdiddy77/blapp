@@ -1,4 +1,5 @@
 import { AppModel } from '../models/AppModel';
+import * as svcTypes from '../../../shared/src/ServiceTypes';
 
 // window.navigator.userAgent = 'ReactNative';
 
@@ -42,7 +43,7 @@ export function resetConnection(appModel: AppModel) {
         socket.on('error', (err: any) => {
             console.log('error', err);
         });
-        socket.on('simctrlmsg', (data: any) => {
+        socket.on('simctrlmsg', (data: svcTypes.ControlMessage) => {
             console.log('simctrlmsg', JSON.stringify(data));
             if (data.type === 'code_change') {
                 appModel.setProperty('code', data.code);
@@ -54,27 +55,30 @@ export function resetConnection(appModel: AppModel) {
             console.log('disconnect');
             appModel.setProperty('connectionState', 'disconnected');
             pairingCode = null;
-        })
+        });
     } else if (pairingCode !== appModel.pairingCode) {
         initPairing(appModel);
     }
 }
 
 function initPairing(appModel: AppModel) {
-    console.log(`initPairing:pairingCode={pairingCode},appModel.pairingCode={appModel.pairingCode}`);
+    console.log(`initPairing:pairingCode=${pairingCode},appModel.pairingCode=${appModel.pairingCode}`);
     if (pairingCode) {
         socket.emit('leaveSessionRequest', pairingCode);
     }
     if (appModel.pairingCode) {
         socket.emit('joinSessionRequest', appModel.pairingCode);
-        socket.on('joinSessionResponse', (data: string) => {
-            if (data == 'noexist') {
+        socket.on('joinSessionResponse', (data: svcTypes.JoinSessionResponseMessage) => {
+            if (data.pairingCode == 'noexist') {
                 appModel.setProperty('connectionState', 'unrecognized pairing code');
             } else {
                 appModel.setProperty('connectionState', 'joined');
             }
+            if (data.executeCode) {
+                appModel.setProperty('code', data.executeCode);
+            }
             console.log('joinSessionResponse', data);
-            pairingCode = data;
+            pairingCode = data.pairingCode;
             // comment
         });
     }

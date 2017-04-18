@@ -2,6 +2,7 @@ import * as React from 'react';
 import { View, Text, Image } from 'react-native';
 
 import { AppModel } from '../models/AppModel';
+import { styles } from '../styles';
 
 interface TargetProps {
     model: AppModel;
@@ -39,10 +40,10 @@ export class Target extends React.Component<TargetProps, TargetState>{
         }
     }
 
-    renderErrorMessage(err: Error) {
+    renderErrorMessage(err: Error,context:string) {
         return (
             <View>
-                <Text>{err.name} : {err.message}</Text>
+                <Text style={[styles.targetErrorText]}>{context} | {err.name} : {err.message} {JSON.stringify(err)}</Text>
             </View>
         );
     }
@@ -50,7 +51,7 @@ export class Target extends React.Component<TargetProps, TargetState>{
     render() {
         let result: any;
         if (this.state.evalErrMsg != null) {
-            return this.renderErrorMessage(this.state.evalErrMsg);
+            return this.renderErrorMessage(this.state.evalErrMsg,'load');
         }
         else if (Target.renderProc != null) {
             try {
@@ -63,7 +64,7 @@ export class Target extends React.Component<TargetProps, TargetState>{
                     this.setState({ evalErrMsg: e });
                     this.props.model.setProperty('lastEvalError', e);
                 });
-                return this.renderErrorMessage(e);
+                return this.renderErrorMessage(e,'render');
             }
         }
         const someText = 'No UI';

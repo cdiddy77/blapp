@@ -17,6 +17,7 @@ interface AppProps {
 interface AppState {
   code: string;
   isInErrorState: boolean;
+  pairingCode: string;
 }
 
 class App extends React.Component<AppProps, AppState> {
@@ -25,19 +26,23 @@ class App extends React.Component<AppProps, AppState> {
 
   constructor(props: AppProps) {
     super(props);
-    this.state = { code: '', isInErrorState: false };
+    this.state = { code: '', isInErrorState: false, pairingCode: null };
   }
   componentDidMount() {
     this.props.model.initializeBlockly(this.blocksArea);
-    this.props.model.on('code_change', newCode => {
-      this.setState({
-        code: newCode,
-        isInErrorState: this.props.model.lastEvalError != null
-      });
-    });
-    this.props.model.on('evalstatus_change', () => {
-      console.log('evalstatuschange');
-      this.setState({ isInErrorState: this.props.model.lastEvalError != null });
+    this.props.model.on('change', prop => {
+      if (prop == 'code') {
+        this.setState({
+          code: this.props.model.data.code,
+          isInErrorState: this.props.model.data.lastEvalError != null
+        });
+      } else if (prop === 'lastEvalError') {
+        console.log('evalstatuschange');
+        this.setState({ isInErrorState: this.props.model.data.lastEvalError != null });
+      } else if (prop === 'pairingCode') {
+        console.log('painringCodeChange',this.props.model.data.pairingCode);
+        this.setState({ pairingCode: this.props.model.data.pairingCode });
+      }
     });
   }
 
@@ -47,7 +52,7 @@ class App extends React.Component<AppProps, AppState> {
         <div className='row'>
           <div className="App-header">
             <h2>New Blapp City</h2>
-            <p>pairing code: {svcConn.getPairingCode()}</p>
+            <p>pairing code: {this.state.pairingCode}</p>
           </div>
         </div>
         <div className='row'>
@@ -62,10 +67,10 @@ class App extends React.Component<AppProps, AppState> {
               <TabPane display={this.state.isInErrorState ? 'Preview(ERR)' : 'Preview'}>
                 <div><Target model={this.props.model} /></div>
               </TabPane>
-             <TabPane display="Test">
-                <div><TestTarget/></div>
+              <TabPane display="Test">
+                <div><TestTarget /></div>
               </TabPane>
-             </TabbedArea>
+            </TabbedArea>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { AppModel } from '../models/AppModel';
+import * as svcTypes from '../../../shared/src/ServiceTypes';
 import * as io from 'socket.io-client';
 var sessionId: string;
 var socket: SocketIOClient.Socket = io({
@@ -7,19 +8,22 @@ var socket: SocketIOClient.Socket = io({
 
 export function init(appModel: AppModel) {
 
-    appModel.on('code_change', (args) => {
-        socket.emit('simctrlmsg', sessionId, {
-            type: 'code_change',
-            code: appModel.code
-        });
-        console.log('sent code_change');
-    });
-    appModel.on('evalstatus_change', (args) => {
-        socket.emit('simctrlmsg', sessionId, {
-            type: 'evalstatus_change',
-            code: appModel.lastEvalError
-        });
-        console.log('sent evalstatus_change');
+    appModel.on('change', (prop) => {
+        if (sessionId == null) {
+            console.log('app changed, but we have no session id, ignoring');
+            return;
+        }
+        if (prop == 'code') {
+            socket.emit(
+                'simctrlmsg',
+                sessionId,
+                svcTypes.createCodeChangeControlMessage(appModel.data.code));
+            console.log('sent code_change');
+        } else if (prop === 'lastEvalError') {
+            socket.emit('simctrlmsg', sessionId,
+                svcTypes.createEvalStatusChangeControlMessage(appModel.data.lastEvalError));
+            console.log('sent evalstatus_change');
+        }
     });
 
     socket.on('connect', () => {
@@ -35,18 +39,19 @@ export function init(appModel: AppModel) {
     socket.on('error', (err: any) => {
         console.log('error', err);
     });
-    socket.on('createSessionResponse', (data: string) => {
+    socket.on('createSessionResponse', (data: svcTypes.CreateSessionResponseMessage) => {
         console.log('createSessionResponse', data);
-        sessionId = data;
-        // comment
+        sessionId = data.pairingCode;
+        appModel.setProperty('pairingCode', sessionId);
+    });
+    socket.on('disconnect', () => {
+        console.log('disconnect');
+        // appModel.setProperty('connectionState', 'disconnected');
+        sessionId = null;
     });
 
-    socket.on('simctrlmsg', (data: any) => {
-        console.log('simctrlmsg', data);
+    socket.on('simctrlmsg', (data: svcTypes.ControlMessage) => {
+        console.log('simctrlmsg');
     });
-}
-
-export function getPairingCode():string{
-    return sessionId;
 }
 

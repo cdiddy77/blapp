@@ -53,12 +53,21 @@ export default class mobile extends React.Component<AppProps, AppState> {
           <Button
             title={'Set Pairing Code'}
             onPress={() => { this.onBackPress() }} />
-            <Text 
+          <View style={[styles.column]}>
+            <Text
               style={{
-                flex:1,
-                flexWrap:'wrap'}}
+                flex: 1,
+                flexWrap: 'wrap'
+              }}
             >connection status: {this.model.connectionState}</Text>
-        </View >
+            <Text
+              style={{
+                flex: 1,
+                flexWrap: 'wrap'
+              }}
+            >pairing code: {this.model.pairingCode}</Text>
+          </View >
+        </View>
         <View style={[styles.greenBorder, styles.targetContainer]} >
           <Target model={this.model} />
         </View>
@@ -66,6 +75,7 @@ export default class mobile extends React.Component<AppProps, AppState> {
           animationType={"fade"}
           visible={this.state.isSettingsShown}
           transparent={true}
+          onRequestClose={()=>{}}
         >
           <View style={[styles.column, {
             marginTop: 50,

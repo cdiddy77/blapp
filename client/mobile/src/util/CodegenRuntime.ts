@@ -42,9 +42,13 @@ export namespace CodegenRuntime {
     export function getProps(): any {
         return curprops;
     }
-    export function createElement(...args:any[]){
+      export function createElement(typ: any, props: any, args?: any[]) {
         // console.log('createElement',args[0],JSON.stringify(args[1]));
-        return React.createElement(args[0],args[1],...args.slice(2));
+        if (args) {
+            return React.createElement(typ, props, ...args);
+        } else {
+            return React.createElement(typ, props);
+        }
     }
     // export var createElement = React.createElement;
 

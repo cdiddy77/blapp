@@ -3,36 +3,27 @@
 
 
 import * as jsutil from '../../../shared/src/util/jsutil';
-import { ModelBase } from './ModelBase';
+import { ModelHolder } from './ModelHolder';
 import { BlocklyConfig } from '../util/BlocklyConfig';
 import { CodegenRuntime } from '../util/CodegenRuntime';
 
-// these are the events that we fire
-type AppModelEvent = 'code_change' | 'evalstatus_change';
+export interface AppModelData {
+    lastEvalError: Error;
+    code: string;
+    pairingCode:string;
+}
 
-export class AppModel extends ModelBase {
+export class AppModel extends ModelHolder<AppModelData> {
 
     constructor() {
-        super();
+        super({
+            lastEvalError: null,
+            code: null,
+            pairingCode:null
+        });
     }
 
     private _workspace: Blockly.Workspace;
-    private _lastEvalError: Error;
-    private _code: string;
-
-    get lastEvalError(): Error {
-        return this._lastEvalError;
-    }
-    set lastEvalError(e: Error) {
-        if (this._lastEvalError !== e) {
-            this._lastEvalError = e;
-            this.fireEvent('evalstatus_change', e);
-        }
-    }
-
-    get code(): string {
-        return this._code;
-    }
 
     initializeBlockly(container: HTMLElement): Promise<void> {
         let result: Promise<void> = jsutil.requestURL({
@@ -64,9 +55,7 @@ export class AppModel extends ModelBase {
             };
             this._workspace = Blockly.inject(container, options);
             this._workspace.addChangeListener((e) => {
-                this._code = Blockly.JavaScript.workspaceToCode(this._workspace);
-                this.evalCode();
-                this.fireEvent('code_change', this._code);
+                this.setProperty('code',Blockly.JavaScript.workspaceToCode(this._workspace));
                 this.backupWorkspace();
             });
             BlocklyConfig.initBlockDefinitions();
@@ -81,14 +70,20 @@ export class AppModel extends ModelBase {
         return result;
     }
 
+    protected onPropertySet(prop: keyof AppModelData) {
+        if (prop == 'code') {
+            this.evalCode();
+        }
+    }
+
     private evalCode() {
         let CgRt = CodegenRuntime;
         CgRt.setTargetRenderProc(null);
         try {
-            eval(this._code);
-            this.lastEvalError = null;
+            eval(this.data.code);
+            this.setProperty('lastEvalError', null);
         } catch (e) {
-            this.lastEvalError = e;
+            this.setProperty('lastEvalError', e);
         }
     }
 
@@ -105,9 +100,4 @@ export class AppModel extends ModelBase {
         var url = window.location.href.split('#')[0];
         window.localStorage.setItem(url, Blockly.Xml.domToText(xml));
     }
-    private fireEvent(ev: AppModelEvent, args?: any) {
-        super.fire(ev, args);
-    }
-
-
 }

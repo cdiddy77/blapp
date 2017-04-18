@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var io = require("socket.io");
 var uuid = require("uuid");
+var svcTypes = require("../../client/shared/src/ServiceTypes");
 var sessionMap = {};
 function init(server) {
     console.log('blappSync.init');
@@ -14,21 +15,30 @@ function init(server) {
         socket.on('createSessionRequest', function () {
             var sessionId = uuid.v4();
             sessionId = createMinimalId(sessionId);
-            sessionMap[sessionId] = { code: '' };
-            socket.emit('createSessionResponse', sessionId);
+            sessionMap[sessionId] = {
+                lastControlMessage: svcTypes.createCodeChangeControlMessage('')
+            };
+            var response = { pairingCode: sessionId };
+            socket.emit('createSessionResponse', response);
             console.log('createSessionRequest', sessionId);
             socket.join(sessionId);
         });
         socket.on('joinSessionRequest', function (sid) {
             console.log('joinSessionRequest', sid);
-            var sessionResponse = "noexist";
+            var sessionResponse = {
+                pairingCode: "noexist",
+                executeCode: ""
+            };
             if (sessionMap[sid]) {
-                console.log("found sid {sid}");
+                console.log("found sid " + sid);
                 socket.join(sid);
-                sessionResponse = sid;
+                sessionResponse = {
+                    pairingCode: sid,
+                    executeCode: sessionMap[sid].lastControlMessage.code
+                };
             }
             else {
-                console.log("did not find sid {sid}");
+                console.log("did not find sid " + sid);
             }
             socket.emit('joinSessionResponse', sessionResponse);
             console.log('sending joinSessionResponse', sessionResponse);
@@ -36,6 +46,14 @@ function init(server) {
         socket.on('simctrlmsg', function (sid, data) {
             console.log('simctrlmsg', sid, data.type);
             ios.to(sid).emit('simctrlmsg', data);
+            if (!sessionMap[sid]) {
+                console.error("simctrlmsg for unknown sid " + sid + ", dropping it on the floor");
+            }
+            else {
+                if (data.type == 'code_change') {
+                    sessionMap[sid].lastControlMessage = data;
+                }
+            }
         });
     });
 }

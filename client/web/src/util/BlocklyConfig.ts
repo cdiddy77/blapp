@@ -3,6 +3,7 @@ import { iconData } from './IconData';
 
 export namespace BlocklyConfig {
     export function initBlockDefinitions(): void {
+        Blockly.BlockSvg.START_HAT = true;
         Blockly.Blocks['user_interface'] = {
             init: function () {
                 this.appendStatementInput("elements")
@@ -544,15 +545,21 @@ export namespace BlocklyConfig {
             };
         }
     }
+
+    var curVarIndex: number = 0;
+    function getVarName(prefix: string): string {
+        curVarIndex++;
+        return prefix + curVarIndex;
+    }
     export function initCodeGenerators(): void {
 
         Blockly.JavaScript['user_interface'] = (block: Blockly.Block) => {
             var statements_elements = Blockly.JavaScript.statementToCode(block, 'elements');
-            let code = '\nvar __f,result={};\nCgRt.setTargetRenderProc(() => {';
+            let code = '\nvar __f,result={};\nCgRt.setTargetRenderProc(function(){';
             code += '\nCgRt.pushCont();\n';
             code += statements_elements;
-            code += '\nlet cl=CgRt.popCont();'
-            code += '\nreturn CgRt.createElement(CgRt.Viewr, {style:{backgroundColor:"white",height:600}}, ...cl);\n});';
+            code += '\nvar cl=CgRt.popCont();';
+            code += '\nreturn CgRt.createElement(CgRt.Viewr, {style:{backgroundColor:"white",height:600}}, cl);\n});';
             return code;
         };
 
@@ -567,14 +574,15 @@ export namespace BlocklyConfig {
                 code += '\nCgRt.addProp("style",' + value_style + ');';
             }
             //endprops
-            code += '\nlet p=CgRt.getProps();';
+            let propsVarName = getVarName('p');
+            code += `\nvar ${propsVarName}=CgRt.getProps();`;
 
             // children
             code += '\nCgRt.pushCont();\n{';
             code += statements_child_elements;
-
-            code += '}\nlet cl=CgRt.popCont();';
-            code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Viewr, p,...cl));\n}\n';
+            let childrenVarName = getVarName('cl');
+            code += `}\nvar ${childrenVarName}=CgRt.popCont();`;
+            code += `\nCgRt.pushElem(CgRt.createElement(CgRt.Viewr, ${propsVarName},${childrenVarName}));\n}\n`;
             return code;
         };
 
@@ -589,11 +597,12 @@ export namespace BlocklyConfig {
                 code += '\nCgRt.addProp("style",' + value_style + ');';
             }
             //endprops
-            code += '\nlet p=CgRt.getProps();';
+            let propsVarName = getVarName('p');
+            code += `\nvar ${propsVarName}=CgRt.getProps();`;
 
-            code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Textr,p,'
+            code += `\nCgRt.pushElem(CgRt.createElement(CgRt.Textr,${propsVarName},[`;
             code += value_text_value && value_text_value !== '' ? value_text_value : "''";
-            code += '));\n}\n';
+            code += ']));\n}\n';
             return code;
         };
 
@@ -612,14 +621,14 @@ export namespace BlocklyConfig {
             }
 
             //endprops
-            code += '\nlet p=CgRt.getProps();';
+            code += '\nvar p=CgRt.getProps();';
 
             code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Imager,p));\n}';
             return code;
         };
         Blockly.JavaScript['styledef'] = (block: Blockly.Block) => {
             let statements_name = Blockly.JavaScript.statementToCode(block, 'STYLES');
-            let code = '\n__f= function(){\nlet result={};';
+            let code = '\n__f= function(){\nvar result={};';
             code += statements_name;
             code += '\nreturn result;\n}()';
             return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
@@ -863,7 +872,7 @@ export namespace BlocklyConfig {
                 code += '\nCgRt.addProp("style",' + default_style + ');';
 
                 //endprops
-                code += '\nlet p=CgRt.getProps();';
+                code += '\nvar p=CgRt.getProps();';
 
                 code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Imager,p));\n}';
                 return code;

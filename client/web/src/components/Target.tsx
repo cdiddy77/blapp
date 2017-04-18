@@ -18,20 +18,21 @@ export class Target extends React.Component<TargetProps, TargetState>{
             // renderProc: null,
             evalErrMsg: null
         };
-        this.onErrMsgChange = this.onErrMsgChange.bind(this);
+        this.onModelChange = this.onModelChange.bind(this);
         //this.setRenderProc = this.setRenderProc.bind(this);
     }
     componentDidMount() {
-        this.props.model.on('evalstatus_change', this.onErrMsgChange);
-        this.onErrMsgChange(this.props.model.lastEvalError);
+       this.props.model.on('change', this.onModelChange);
+        this.onModelChange('lastEvalError');
     }
     componentWillUnmount() {
-        this.props.model.off('evalstatus_change', this.onErrMsgChange);
+        this.props.model.off('change', this.onModelChange);
     }
 
-    onErrMsgChange(err: Error) {
-        if (this.state.evalErrMsg !== err) {
-            this.setState({ evalErrMsg: err });
+    onModelChange(prop:string) {
+        if(prop=='lastEvalError')
+        if (this.state.evalErrMsg !== this.props.model.data.lastEvalError) {
+            this.setState({ evalErrMsg: this.props.model.data.lastEvalError });
         }
     }
 
@@ -57,7 +58,7 @@ export class Target extends React.Component<TargetProps, TargetState>{
                 // we wait until we are done rendering.
                 setTimeout(() => {
                     this.setState({ evalErrMsg: e });
-                    this.props.model.lastEvalError = e;
+                    this.props.model.setProperty('lastEvalError',e);
                 });
                 return this.renderErrorMessage(e);
             }

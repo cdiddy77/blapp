@@ -7,7 +7,7 @@ import './index.css';
 
 const appModel: AppModel = new AppModel();
 svcConn.init(appModel);
-
+// add a comment
 ReactDOM.render(
   <App model={appModel} />,
   document.getElementById('root')

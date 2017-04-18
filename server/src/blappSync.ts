@@ -2,9 +2,10 @@ import * as http from 'http';
 import * as io from 'socket.io';
 import * as uuid from 'uuid';
 
+import * as svcTypes from '../../client/shared/src/ServiceTypes';
 
 interface ProjectSessionState {
-    code: string;
+    lastControlMessage: svcTypes.ControlMessage;
 }
 
 var sessionMap: {
@@ -23,27 +24,43 @@ export function init(server: any) {
         socket.on('createSessionRequest', () => {
             let sessionId = uuid.v4();
             sessionId = createMinimalId(sessionId);
-            sessionMap[sessionId] = { code: '' };
-            socket.emit('createSessionResponse', sessionId);
+            sessionMap[sessionId] = {
+                lastControlMessage: svcTypes.createCodeChangeControlMessage('')
+            };
+            let response: svcTypes.CreateSessionResponseMessage = { pairingCode: sessionId };
+            socket.emit('createSessionResponse', response);
             console.log('createSessionRequest', sessionId);
             socket.join(sessionId);
         });
         socket.on('joinSessionRequest', (sid: string) => {
             console.log('joinSessionRequest', sid);
-            let sessionResponse = "noexist";
+            let sessionResponse: svcTypes.JoinSessionResponseMessage = {
+                pairingCode: "noexist",
+                executeCode: ""
+            };
             if (sessionMap[sid]) {
-                console.log(`found sid {sid}`);
+                console.log(`found sid ${sid}`);
                 socket.join(sid);
-                sessionResponse = sid;
+                sessionResponse = {
+                    pairingCode: sid,
+                    executeCode: sessionMap[sid].lastControlMessage.code
+                };
             } else {
-                console.log(`did not find sid {sid}`);
+                console.log(`did not find sid ${sid}`);
             }
             socket.emit('joinSessionResponse', sessionResponse);
             console.log('sending joinSessionResponse', sessionResponse);
         });
-        socket.on('simctrlmsg', (sid: string, data: any) => {
+        socket.on('simctrlmsg', (sid: string, data: svcTypes.ControlMessage) => {
             console.log('simctrlmsg', sid, data.type);
             ios.to(sid).emit('simctrlmsg', data);
+            if (!sessionMap[sid]) {
+                console.error(`simctrlmsg for unknown sid ${sid}, dropping it on the floor`);
+            } else {
+                if (data.type == 'code_change') {
+                    sessionMap[sid].lastControlMessage = data;
+                }
+            }
         });
     });
 }
