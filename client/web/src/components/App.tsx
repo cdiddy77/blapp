@@ -46,7 +46,7 @@ class App extends React.Component<AppProps, AppState> {
       <div className="App">
         <div className='row'>
           <div className="App-header">
-            <h2>Blapp</h2>
+            <h2>New Blapp City</h2>
             <p>pairing code: {svcConn.getPairingCode()}</p>
           </div>
         </div>
