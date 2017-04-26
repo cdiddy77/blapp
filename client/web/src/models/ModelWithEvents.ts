@@ -2,7 +2,7 @@ import * as jsutil from '../../../shared/src/util/jsutil';
 
 type ModelEventCallback = (args: any) => void;
 
-export class ModelHolder<T> {
+export class ModelWithEvents<T> {
 
     constructor(m: T) {
         this._data = m;

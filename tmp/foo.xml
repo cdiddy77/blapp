@@ -1,0 +1,93 @@
+<xml>
+    <block type="user_interface" id="]S:/u%bmJW?PJkc($xGX" x="-337" y="-322">
+        <statement name="elements">
+            <block type="container_element" id="O7ZkNG|UH0iE0#c8(o~E">
+                <field name="NAME"/>
+                <statement name="child elements">
+                    <block type="text_element" id="~BE*D-GbXX:U%th|ldtg">
+                        <value name="text value">
+                            <shadow type="text" id="*Rpbwfy9pnn4Yd]hC~ls">
+                                <field name="TEXT">line 3</field>
+                            </shadow>
+                        </value>
+                        <next>
+                            <block type="text_element" id="rz%RkdEA!tn`^`r|$SnJ">
+                                <value name="text value">
+                                    <shadow type="text" id="{V|,5+ce-1(Qz^(_{N1H">
+                                        <field name="TEXT">ewjhwkehrwkerh</field>
+                                    </shadow>
+                                </value>
+                            </block>
+                        </next>
+                    </block>
+                </statement>
+                <value name="style">
+                    <block type="variables_get" id="X|cG%}0tiT]v,+OZe3uM">
+                        <field name="VAR">rowstyle</field>
+                    </block>
+                </value>
+                <next>
+                    <block type="text_element" id="v+#3iC,T,gvjqA8jBvEK">
+                        <value name="text value">
+                            <shadow type="text" id="jO6i@%}/[uiRB,]4EXF{">
+                                <field name="TEXT">line 2</field>
+                            </shadow>
+                        </value>
+                    </block>
+                </next>
+            </block>
+        </statement>
+    </block>
+    <block type="variables_set" id="[U[KhD1sFUy#3j$`Rfa(" x="46" y="-269">
+        <field name="VAR">rowstyle</field>
+        <value name="VALUE">
+            <block type="styledef" id="-`)IN})|6$Jde?FyL/i(">
+                <statement name="STYLES">
+                    <block type="styleprop_flexdirection" id=";3CExRV_Msk#)kY[eytg">
+                        <field name="VALUE">row</field>
+                        <next>
+                            <block type="styleprop_backgroundcolor" id="/Abn8~^A]nO1in`*rCU[">
+                                <field name="VALUE">#33ccff</field>
+                            </block>
+                        </next>
+                    </block>
+                </statement>
+            </block>
+        </value>
+    </block>
+    <block type="variables_set" id=":?X}Ibi!c/h9J^Y*S1m$" x="87" y="-99">
+        <field name="VAR">colstyle</field>
+        <value name="VALUE">
+            <block type="styledef" id="^il@vvL!bq(8r:8-4y}2">
+                <statement name="STYLES">
+                    <block type="styleprop_flexdirection" id="]!QH$jD7[dk0bv_E0vKM">
+                        <field name="VALUE">column</field>
+                    </block>
+                </statement>
+            </block>
+        </value>
+    </block>
+    <block type="styledef" id="%0EK-ZcsdOK]682%$dhg" x="288" y="-25"/>
+    <block type="controls_if" id="):7VFzf=_].$3hU934_d" x="403" y="-15"/>
+    <block type="controls_for" id="uDL/:GHOkt|-ZeurrxQ." x="136" y="72">
+        <field name="VAR">i</field>
+        <value name="FROM">
+            <shadow type="math_number" id="E)?8U8vQAFlbyK%:Cnt=">
+                <field name="NUM">1</field>
+            </shadow>
+        </value>
+        <value name="TO">
+            <shadow type="math_number" id="5nm1].J)t:v^x1kg1.N2">
+                <field name="NUM">10</field>
+            </shadow>
+        </value>
+        <value name="BY">
+            <shadow type="math_number" id="H`vka6m@nn9.a6d:v2{X">
+                <field name="NUM">1</field>
+            </shadow>
+        </value>
+    </block>
+    <block type="variables_set" id="|,P}.POC4h~,!@+#V[J," x="326" y="152">
+        <field name="VAR">colstyle</field>
+    </block>
+</xml>

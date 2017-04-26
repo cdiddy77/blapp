@@ -1,12 +1,23 @@
 import * as jsutil from '../../../shared/src/util/jsutil';
-import { Target } from '../components/Target';
 import * as React from 'react';
 import { View, Text, Image } from 'react-native';
+
+export interface CodegenHost {
+}
 
 export namespace CodegenRuntime {
     var curelems: any[][] = [];
     var curstyles: any = {};
     var curprops: any = {};
+
+    var sharedVars: any = {};
+    var cgHost: CodegenHost = null;
+
+    var targetRenderProc: () => any;
+
+    export function setCodegenHost(host: CodegenHost): void {
+        cgHost = host;
+    }
 
     export function pushCont() {
         curelems.push([]);
@@ -19,7 +30,10 @@ export namespace CodegenRuntime {
             curelems[curelems.length - 1].push(e);
     }
     export function setTargetRenderProc(renderProc: () => any) {
-        Target.renderProc = renderProc;
+        targetRenderProc = renderProc;
+    }
+    export function getTargetRenderProc(): () => any {
+        return targetRenderProc;
     }
     export function makeImageUri(url: string): any {
         return { uri: url };
@@ -50,6 +64,16 @@ export namespace CodegenRuntime {
             return React.createElement(typ, props);
         }
     }
+
+    export function getShareVar(name: string): any {
+        return sharedVars[name];
+    }
+
+    export function setShareVar(name: string, val: any): void {
+        // SHARVAR : implement synchronization of this variable
+        sharedVars[name] = val;
+    }
+
     // export var createElement = React.createElement;
 
     export var Viewr = View;

@@ -3,8 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
+    "@types/jquery": "^2.0.41",
     "@types/react": "^15.0.21",
+    "@types/react-bootstrap": "0.0.48",
     "@types/react-dom": "^0.14.23",
+    "@types/react-modal": "^1.6.6",
     "@types/react-native": "^0.43.0",
     "@types/socket.io": "^1.4.29",
     "@types/socket.io-client": "^1.4.29",
@@ -55,7 +58,9 @@
   },
   "dependencies": {
     "react": "~15.4.1",
+    "react-bootstrap": "^0.30.10",
     "react-dom": "~15.4.1",
+    "react-modal": "^1.7.7",
     "react-native-web": "0.0.81",
     "socket.io": "^1.7.3",
     "socket.io-client": "^1.7.3",
@@ -65,7 +70,7 @@
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom",
-    "build-server":"tsc -p server"
+    "build-server": "tsc -p server"
   },
   "jest": {
     "collectCoverageFrom": [

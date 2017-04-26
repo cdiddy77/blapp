@@ -6,11 +6,11 @@ export interface ControlMessage {
     evalError?: Error;
 }
 
-export interface CreateSessionResponseMessage{
-pairingCode:string;
+export interface CreateSessionResponseMessage {
+    pairingCode: string;
 }
 export interface JoinSessionResponseMessage {
-    pairingCode: string|'noexist';
+    pairingCode: string | 'noexist';
     executeCode: string;
 }
 

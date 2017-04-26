@@ -3,6 +3,7 @@ import { View, Text, Image } from 'react-native';
 
 import { AppModel } from '../models/AppModel';
 import { styles } from '../styles';
+import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
 
 interface TargetProps {
     model: AppModel;
@@ -12,7 +13,6 @@ interface TargetState {
     evalErrMsg: Error;
 }
 export class Target extends React.Component<TargetProps, TargetState>{
-    static renderProc: () => any;
     constructor(props: TargetProps) {
         super(props);
         this.state = {
@@ -53,9 +53,9 @@ export class Target extends React.Component<TargetProps, TargetState>{
         if (this.state.evalErrMsg != null) {
             return this.renderErrorMessage(this.state.evalErrMsg,'load');
         }
-        else if (Target.renderProc != null) {
+        else if (CodegenRuntime.getTargetRenderProc() != null) {
             try {
-                result = Target.renderProc();
+                result = CodegenRuntime.getTargetRenderProc()();
                 return result;
             } catch (e) {
                 // this will trigger a re-render, so 

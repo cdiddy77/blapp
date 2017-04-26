@@ -254,7 +254,7 @@ declare namespace Blockly {
     }
 
     class FieldDropdown extends Field {
-        constructor(val: any[][]);
+        constructor(val: any[][]| (()=>any[][]));
     }
     class FieldImage extends Field {
         constructor(url: string, width: number, height: number, def: string);
@@ -265,7 +265,7 @@ declare namespace Blockly {
     class FieldColour extends Field {
         constructor(v: string);
     }
-    
+
     class Block {
         static obtain(workspace: Workspace, prototypeName?: string): Block;
 
@@ -455,6 +455,8 @@ declare namespace Blockly {
         traceOn(armed: boolean): void;
         addChangeListener(f: (e: BlocklyEvent) => void): callbackHandler;
         removeChangeListener(h: callbackHandler): void;
+        registerToolboxCategoryCallback(catName: string, cb: (w: Workspace) => Element[]): void;
+        registerButtonCallback(cbName:string,cb:(button:any)=>any):void;
         updateToolbox(newTree: Element | string): void;
         getCanvas(): any;
         getParentSvg(): Element;

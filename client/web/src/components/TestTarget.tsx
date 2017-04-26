@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { View, Text, Image } from 'react-native';
-import { CodegenRuntime } from '../util/CodegenRuntime';
+import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
 
 export class TestTarget extends React.Component<{}, {}>{
     render() {

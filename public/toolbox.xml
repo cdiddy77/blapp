@@ -435,4 +435,5 @@
   <sep/>
   <category name="Variables" colour="#A65C81" custom="VARIABLE"/>
   <category name="Functions" colour="#9A5CA6" custom="PROCEDURE"/>
+  <category name="Shared Variables" colour="#A65C81" custom="SHARED_VARS_PALETTE"/>
 </xml>

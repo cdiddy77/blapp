@@ -1,11 +1,12 @@
 // import React, { Component } from 'react';
 import { AsyncStorage } from 'react-native';
 import { ModelBase } from './ModelBase';
-import { CodegenRuntime } from '../util/CodegenRuntime';
+import { CodegenRuntime, CodegenHost } from '../../../shared/src/util/CodegenRuntime';
 
-export class AppModel extends ModelBase {
+export class AppModel extends ModelBase implements CodegenHost {
     constructor() {
         super();
+        CodegenRuntime.setCodegenHost(this);
     }
 
     readonly serverUri: string;
