@@ -1,6 +1,7 @@
 <xml xmlns="http://www.w3.org/1999/xhtml" id="toolbox" style="display: none;">
   <category name="UI" colour="#935ba5">
     <block type="user_interface"/>
+    <block type="force_ui_update"/>
     <block type="container_element"/>
     <block type="text_element">
       <value name="text value">
@@ -16,6 +17,7 @@
         </shadow>
       </value>
     </block>
+    <block type="button_element"/>
     <category name="Icons">
       <block type="icon_action"/>
       <block type="icon_alert"/>
@@ -38,7 +40,7 @@
   <category name="Styles" colour="#935ba5">
     <block type="styledef"/>
     <block type="stylejoindef"/>
-   <category name="Layout">
+    <category name="Layout">
       <block type="styleprop_aligncontent"/>
       <block type="styleprop_alignitems"/>
       <block type="styleprop_alignself"/>

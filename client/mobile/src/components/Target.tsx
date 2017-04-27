@@ -25,10 +25,15 @@ export class Target extends React.Component<TargetProps, TargetState>{
     componentDidMount() {
         this.props.model.on('change', this.onModelPropChange);
         this.onModelPropChange('lastEvalError');
-    }
+
+       CodegenRuntime.setForceTargetUpdateProc(() => {
+            this.forceUpdate();
+        });
+     }
     componentWillUnmount() {
         this.props.model.off('change', this.onModelPropChange);
-    }
+         CodegenRuntime.setForceTargetUpdateProc(null);
+   }
 
     onModelPropChange(prop: string) {
         if (prop === 'lastEvalError') {

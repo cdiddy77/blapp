@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text, Image, Button } from 'react-native';
 
 import { AppModel } from '../models/AppModel';
 import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
@@ -24,9 +24,14 @@ export class Target extends React.Component<TargetProps, TargetState>{
     componentDidMount() {
         this.props.model.on('change', this.onModelChange);
         this.onModelChange('lastEvalError');
+
+        CodegenRuntime.setForceTargetUpdateProc(() => {
+            this.forceUpdate();
+        });
     }
     componentWillUnmount() {
         this.props.model.off('change', this.onModelChange);
+        CodegenRuntime.setForceTargetUpdateProc(null);
     }
 
     onModelChange(prop: string) {

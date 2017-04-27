@@ -16,6 +16,18 @@ export namespace BlocklyConfig {
             }
         };
 
+        Blockly.Blocks['force_ui_update'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField("update UI");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(230);
+                this.setTooltip('');
+                this.setHelpUrl('');
+            }
+        };
+
         Blockly.Blocks['container_element'] = {
             init: function () {
                 this.appendDummyInput()
@@ -80,7 +92,7 @@ export namespace BlocklyConfig {
         Blockly.Blocks['button_element'] = {
             init: function () {
                 this.appendDummyInput()
-                     .appendField(new Blockly.FieldImage("media/image/ic_photo_white_48dp.png", 16, 16, "*"))
+                    .appendField(new Blockly.FieldImage("icons/dark/appbar.interface.button.png", 16, 16, "*"))
                     .appendField("button");
                 this.appendValueInput("color")
                     .setCheck(null)
@@ -577,6 +589,22 @@ export namespace BlocklyConfig {
         curVarIndex++;
         return prefix + curVarIndex;
     }
+
+    function conditionalStringPropertySetting(prop: string, value: string, defaultValue?: string): string {
+        if (value && value !== 'null' && value !== 'undefined') {
+            value = `String(${value})`;
+        }
+        return conditionalPropertySetting(prop, value, defaultValue);
+    }
+    function conditionalPropertySetting(prop: string, value: string, defaultValue?: string): string {
+        let code: string = '';
+        if (value && value != '') {
+            code += `\nCgRt.addProp("${prop}",${value});`;
+        } else if (defaultValue) {
+            code += `\nCgRt.addProp("${prop}",${defaultValue});`;
+        }
+        return code;
+    }
     export function initCodeGenerators(): void {
 
         Blockly.JavaScript['user_interface'] = (block: Blockly.Block) => {
@@ -588,7 +616,10 @@ export namespace BlocklyConfig {
             code += '\nreturn CgRt.createElement(CgRt.Viewr, {style:{backgroundColor:"white",height:600}}, cl);\n});';
             return code;
         };
-
+        Blockly.JavaScript['force_ui_update'] = function (block: Blockly.Block) {
+            var code = 'CgRt.updateUI();\n';
+            return code;
+        };
         Blockly.JavaScript['container_element'] = (block: Blockly.Block) => {
             let statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
             // properties
@@ -652,7 +683,29 @@ export namespace BlocklyConfig {
             code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Imager,p));\n}';
             return code;
         };
-  
+
+        Blockly.JavaScript['button_element'] = function (block: Blockly.Block) {
+            var value_color = Blockly.JavaScript.valueToCode(block, 'color', Blockly.JavaScript.ORDER_NONE);
+            var value_title = Blockly.JavaScript.valueToCode(block, 'title', Blockly.JavaScript.ORDER_NONE);
+            var statements_onpress = Blockly.JavaScript.statementToCode(block, 'onpress');
+
+            //properties
+            let code = '\n{\nCgRt.beginProps();\n';
+            //code += `var testProc=function(){console.log("foo was here");};`;
+            code += conditionalStringPropertySetting('color', value_color);
+            code += conditionalStringPropertySetting('title', value_title);
+            // BUTTON doesn't support styles
+            // let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
+            // if (value_style && value_style !== '') {
+            //     code += '\nCgRt.addProp("style",' + value_style + ');';
+            // }
+            code += conditionalPropertySetting('onPress', `function(){${statements_onpress}}`);
+            //endprops
+            code += '\nvar p=CgRt.getProps();';
+
+            code += '\nCgRt.pushElem(CgRt.createElement(CgRt.Buttonr,p));\n}';
+            return code;
+        };
         Blockly.JavaScript['styledef'] = (block: Blockly.Block) => {
             let statements_name = Blockly.JavaScript.statementToCode(block, 'STYLES');
             let code = '\nfunction(){\nvar result={};';
@@ -683,7 +736,7 @@ export namespace BlocklyConfig {
             // TODO: Assemble JavaScript into code variable.
             var code = `\nCgRt.setShareVar('${dropdown_varname}',${value_value});`;
             // TODO: Change ORDER_NONE to the correct strength.
-            return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+            return code;
         };
     }
 

@@ -61,7 +61,7 @@
     "react-bootstrap": "^0.30.10",
     "react-dom": "~15.4.1",
     "react-modal": "^1.7.7",
-    "react-native-web": "0.0.81",
+    "react-native-web": "0.0.89",
     "socket.io": "^1.7.3",
     "socket.io-client": "^1.7.3",
     "uuid": "^3.0.1"

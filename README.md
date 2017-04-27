@@ -32,9 +32,6 @@ npm run build -- --watch
 ```
 npm run start
 ```
-### in new shell:
-```
-```
 	
 ## to write server code 
 ```

@@ -186,9 +186,11 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
                     .setCheck(null)
                     .appendField(new Blockly.FieldImage("media/social/ic_share_white_48dp.png", 16, 16, "*"))
                     .appendField("set shared")
-                    .appendField(new Blockly.FieldDropdown(getSharedVarsListProc), "varname");
+                    .appendField(new Blockly.FieldDropdown(getSharedVarsListProc), "varname")
+                    .appendField("to");
                 this.setInputsInline(false);
-                this.setOutput(true, null);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
                 this.setColour(230);
                 this.setTooltip('');
                 this.setHelpUrl('');

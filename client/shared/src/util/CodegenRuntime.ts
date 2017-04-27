@@ -1,6 +1,6 @@
 import * as jsutil from '../../../shared/src/util/jsutil';
 import * as React from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text, Image, Button } from 'react-native';
 
 export interface CodegenHost {
 }
@@ -14,6 +14,7 @@ export namespace CodegenRuntime {
     var cgHost: CodegenHost = null;
 
     var targetRenderProc: () => any;
+    var forceTargetUpdateProc: () => void;
 
     export function setCodegenHost(host: CodegenHost): void {
         cgHost = host;
@@ -34,6 +35,12 @@ export namespace CodegenRuntime {
     }
     export function getTargetRenderProc(): () => any {
         return targetRenderProc;
+    }
+    export function setForceTargetUpdateProc(proc: () => any) {
+        forceTargetUpdateProc = proc;
+    }
+    export function getForceTargetUpdateProc(): () => any {
+        return forceTargetUpdateProc;
     }
     export function makeImageUri(url: string): any {
         return { uri: url };
@@ -74,9 +81,26 @@ export namespace CodegenRuntime {
         sharedVars[name] = val;
     }
 
+    export function testProc() {
+        console.log('testProc sfgsdfg');
+    }
+
+    export function updateUI() {
+        if (forceTargetUpdateProc) {
+            forceTargetUpdateProc();
+        }
+    }
+
+    export function ensureString(v: any): string {
+        if (!v) return null;
+
+        return String(v);
+    }
+
     // export var createElement = React.createElement;
 
     export var Viewr = View;
     export var Imager = Image;
     export var Textr = Text;
+    export var Buttonr = Button;
 }

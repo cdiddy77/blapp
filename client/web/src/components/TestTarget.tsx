@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text, Image,Button } from 'react-native';
 import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
 
 export class TestTarget extends React.Component<{}, {}>{
@@ -22,61 +22,61 @@ export class TestTarget extends React.Component<{}, {}>{
         //         }},"dfdfd")
         //         )
         // ));
-        /*return (
+        // CodegenRuntime.testProc();
+        return (
             <View style={{ height: 600 }}>
-                <View style={{
+                {/*<View style={{
                     backgroundColor:"#ff9900",
                     borderColor:"#000000",
                     borderWidth:2,
                     padding:10,
-                    minHeight:500,
                     alignContent:'flex-start'
                 }}>
                     <Text style={{
                     backgroundColor:"#c0c0c0",
                     padding:10,
-                    minHeight:500
-                }}>dfdfd</Text>
-                </View>
+                }}>dfdfd</Text>*/}
+                <Button title='i am sfasdf' onPress={CodegenRuntime.testProc} disabled={false}/>
+                {/*</View>*/}
             </View>
-        );*/
-        let CgRt = CodegenRuntime;
-        var __f, result = {};
-        CgRt.pushCont();
-        {
-            CgRt.beginProps();
+        );
+        // let CgRt = CodegenRuntime;
+        // var __f, result = {};
+        // CgRt.pushCont();
+        // {
+        //     CgRt.beginProps();
 
-            let p = CgRt.getProps();
-            CgRt.pushCont();
-            {
-                CgRt.beginProps();
+        //     let p = CgRt.getProps();
+        //     CgRt.pushCont();
+        //     {
+        //         CgRt.beginProps();
 
-                CgRt.addProp("source", { uri: 'favicon.ico' });
-                CgRt.addProp("style", (
-                    __f = function () {
-                        let result: any = {};
-                        result.height = 50;
-                        result.width = 50;
-                        return result;
-                    }()));
-                let p = CgRt.getProps();
-                CgRt.pushElem(CgRt.createElement(CgRt.Imager, p)); {
-                    CgRt.beginProps();
+        //         CgRt.addProp("source", { uri: 'favicon.ico' });
+        //         CgRt.addProp("style", (
+        //             __f = function () {
+        //                 let result: any = {};
+        //                 result.height = 50;
+        //                 result.width = 50;
+        //                 return result;
+        //             }()));
+        //         let p = CgRt.getProps();
+        //         CgRt.pushElem(CgRt.createElement(CgRt.Imager, p)); {
+        //             CgRt.beginProps();
 
-                    CgRt.addProp("style", (
-                        __f = function () {
-                            let result = {};
-                            return result;
-                        }()));
-                    let p = CgRt.getProps();
-                    CgRt.pushElem(CgRt.createElement(CgRt.Textr, p, ['Math homework takes 10^3 times longer when using your phone as your calculator']));
-                }
-            }
-            let cl = CgRt.popCont();
-            CgRt.pushElem(CgRt.createElement(CgRt.Viewr, p, cl));
-        }
+        //             CgRt.addProp("style", (
+        //                 __f = function () {
+        //                     let result = {};
+        //                     return result;
+        //                 }()));
+        //             let p = CgRt.getProps();
+        //             CgRt.pushElem(CgRt.createElement(CgRt.Textr, p, ['Math homework takes 10^3 times longer when using your phone as your calculator']));
+        //         }
+        //     }
+        //     let cl = CgRt.popCont();
+        //     CgRt.pushElem(CgRt.createElement(CgRt.Viewr, p, cl));
+        // }
 
-        let cl = CgRt.popCont();
-        return CgRt.createElement(CgRt.Viewr, { style: { backgroundColor: "white", height: 600 } }, cl);
+        // let cl = CgRt.popCont();
+        // return CgRt.createElement(CgRt.Viewr, { style: { backgroundColor: "white", height: 600 } }, cl);
     }
 }
