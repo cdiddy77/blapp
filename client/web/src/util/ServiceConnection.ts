@@ -1,13 +1,21 @@
 import { AppModel } from '../models/AppModel';
 import * as svcTypes from '../../../shared/src/ServiceTypes';
 import * as io from 'socket.io-client';
+import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
+
+
 var sessionId: string;
 var socket: SocketIOClient.Socket = io({
     port: '8080'
 });
 
 export function init(appModel: AppModel) {
-
+    CodegenRuntime.setShareVarSetProc((name, value) => {
+        if (!socket || !sessionId) {
+            return;
+        }
+        socket.emit('setShareVar', sessionId, { name: name, value: value });
+    });
     appModel.on('change', (prop) => {
         if (sessionId == null) {
             console.log('app changed, but we have no session id, ignoring');
@@ -52,6 +60,9 @@ export function init(appModel: AppModel) {
 
     socket.on('simctrlmsg', (data: svcTypes.ControlMessage) => {
         console.log('simctrlmsg');
+    });
+    socket.on('shareVarUpdated', (data: svcTypes.ShareVarUpdatedMessage) => {
+        CodegenRuntime.onVarUpdated(data.name, data.value);
     });
 }
 

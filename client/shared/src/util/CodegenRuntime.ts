@@ -6,6 +6,8 @@ export interface CodegenHost {
 }
 
 export namespace CodegenRuntime {
+    type ShareVarUpdatedCallback = () => void;
+
     var curelems: any[][] = [];
     var curstyles: any = {};
     var curprops: any = {};
@@ -15,21 +17,20 @@ export namespace CodegenRuntime {
 
     var targetRenderProc: () => any;
     var forceTargetUpdateProc: () => void;
+    var shareVarSetProc: (name: string, value: any) => void;
+
+    var shareVarUpdateWildCardHandlers: ShareVarUpdatedCallback[] = [];
+    var shareVarUpdateHandlers: jsutil.Map<ShareVarUpdatedCallback[]> = {};
 
     export function setCodegenHost(host: CodegenHost): void {
         cgHost = host;
     }
 
-    export function pushCont() {
-        curelems.push([]);
+    export function resetCodeState() {
+        setTargetRenderProc(null);
+        clearAllShareVarUpdateHandlers();
     }
-    export function popCont(): any[] {
-        return curelems.pop();
-    }
-    export function pushElem(e: any) {
-        if (curelems.length >= 1)
-            curelems[curelems.length - 1].push(e);
-    }
+
     export function setTargetRenderProc(renderProc: () => any) {
         targetRenderProc = renderProc;
     }
@@ -41,6 +42,51 @@ export namespace CodegenRuntime {
     }
     export function getForceTargetUpdateProc(): () => any {
         return forceTargetUpdateProc;
+    }
+    export function setShareVarSetProc(proc: (name: string, value: any) => void) {
+        shareVarSetProc = proc;
+    }
+    export function getShareVarSetProc(): (name: string, value: any) => void {
+        return shareVarSetProc;
+    }
+
+    export function onVarUpdated(name: string, value: any) {
+        sharedVars[name] = value;
+        for (let i = 0; i < shareVarUpdateWildCardHandlers.length; i++) {
+            shareVarUpdateWildCardHandlers[i].call(this);
+        }
+        if (shareVarUpdateHandlers[name]) {
+            shareVarUpdateHandlers[name].forEach((v: any, i: number, arr: any[]) => {
+                v.call(this);
+            });
+        }
+    }
+
+    export function registerShareVarUpdateWildcardHandler(cb: ShareVarUpdatedCallback) {
+        shareVarUpdateWildCardHandlers.push(cb);
+    }
+    export function registerShareVarUpdateHandler(name: string, cb: ShareVarUpdatedCallback) {
+        if (shareVarUpdateHandlers[name] === undefined)
+            shareVarUpdateHandlers[name] = [];
+        shareVarUpdateHandlers[name].push(cb);
+
+    }
+   
+    export function clearAllShareVarUpdateHandlers() {
+        shareVarUpdateWildCardHandlers = [];
+        shareVarUpdateHandlers = {};
+    }
+
+    // actual routines that are called by generated code
+    export function pushCont() {
+        curelems.push([]);
+    }
+    export function popCont(): any[] {
+        return curelems.pop();
+    }
+    export function pushElem(e: any) {
+        if (curelems.length >= 1)
+            curelems[curelems.length - 1].push(e);
     }
     export function makeImageUri(url: string): any {
         return { uri: url };
@@ -77,12 +123,13 @@ export namespace CodegenRuntime {
     }
 
     export function setShareVar(name: string, val: any): void {
-        // SHARVAR : implement synchronization of this variable
         sharedVars[name] = val;
+        if(shareVarSetProc)
+            shareVarSetProc(name,val);
     }
 
     export function testProc() {
-        console.log('testProc sfgsdfg');
+        console.log('testProc called');
     }
 
     export function updateUI() {

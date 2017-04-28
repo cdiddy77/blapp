@@ -127,7 +127,7 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
 
     private evalCode() {
         let CgRt = CodegenRuntime;
-        CgRt.setTargetRenderProc(null);
+        CgRt.resetCodeState();
         try {
             eval(this.data.code);
             this.setProperty('lastEvalError', null);
@@ -165,10 +165,13 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
             });
         }
     }
+    private getSharedVariablesListWithWildcard() {
+        return [['--any--', '__ANY__'], ...this.getSharedVariablesList()];
+    }
 
     initSharedVariableBlocks() {
-        let thisModel = this;
         let getSharedVarsListProc = this.getSharedVariablesList.bind(this);
+        let getSharedVarsListWithWildcardProc = this.getSharedVariablesListWithWildcard.bind(this);
         Blockly.Blocks['sharvar_get'] = {
             init: function () {
                 this.appendDummyInput()
@@ -193,6 +196,19 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
                 this.setNextStatement(true, null);
                 this.setColour(230);
                 this.setTooltip('');
+                this.setHelpUrl('');
+            }
+        };
+        Blockly.Blocks['on_sharvar_change'] = {
+            init: function () {
+                this.appendStatementInput("statements")
+                    .setCheck(null)
+                    .appendField(new Blockly.FieldImage("media/social/ic_share_white_48dp.png", 16, 16, "*"))
+                    .appendField("when")
+                    .appendField(new Blockly.FieldDropdown(getSharedVarsListWithWildcardProc), "varname")
+                    .appendField("changes");
+                this.setColour(285);
+                this.setTooltip('when a variable changes, make something happen');
                 this.setHelpUrl('');
             }
         };
@@ -281,6 +297,9 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
             block.setAttribute('type', 'sharvar_set');
             xmlList.push(block);
         }
+        let block = document.createElementNS(null, 'block');
+        block.setAttribute('type', 'on_sharvar_change');
+        xmlList.push(block);
         return xmlList;
     }
 

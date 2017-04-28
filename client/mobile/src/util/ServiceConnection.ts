@@ -1,5 +1,6 @@
 import { AppModel } from '../models/AppModel';
 import * as svcTypes from '../../../shared/src/ServiceTypes';
+import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
 
 // window.navigator.userAgent = 'ReactNative';
 
@@ -15,6 +16,13 @@ interface CtrlMsgData {
     code?: string;
     evalError?: Error;
 }
+
+CodegenRuntime.setShareVarSetProc((name, value) => {
+    if (!socket || !pairingCode) {
+        return;
+    }
+    socket.emit('setShareVar', pairingCode, { name: name, value: value });
+});
 
 export function resetConnection(appModel: AppModel) {
     console.log('SERVICE trying to connect');
@@ -50,6 +58,9 @@ export function resetConnection(appModel: AppModel) {
             } else if (data.type === 'evalstatus_change') {
                 appModel.setProperty('lastEvalError', data.code);
             }
+        });
+        socket.on('shareVarUpdated', (data: svcTypes.ShareVarUpdatedMessage) => {
+            CodegenRuntime.onVarUpdated(data.name, data.value);
         });
         socket.on('disconnect', () => {
             console.log('disconnect');

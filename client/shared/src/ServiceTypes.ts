@@ -12,6 +12,17 @@ export interface CreateSessionResponseMessage {
 export interface JoinSessionResponseMessage {
     pairingCode: string | 'noexist';
     executeCode: string;
+    sharedVars: any;
+}
+
+export interface ShareVarSetMessage {
+    name: string;
+    value: any;
+}
+
+export interface ShareVarUpdatedMessage {
+    name: string;
+    value: any;
 }
 
 export function createCodeChangeControlMessage(code: string): ControlMessage {

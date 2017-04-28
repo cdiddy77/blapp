@@ -733,9 +733,20 @@ export namespace BlocklyConfig {
             if (!value_value || value_value == '') {
                 value_value = 'null';
             }
-            // TODO: Assemble JavaScript into code variable.
             var code = `\nCgRt.setShareVar('${dropdown_varname}',${value_value});`;
-            // TODO: Change ORDER_NONE to the correct strength.
+            return code;
+        };
+        Blockly.JavaScript['on_sharvar_change'] = function (block: Blockly.Block) {
+            var dropdown_varname = block.getFieldValue('varname');
+            var statements_statements = Blockly.JavaScript.statementToCode(block, 'statements');
+            let code = '';
+            if (dropdown_varname == '__ANY__') {
+                code += '\nCgRt.registerShareVarUpdateWildcardHandler(function(){';
+            } else {
+                code += `\nCgRt.registerShareVarUpdateHandler("${dropdown_varname}",function(){`;
+            }
+            code += statements_statements;
+            code += "\n});"
             return code;
         };
     }

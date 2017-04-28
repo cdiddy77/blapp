@@ -56,7 +56,6 @@ export class Target extends React.Component<TargetProps, TargetState>{
             return this.renderErrorMessage(this.state.evalErrMsg);
         }
         else if (CodegenRuntime.getTargetRenderProc() != null) {
-            // SHARVAR : track references to shared variables 
             try {
                 result = CodegenRuntime.getTargetRenderProc()();
                 return result;
@@ -69,7 +68,6 @@ export class Target extends React.Component<TargetProps, TargetState>{
                 });
                 return this.renderErrorMessage(e);
             }
-            // SHARVAR : end track shared variable references
         }
         const someText = 'No UI';
         return (

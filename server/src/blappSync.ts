@@ -6,6 +6,7 @@ import * as svcTypes from '../../client/shared/src/ServiceTypes';
 
 interface ProjectSessionState {
     lastControlMessage: svcTypes.ControlMessage;
+    sharedVars: any
 }
 
 var sessionMap: {
@@ -25,7 +26,8 @@ export function init(server: any) {
             let sessionId = uuid.v4();
             sessionId = createMinimalId(sessionId);
             sessionMap[sessionId] = {
-                lastControlMessage: svcTypes.createCodeChangeControlMessage('')
+                lastControlMessage: svcTypes.createCodeChangeControlMessage(''),
+                sharedVars: {}
             };
             let response: svcTypes.CreateSessionResponseMessage = { pairingCode: sessionId };
             socket.emit('createSessionResponse', response);
@@ -36,14 +38,16 @@ export function init(server: any) {
             console.log('joinSessionRequest', sid);
             let sessionResponse: svcTypes.JoinSessionResponseMessage = {
                 pairingCode: "noexist",
-                executeCode: ""
+                executeCode: "",
+                sharedVars: {}
             };
             if (sessionMap[sid]) {
                 console.log(`found sid ${sid}`);
                 socket.join(sid);
                 sessionResponse = {
                     pairingCode: sid,
-                    executeCode: sessionMap[sid].lastControlMessage.code
+                    executeCode: sessionMap[sid].lastControlMessage.code,
+                    sharedVars: sessionMap[sid].sharedVars
                 };
             } else {
                 console.log(`did not find sid ${sid}`);
@@ -61,6 +65,16 @@ export function init(server: any) {
                     sessionMap[sid].lastControlMessage = data;
                 }
             }
+        });
+        socket.on('setShareVar', (sid: string, data: svcTypes.ShareVarSetMessage) => {
+            console.log('setShareVar', sid, data.name);
+            let session = sessionMap[sid];
+            if (!session) {
+                console.error('unknown session', sid);
+                return;
+            }
+            session.sharedVars[data.name] = data.value;
+            ios.to(sid).emit('shareVarUpdated', data); 
         });
     });
 }

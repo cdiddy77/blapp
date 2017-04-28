@@ -35,7 +35,7 @@ npm run start
 	
 ## to write server code 
 ```
-code server
+code .
 Run Build Task (tsc -p server -w)
 ```
 	

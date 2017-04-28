@@ -15,7 +15,6 @@ import {
     HelpBlock
 } from 'react-bootstrap';
 
-// SPROMPT : remove react-modal for being fucking useless
 
 interface SimplePromptState {
     currentValue: string;

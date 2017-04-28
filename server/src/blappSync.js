@@ -16,7 +16,8 @@ function init(server) {
             var sessionId = uuid.v4();
             sessionId = createMinimalId(sessionId);
             sessionMap[sessionId] = {
-                lastControlMessage: svcTypes.createCodeChangeControlMessage('')
+                lastControlMessage: svcTypes.createCodeChangeControlMessage(''),
+                sharedVars: {}
             };
             var response = { pairingCode: sessionId };
             socket.emit('createSessionResponse', response);
@@ -27,14 +28,16 @@ function init(server) {
             console.log('joinSessionRequest', sid);
             var sessionResponse = {
                 pairingCode: "noexist",
-                executeCode: ""
+                executeCode: "",
+                sharedVars: {}
             };
             if (sessionMap[sid]) {
                 console.log("found sid " + sid);
                 socket.join(sid);
                 sessionResponse = {
                     pairingCode: sid,
-                    executeCode: sessionMap[sid].lastControlMessage.code
+                    executeCode: sessionMap[sid].lastControlMessage.code,
+                    sharedVars: sessionMap[sid].sharedVars
                 };
             }
             else {
@@ -54,6 +57,16 @@ function init(server) {
                     sessionMap[sid].lastControlMessage = data;
                 }
             }
+        });
+        socket.on('setShareVar', function (sid, data) {
+            console.log('setShareVar', sid, data.name);
+            var session = sessionMap[sid];
+            if (!session) {
+                console.error('unknown session', sid);
+                return;
+            }
+            session.sharedVars[data.name] = data.value;
+            ios.to(sid).emit('shareVarUpdated', data);
         });
     });
 }
