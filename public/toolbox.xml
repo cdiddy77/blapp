@@ -17,7 +17,13 @@
         </shadow>
       </value>
     </block>
-    <block type="button_element"/>
+    <block type="button_element">
+     <value name="title">
+        <shadow type="text">
+          <field name="title"/>
+        </shadow>
+      </value>
+      </block>
     <category name="Icons">
       <block type="icon_action"/>
       <block type="icon_alert"/>

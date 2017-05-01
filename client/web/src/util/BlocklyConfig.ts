@@ -699,7 +699,7 @@ export namespace BlocklyConfig {
             // if (value_style && value_style !== '') {
             //     code += '\nCgRt.addProp("style",' + value_style + ');';
             // }
-            code += conditionalPropertySetting('onPress', `function(){${statements_onpress}}`);
+            code += conditionalPropertySetting('onPress', `function(){${statements_onpress}\nCgRt.updateUI();\n}`);
             //endprops
             code += '\nvar p=CgRt.getProps();';
 

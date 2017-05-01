@@ -60,6 +60,7 @@ export namespace CodegenRuntime {
                 v.call(this);
             });
         }
+        updateUI();
     }
 
     export function registerShareVarUpdateWildcardHandler(cb: ShareVarUpdatedCallback) {
@@ -71,7 +72,7 @@ export namespace CodegenRuntime {
         shareVarUpdateHandlers[name].push(cb);
 
     }
-   
+
     export function clearAllShareVarUpdateHandlers() {
         shareVarUpdateWildCardHandlers = [];
         shareVarUpdateHandlers = {};
@@ -124,8 +125,8 @@ export namespace CodegenRuntime {
 
     export function setShareVar(name: string, val: any): void {
         sharedVars[name] = val;
-        if(shareVarSetProc)
-            shareVarSetProc(name,val);
+        if (shareVarSetProc)
+            shareVarSetProc(name, val);
     }
 
     export function testProc() {
