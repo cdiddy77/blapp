@@ -40,7 +40,7 @@ class App extends React.Component<AppProps, AppState> {
       <div className="App">
         <div className='row'>
           <div className="App-header">
-            <h2>New Blappage du Jour</h2>
+            <h2>Le Blappage du Jour</h2>
             <p>pairing code: {modelData.pairingCode}</p>
           </div>
         </div>
