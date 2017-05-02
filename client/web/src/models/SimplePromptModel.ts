@@ -6,5 +6,4 @@ export interface SimplePromptModel {
     helpMessage?: string;
     title: string;
     prompt: string;
-    // SPROMPT : add validation callback which returns null or text of error message
 }

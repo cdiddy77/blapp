@@ -22,6 +22,8 @@ export namespace CodegenRuntime {
     var shareVarUpdateWildCardHandlers: ShareVarUpdatedCallback[] = [];
     var shareVarUpdateHandlers: jsutil.Map<ShareVarUpdatedCallback[]> = {};
 
+    export var screenHeight = 600;
+
     export function setCodegenHost(host: CodegenHost): void {
         cgHost = host;
     }

@@ -9,12 +9,14 @@ import { ModelWithEvents } from './ModelWithEvents';
 import { BlocklyConfig } from '../util/BlocklyConfig';
 import { CodegenRuntime, CodegenHost } from '../../../shared/src/util/CodegenRuntime';
 import { SimplePromptModel } from './SimplePromptModel';
+import { InputFilePromptModel } from './InputFilePromptModel';
 
 export interface AppModelData {
     lastEvalError: Error;
     code: string;
     pairingCode: string;
     simplePrompt: SimplePromptModel;
+    inputFilePrompt: InputFilePromptModel;
 }
 
 export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHost {
@@ -24,7 +26,8 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
             lastEvalError: null,
             code: null,
             pairingCode: null,
-            simplePrompt: null
+            simplePrompt: null,
+            inputFilePrompt: null
         });
         CodegenRuntime.setCodegenHost(this);
     }
@@ -110,6 +113,24 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
                 prompt: prompt
             };
             this.setProperty('simplePrompt', promptVal);
+        })
+    }
+    doInputFilePrompt(title: string, prompt: string): Promise<FileList> {
+        return new Promise<FileList>((resolve, reject) => {
+            let promptVal: InputFilePromptModel = {
+                isActive: true,
+                okCallback: (input) => {
+                    resolve(input);
+                    this.setProperty('inputFilePrompt', null);
+                },
+                cancelCallback: () => {
+                    resolve(null);
+                    this.setProperty('inputFilePrompt', null);
+                },
+                title: title,
+                prompt: prompt
+            };
+            this.setProperty('inputFilePrompt', promptVal);
         })
     }
 
@@ -305,4 +326,45 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
 
     //
     /////////////////////////////////////////////////////////////////////
+
+    // save/load stuffs /////////////////////////////////////////////////
+    //
+    clearWorkspace() {
+        jsutil.notYetImplemented('clearWorkspace');
+    }
+    saveWorkspaceToFile() {
+        this.doSimplePrompt('Save File', 'file name', () => true).then(filename => {
+            if (!filename)
+                return;
+            let xml = Blockly.Xml.workspaceToDom(this._workspace);
+            // Gets the current URL, not including the hash.
+            let text = Blockly.Xml.domToText(xml);
+
+            let element = document.createElement('a');
+            element.setAttribute('href', 'data:text/xml;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+        });
+    }
+    loadWorkspaceFromFile() {
+        jsutil.notYetImplemented('loadWorkspaceFromFile');
+        this.doInputFilePrompt('Load File','file location').then(files=>{
+            if(!files|| files.length==0){
+                return;
+            }
+            let reader = new FileReader();
+            reader.onload = (evt)=>{
+                console.log((<any>evt.target).result);
+            }
+            reader.readAsText(files[0]);
+        })
+    }
+    //
+    ////////////////////////////////////////////////////////////////////
 }
