@@ -3,6 +3,7 @@
 
 
 import * as React from 'react';
+import { CSSTransitionGroup } from 'react-transition-group';
 import '../App.css';
 import { AppModel } from '../models/AppModel';
 import { TabbedArea, TabPane } from './TabbedArea';
@@ -15,6 +16,7 @@ import { InputFilePrompt } from './InputFilePrompt';
 interface AppProps {
   model: AppModel;
 }
+
 
 interface AppState {
 }
@@ -45,6 +47,7 @@ class App extends React.Component<AppProps, AppState> {
     let headerHeight = 60;
     let footerHeight = 60;
     let modelData = this.props.model.data;
+    
     return (
       <div className="App">
         <div className="App-header">
@@ -82,12 +85,18 @@ class App extends React.Component<AppProps, AppState> {
           </TabbedArea>
         </div>
         <SimplePrompt {...modelData.simplePrompt} />
-        <InputFilePrompt {...modelData.inputFilePrompt}/>
+        <InputFilePrompt {...modelData.inputFilePrompt} />
         <footer className="footer">
           <div className="container">
-           <button type='button' className='btn btn-primary' onClick={()=>this.props.model.clearWorkspace()}>Clear all</button>
-           <button type='button' className='btn btn-primary' onClick={()=>this.props.model.saveWorkspaceToFile()}>Save</button>
-           <button type='button' className='btn btn-primary' onClick={()=>this.props.model.loadWorkspaceFromFile()}>Load</button>
+            <button type='button' className='btn btn-primary' onClick={() => this.props.model.clearWorkspace()}>Clear all</button>
+            <button type='button' className='btn btn-primary' onClick={() => this.props.model.saveWorkspaceToFile()}>Save</button>
+            <button type='button' className='btn btn-primary' onClick={() => this.props.model.loadWorkspaceFromFile()}>Load</button>
+            <CSSTransitionGroup
+              transitionName='statusMessage'
+              transitionEnterTimeout={0}
+              transitionLeaveTimeout={0}>
+              {modelData.statusMessage && <span>{modelData.statusMessage}</span>}
+            </CSSTransitionGroup>
           </div>
         </footer>
       </div>

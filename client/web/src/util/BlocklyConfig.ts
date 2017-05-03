@@ -990,4 +990,195 @@ export namespace BlocklyConfig {
         }
 
     }
+
+    export function initTestBlockDef() {
+        // CPROP : since each of these kinds of blocks are going to have a 
+        // different set of properties, we need to figure out a way to store
+        // that information. Presumably we can just add an optional property
+        // on BlockDefinition
+        Blockly.Blocks['mutable_block1'] = {
+            /**
+             * Block for creating a list with any number of elements of any type.
+             * @this Blockly.Block
+             */
+            init: function () {
+                this.setHelpUrl('LISTS_CREATE_WITH_HELPURL');
+                this.setColour(230);
+                // CPROP : replace this with the set of properties that are included
+                this.itemCount_ = 3;
+                this.updateShape_();
+                this.setOutput(true, 'Array');
+                // CPROP : each mutable_block_item is going to have a different name and different props
+                this.setMutator(new Blockly.Mutator(['mutable_block1_item']));
+                this.setTooltip('LISTS_CREATE_WITH_TOOLTIP');
+            },
+            /**
+             * Create XML to represent list inputs.
+             * @return {!Element} XML storage element.
+             * @this Blockly.Block
+             */
+            mutationToDom: function () {
+                var container = document.createElement('mutation');
+                // CPROP : persist set of properties included
+                container.setAttribute('items', this.itemCount_);
+                return container;
+            },
+            /**
+             * Parse XML to restore the list inputs.
+             * @param {!Element} xmlElement XML storage element.
+             * @this Blockly.Block
+             */
+            domToMutation: function (xmlElement) {
+                // CPROP : read the set of properties that are included
+                this.itemCount_ = parseInt(xmlElement.getAttribute('items'), 10);
+                this.updateShape_();
+            },
+            /**
+             * Populate the mutator's dialog with this block's components.
+             * @param {!Blockly.Workspace} workspace Mutator's workspace.
+             * @return {!Blockly.Block} Root block in mutator.
+             * @this Blockly.Block
+             */
+            decompose: function (workspace) {
+                var containerBlock = workspace.newBlock('mutable_block1_container');
+                containerBlock.initSvg();
+                var connection = containerBlock.getInput('STACK').connection;
+                // CPROP : for each of the props that have been selected
+                for (var i = 0; i < this.itemCount_; i++) {
+                    var itemBlock = workspace.newBlock('mutable_block1_item');
+                    itemBlock.initSvg();
+                    connection.connect(itemBlock.previousConnection);
+                    connection = itemBlock.nextConnection;
+                }
+                return containerBlock;
+            },
+            /**
+             * Reconfigure this block based on the mutator dialog's components.
+             * @param {!Blockly.Block} containerBlock Root block in mutator.
+             * @this Blockly.Block
+             */
+            compose: function (containerBlock) {
+                var itemBlock = containerBlock.getInputTargetBlock('STACK');
+                // Count number of inputs.
+                var connections = [];
+                while (itemBlock) {
+                    connections.push(itemBlock.valueConnection_);
+                    itemBlock = itemBlock.nextConnection &&
+                        itemBlock.nextConnection.targetBlock();
+                }
+                // CPROP : if we have an input that is no longer in the 
+                // mutator container, we clean up the connection stuff
+                // Disconnect any children that don't belong.
+                for (var i = 0; i < this.itemCount_; i++) {
+                    var connection = this.getInput('ADD' + i).connection.targetConnection;
+                    if (connection && connections.indexOf(connection) == -1) {
+                        connection.disconnect();
+                    }
+                }
+                this.itemCount_ = connections.length;
+                this.updateShape_();
+                // Reconnect any child blocks.
+                // CPROP : reconnect
+                for (var i = 0; i < this.itemCount_; i++) {
+                    Blockly.Mutator.reconnect(connections[i], this, 'ADD' + i);
+                }
+            },
+            /**
+             * Store pointers to any connected child blocks.
+             * @param {!Blockly.Block} containerBlock Root block in mutator.
+             * @this Blockly.Block
+             */
+            saveConnections: function (containerBlock) {
+                var itemBlock = containerBlock.getInputTargetBlock('STACK');
+                var i = 0;
+                // CPROP : not sure how we are going to accomplish this
+                while (itemBlock) {
+                    var input = this.getInput('ADD' + i);
+                    itemBlock.valueConnection_ = input && input.connection.targetConnection;
+                    i++;
+                    itemBlock = itemBlock.nextConnection &&
+                        itemBlock.nextConnection.targetBlock();
+                }
+            },
+            /**
+             * Modify this block to have the correct number of inputs.
+             * @private
+             * @this Blockly.Block
+             */
+            updateShape_: function () {
+                // CPROP : I think we can just get rid of the empty business
+                if (this.itemCount_ && this.getInput('EMPTY')) {
+                    this.removeInput('EMPTY');
+                } else if (!this.itemCount_ && !this.getInput('EMPTY')) {
+                    this.appendDummyInput('EMPTY')
+                        .appendField('LISTS_CREATE_EMPTY_TITLE');
+                }
+                // CPROP : for properties that the user added
+                // Add new inputs.
+                for (var i = 0; i < this.itemCount_; i++) {
+                    if (!this.getInput('ADD' + i)) {
+                        var input = this.appendValueInput('ADD' + i);
+                        if (i == 0) {
+                            input.appendField('block name');
+                        }
+                    }
+                }
+                // CPROP : for properties that aren't there any more
+                // Remove deleted inputs.
+                while (this.getInput('ADD' + i)) {
+                    this.removeInput('ADD' + i);
+                    i++;
+                }
+            }
+        };
+
+        Blockly.Blocks['mutable_block1_container'] = {
+            /**
+             * Mutator block for list container.
+             * @this Blockly.Block
+             */
+            init: function () {
+                this.setColour(230);
+                this.appendDummyInput()
+                    .appendField('block name properties');
+                this.appendStatementInput('STACK');
+                this.setTooltip('LISTS_CREATE_WITH_CONTAINER_TOOLTIP');
+                this.contextMenu = false;
+            }
+        };
+
+        Blockly.Blocks['mutable_block1_item'] = {
+            /**
+             * Mutator block for adding items.
+             * @this Blockly.Block
+             */
+            init: function () {
+                this.setColour(230);
+                this.appendDummyInput()
+                // CPROP : need a way to shoehorn the name of the property here
+                    .appendField('propertyname');
+                this.setPreviousStatement(true);
+                this.setNextStatement(true);
+                this.setTooltip('LISTS_CREATE_WITH_ITEM_TOOLTIP');
+                this.contextMenu = false;
+            }
+        };
+
+
+    }
+
+    export function initTestBlockCodegen() {
+        Blockly.JavaScript['mutable_block1'] = function (block: Blockly.Block) {
+            // Create a list with any number of elements of any type.
+            var elements = new Array(block.itemCount_);
+            // CPROP : generate a prop on the element for each
+            for (var i = 0; i < block.itemCount_; i++) {
+                elements[i] = Blockly.JavaScript.valueToCode(block, 'ADD' + i,
+                    Blockly.JavaScript.ORDER_COMMA) || 'null';
+            }
+            var code = '[' + elements.join(', ') + ']';
+            return [code, Blockly.JavaScript.ORDER_ATOMIC];
+        };
+
+    }
 }

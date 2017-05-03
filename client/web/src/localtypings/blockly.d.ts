@@ -48,6 +48,12 @@ declare namespace Blockly {
         getVars?: () => any[];
         renameVar?: (oldName: string, newName: string) => void;
         customContextMenu?: any;
+        mutationToDom?: () => any;
+        domToMutation?: (xmlElement: any) => void;
+        decompose?: (ws: Blockly.Workspace) => any;
+        compose?: (block: Blockly.Block) => void;
+        saveConnections?: (block: Blockly.Block) => void;
+        updateShape_?:()=>void;
     }
 
     const Blocks: {
@@ -254,7 +260,7 @@ declare namespace Blockly {
     }
 
     class FieldDropdown extends Field {
-        constructor(val: any[][]| (()=>any[][]));
+        constructor(val: any[][] | (() => any[][]));
     }
     class FieldImage extends Field {
         constructor(url: string, width: number, height: number, def: string);
@@ -277,6 +283,8 @@ declare namespace Blockly {
         outputConnection: Connection;
         previousConnection: Connection;
         workspace: Workspace;
+        itemCount_?: number;
+        valueConnection_?: any;
 
 
         // Returns null if the field does not exist on the specified block.
@@ -311,6 +319,7 @@ declare namespace Blockly {
         getChildren(): Block[];
         getColour(): string;
         getDescendants(): Block[];
+        getInput(input: string): Input;
         initSvg(): void;
         removeInput(name: string, opt_quiet?: boolean): void;
         dispose(healGap: boolean): void;
@@ -424,7 +433,7 @@ declare namespace Blockly {
          */
         constructor(quarkNames: string[]);
 
-        reconnect(connectionChild: Connection, block: Block, inputName: string): boolean;
+        static reconnect(connectionChild: Connection, block: Block, inputName: string): boolean;
         dispose(): void;
     }
 
@@ -456,7 +465,7 @@ declare namespace Blockly {
         addChangeListener(f: (e: BlocklyEvent) => void): callbackHandler;
         removeChangeListener(h: callbackHandler): void;
         registerToolboxCategoryCallback(catName: string, cb: (w: Workspace) => Element[]): void;
-        registerButtonCallback(cbName:string,cb:(button:any)=>any):void;
+        registerButtonCallback(cbName: string, cb: (button: any) => any): void;
         updateToolbox(newTree: Element | string): void;
         getCanvas(): any;
         getParentSvg(): Element;

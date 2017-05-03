@@ -107,6 +107,23 @@ body {
   background: #ddd;
 }
 
+.statusMessage-enter {
+  opacity: 0.01;
+}
+
+.statusMessage-enter.statusMessage-enter-active {
+  opacity: 1;
+  transition: opacity 500ms ease-in;
+}
+
+.statusMessage-leave {
+  opacity: 1;
+}
+
+.statusMessage-leave.statusMessage-leave-active {
+  opacity: 0.01;
+  transition: opacity 300ms ease-in;
+}
 
 /*.clearfix:after {
   content: "";

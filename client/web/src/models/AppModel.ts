@@ -17,6 +17,7 @@ export interface AppModelData {
     pairingCode: string;
     simplePrompt: SimplePromptModel;
     inputFilePrompt: InputFilePromptModel;
+    statusMessage:string;
 }
 
 export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHost {
@@ -27,7 +28,8 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
             code: null,
             pairingCode: null,
             simplePrompt: null,
-            inputFilePrompt: null
+            inputFilePrompt: null,
+            statusMessage:null
         });
         CodegenRuntime.setCodegenHost(this);
     }
@@ -81,6 +83,8 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
             BlocklyConfig.initStyleBlockCodeGenerators();
             BlocklyConfig.initIconBlockDefinitions();
             BlocklyConfig.initIconBlockCodeGenerators();
+            BlocklyConfig.initTestBlockDef();
+            BlocklyConfig.initTestBlockCodegen();
             setTimeout(this.restoreWorkspace(), 0);
         });
 
@@ -326,11 +330,16 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
 
     //
     /////////////////////////////////////////////////////////////////////
-
+setUIStatusMessage(status:string){
+            this.setProperty('statusMessage',status);
+            setTimeout(()=>{
+                this.setProperty('statusMessage',null);
+            },5000);
+        }
     // save/load stuffs /////////////////////////////////////////////////
     //
     clearWorkspace() {
-        jsutil.notYetImplemented('clearWorkspace');
+        this._workspace.clear();
     }
     saveWorkspaceToFile() {
         this.doSimplePrompt('Save File', 'file name', () => true).then(filename => {
@@ -353,14 +362,24 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
         });
     }
     loadWorkspaceFromFile() {
-        jsutil.notYetImplemented('loadWorkspaceFromFile');
-        this.doInputFilePrompt('Load File','file location').then(files=>{
-            if(!files|| files.length==0){
+        this.doInputFilePrompt('Load File', 'file location').then(files => {
+            if (!files || files.length == 0) {
                 return;
             }
             let reader = new FileReader();
-            reader.onload = (evt)=>{
-                console.log((<any>evt.target).result);
+            reader.onload = (evt) => {
+                let text = (<any>evt.target).result;
+                let xml = Blockly.Xml.textToDom(text);
+                if(xml.tagName!=='xml'){
+                    this.setUIStatusMessage('could not find blocks in this file');
+                    return;
+                }
+                this._workspace.clear();
+                Blockly.Xml.domToWorkspace(xml, this._workspace);
+
+                // and then walk the workspace, find all of the 
+                // shared variables, and keep them in our own list
+                this.findAllSharedVariables(true);
             }
             reader.readAsText(files[0]);
         })
