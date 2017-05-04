@@ -48,6 +48,10 @@ declare namespace Blockly {
         getVars?: () => any[];
         renameVar?: (oldName: string, newName: string) => void;
         customContextMenu?: any;
+
+        // putting these functions here gets the compiler to 
+        // be quiet, but actually these functions get stuck
+        // on the block, not on the 
         mutationToDom?: () => any;
         domToMutation?: (xmlElement: any) => void;
         decompose?: (ws: Blockly.Workspace) => any;

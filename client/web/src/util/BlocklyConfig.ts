@@ -991,7 +991,27 @@ export namespace BlocklyConfig {
 
     }
 
-    export function initTestBlockDef() {
+    interface UIBlockOptionalProperty {
+        name: string;
+        type: 'val' | 'func' | 'text' | 'enum';
+        enumVals?: string[];
+    }
+    class UIBlockDescriptor{
+        blockName:string;
+        optionalProps:UIBlockOptionalProperty[];
+        initFunction:(
+    }
+
+    export function initAllUIBlockDefs(){
+        let uiBlockDefs:UIBlockDescriptor[]=[
+
+        ];
+        for(let i=0;i<uiBlockDefs.length;i++){
+
+        }
+    }
+
+    export function initUIBlockDef(uiBlock:UIBlockDescriptor) {
         // CPROP : since each of these kinds of blocks are going to have a 
         // different set of properties, we need to figure out a way to store
         // that information. Presumably we can just add an optional property
@@ -1002,15 +1022,27 @@ export namespace BlocklyConfig {
              * @this Blockly.Block
              */
             init: function () {
-                this.setHelpUrl('LISTS_CREATE_WITH_HELPURL');
-                this.setColour(230);
+                this.appendDummyInput()
+                    .appendField(new Blockly.FieldImage("media/av/ic_web_white_48dp.png", 16, 16, "*"))
+                    .appendField("container")
+                    .appendField(new Blockly.FieldTextInput("", null), "NAME");
+                this.appendStatementInput("child elements")
+                    .setCheck(null);
+                this.appendValueInput("style")
+                    .setCheck("STYLE")
+                    .setAlign(Blockly.ALIGN_RIGHT)
+                    .appendField("appearance");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(285);
+                this.setTooltip('');
+                this.setHelpUrl('');
+
                 // CPROP : replace this with the set of properties that are included
                 this.itemCount_ = 3;
                 this.updateShape_();
-                this.setOutput(true, 'Array');
                 // CPROP : each mutable_block_item is going to have a different name and different props
                 this.setMutator(new Blockly.Mutator(['mutable_block1_item']));
-                this.setTooltip('LISTS_CREATE_WITH_TOOLTIP');
             },
             /**
              * Create XML to represent list inputs.
@@ -1155,7 +1187,7 @@ export namespace BlocklyConfig {
             init: function () {
                 this.setColour(230);
                 this.appendDummyInput()
-                // CPROP : need a way to shoehorn the name of the property here
+                    // CPROP : need a way to shoehorn the name of the property here
                     .appendField('propertyname');
                 this.setPreviousStatement(true);
                 this.setNextStatement(true);
@@ -1169,15 +1201,26 @@ export namespace BlocklyConfig {
 
     export function initTestBlockCodegen() {
         Blockly.JavaScript['mutable_block1'] = function (block: Blockly.Block) {
-            // Create a list with any number of elements of any type.
-            var elements = new Array(block.itemCount_);
-            // CPROP : generate a prop on the element for each
-            for (var i = 0; i < block.itemCount_; i++) {
-                elements[i] = Blockly.JavaScript.valueToCode(block, 'ADD' + i,
-                    Blockly.JavaScript.ORDER_COMMA) || 'null';
+            let statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
+            // properties
+            let code = '{\nCgRt.beginProps();\n';
+
+            //styles
+            let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
+            if (value_style && value_style !== '') {
+                code += '\nCgRt.addProp("style",' + value_style + ');';
             }
-            var code = '[' + elements.join(', ') + ']';
-            return [code, Blockly.JavaScript.ORDER_ATOMIC];
+            //endprops
+            let propsVarName = getVarName('p');
+            code += `\nvar ${propsVarName}=CgRt.getProps();`;
+
+            // children
+            code += '\nCgRt.pushCont();\n{';
+            code += statements_child_elements;
+            let childrenVarName = getVarName('cl');
+            code += `}\nvar ${childrenVarName}=CgRt.popCont();`;
+            code += `\nCgRt.pushElem(CgRt.createElement(CgRt.Viewr, ${propsVarName},${childrenVarName}));\n}\n`;
+            return code;
         };
 
     }

@@ -83,7 +83,7 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
             BlocklyConfig.initStyleBlockCodeGenerators();
             BlocklyConfig.initIconBlockDefinitions();
             BlocklyConfig.initIconBlockCodeGenerators();
-            BlocklyConfig.initTestBlockDef();
+            BlocklyConfig.initAllUIBlockDefs();
             BlocklyConfig.initTestBlockCodegen();
             setTimeout(this.restoreWorkspace(), 0);
         });
