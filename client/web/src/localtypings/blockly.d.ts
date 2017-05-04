@@ -57,7 +57,7 @@ declare namespace Blockly {
         decompose?: (ws: Blockly.Workspace) => any;
         compose?: (block: Blockly.Block) => void;
         saveConnections?: (block: Blockly.Block) => void;
-        updateShape_?:()=>void;
+        updateShape_?: () => void;
     }
 
     const Blocks: {
@@ -287,8 +287,11 @@ declare namespace Blockly {
         outputConnection: Connection;
         previousConnection: Connection;
         workspace: Workspace;
-        itemCount_?: number;
         valueConnection_?: any;
+
+        // actually this is required for the optional parameters
+        itemCount_?: number;
+        mutateInfo_?: any;
 
 
         // Returns null if the field does not exist on the specified block.

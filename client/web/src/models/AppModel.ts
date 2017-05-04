@@ -6,7 +6,8 @@
 
 import * as jsutil from '../../../shared/src/util/jsutil';
 import { ModelWithEvents } from './ModelWithEvents';
-import { BlocklyConfig } from '../util/BlocklyConfig';
+import { BlocklyConfig } from '../blocks/BlocklyConfig';
+import { UIBlockConfig } from '../blocks/UIBlockConfig';
 import { CodegenRuntime, CodegenHost } from '../../../shared/src/util/CodegenRuntime';
 import { SimplePromptModel } from './SimplePromptModel';
 import { InputFilePromptModel } from './InputFilePromptModel';
@@ -83,8 +84,8 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
             BlocklyConfig.initStyleBlockCodeGenerators();
             BlocklyConfig.initIconBlockDefinitions();
             BlocklyConfig.initIconBlockCodeGenerators();
-            BlocklyConfig.initAllUIBlockDefs();
-            BlocklyConfig.initTestBlockCodegen();
+            UIBlockConfig.initAllUIBlockDefs();
+            UIBlockConfig.initTestBlockCodegen();
             setTimeout(this.restoreWorkspace(), 0);
         });
 
