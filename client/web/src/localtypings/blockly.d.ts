@@ -289,8 +289,7 @@ declare namespace Blockly {
         workspace: Workspace;
         valueConnection_?: any;
 
-        // actually this is required for the optional parameters
-        itemCount_?: number;
+        // CPROP : When everything is working, get rid of itemCount_
         mutateInfo_?: any;
 
 
@@ -414,6 +413,7 @@ declare namespace Blockly {
         sourceBlock_: Block;
         targetBlock(): Block;
         connect(otherConnection: Connection): void;
+        disconnect(): void;
     }
 
     // if type is one of "procedures_def{,no}return", or "procedures_call{,no}return"

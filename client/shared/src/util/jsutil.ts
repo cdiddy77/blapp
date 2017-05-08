@@ -53,9 +53,8 @@ export function mapToArray<T, U>(src: Map<T>, fn: (k: string, v: T) => U): U[] {
         if (src.hasOwnProperty(p)) {
             dest.push(fn(p, src[p]));
         }
-        return dest;
     }
-
+    return dest;
 }
 
 export function interpolateValue(normValue: number, low: number, high: number): number {
