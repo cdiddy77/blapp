@@ -47,6 +47,17 @@ export function mapSelect<T, U>(src: Map<T>, s: (t: T) => U): Map<U> {
     return dest;
 }
 
+export function mapToArray<T, U>(src: Map<T>, fn: (k: string, v: T) => U): U[] {
+    let dest: U[] = [];
+    for (var p in src) {
+        if (src.hasOwnProperty(p)) {
+            dest.push(fn(p, src[p]));
+        }
+        return dest;
+    }
+
+}
+
 export function interpolateValue(normValue: number, low: number, high: number): number {
     return low + (normValue * (high - low));
 }
@@ -121,7 +132,7 @@ export interface RequestURLOpts {
 export function requestURL(opts: RequestURLOpts): Promise<string> {
     return new Promise<string>(function (resolve, reject) {
         let xhr = new XMLHttpRequest();
-        let method = opts.method||'GET';
+        let method = opts.method || 'GET';
         xhr.open(method, opts.url);
         xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) {
@@ -140,7 +151,7 @@ export function requestURL(opts: RequestURLOpts): Promise<string> {
             });
         };
         if (opts.headers) {
-            Object.keys(opts.headers).forEach((key)=> {
+            Object.keys(opts.headers).forEach((key) => {
                 xhr.setRequestHeader(key, opts.headers[key]);
             });
         }

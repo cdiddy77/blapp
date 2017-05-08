@@ -4,14 +4,15 @@ import * as jsutil from '../../../shared/src/util/jsutil';
 import { BlocklyConfig } from './BlocklyConfig';
 
 export namespace UIBlockConfig {
-    interface UIBlockOptionalProperty {
+
+    interface UIBlockOptPropDesc {
         name: string;
         displayName: string;
         type: 'val' | 'func' | 'text' | 'enum';
         enumVals?: string[][];
     }
-    class UIBlockDescriptor {
-        optionalProps: jsutil.Map<UIBlockOptionalProperty>;
+    class UIBlockDesc {
+        optionalProps: jsutil.Map<UIBlockOptPropDesc>;
     }
 
     interface UIBlockMutateInfo {
@@ -19,7 +20,11 @@ export namespace UIBlockConfig {
         installedProps: string[];
     }
 
-    var uiBlockDescriptors: jsutil.Map<UIBlockDescriptor> = {
+    class OptPropMutatorItemBlock extends Blockly.Block {
+        desc_: UIBlockOptPropDesc;
+    }
+
+    var uiBlockDescriptors: jsutil.Map<UIBlockDesc> = {
         'view-block': {
             optionalProps: {
                 pointerEvents: {
@@ -43,6 +48,17 @@ export namespace UIBlockConfig {
     };
 
     export function initAllUIBlockDefs() {
+        for (let p in uiBlockDescriptors) {
+            let blockDesc = uiBlockDescriptors[p];
+            for (let pop in blockDesc.optionalProps) {
+                let mutateItemBlockName = getOptPropBlockName(p, pop);
+                if (!Blockly.Blocks[mutateItemBlockName]) {
+                    Blockly.Blocks[mutateItemBlockName] = createPropMutationItemBlock(
+                        blockDesc.optionalProps[pop]);
+                }
+            }
+        }
+
         // view-block definition
         const defName = 'view-block';
         let viewBlockDef = createUIBlockDef(uiBlockDescriptors[defName]);
@@ -91,9 +107,8 @@ export namespace UIBlockConfig {
              */
             init: function () {
                 this.setColour(230);
-                this.appendDummyInput()
-                    // CPROP : need a way to shoehorn the name of the property here
-                    .appendField('propertyname');
+                this.appendDummyInput().
+                    appendField('propertyname')
                 this.setPreviousStatement(true);
                 this.setNextStatement(true);
                 this.setTooltip('LISTS_CREATE_WITH_ITEM_TOOLTIP');
@@ -111,17 +126,44 @@ export namespace UIBlockConfig {
             descriptorName: defName,
             installedProps: []
         };
-        this.updateShape_();
-        // CPROP : each mutable_block_item is going to have a different name and different props
-        this.setMutator(new Blockly.Mutator(['mutable_block1_item']));
 
+        this.updateShape_();
+        let desc = uiBlockDescriptors[defName];
+        // CPROP : each mutable_block_item is going to have a different name and different props
+        this.setMutator(new Blockly.Mutator(
+            jsutil.mapToArray(desc.optionalProps, (k, v) => {
+                return getOptPropBlockName(defName, k);
+            })));
+
+    }
+
+    function getOptPropBlockName(defName: string, propName: string): string {
+        return `mutable_${defName}_${propName}_item`;
+    }
+    function createPropMutationItemBlock(
+        propDesc: UIBlockOptPropDesc): Blockly.BlockDefinition {
+        return {
+            /**
+             * Mutator block for adding items.
+             * @this Blockly.Block
+             */
+            init: function () {
+                this.setColour(230);
+                this.appendDummyInput().
+                    appendField(propDesc.displayName)
+                this.setPreviousStatement(true);
+                this.setNextStatement(true);
+                this.setTooltip('LISTS_CREATE_WITH_ITEM_TOOLTIP');
+                this.contextMenu = false;
+            }
+        };
     }
 
     function getMutateInfo(b: Blockly.Block): UIBlockMutateInfo {
         return <UIBlockMutateInfo>(b.mutateInfo_);
     }
 
-    function createUIBlockDef(uiBlock: UIBlockDescriptor): Blockly.BlockDefinition {
+    function createUIBlockDef(uiBlock: UIBlockDesc): Blockly.BlockDefinition {
         // CPROP : since each of these kinds of blocks are going to have a 
         // different set of properties, we need to figure out a way to store
         // that information. Presumably we can just add an optional property
@@ -167,9 +209,16 @@ export namespace UIBlockConfig {
                 containerBlock.initSvg();
                 var connection = containerBlock.getInput('STACK').connection;
                 let minfo = getMutateInfo(this);
+                let desc = uiBlockDescriptors[minfo.descriptorName];
                 // CPROP : for each of the props that have been selected
                 for (var i = 0; i < minfo.installedProps.length; i++) {
                     var itemBlock = workspace.newBlock('mutable_block1_item');
+                    // give it the correct name
+                    itemBlock.appendDummyInput()
+                        // CPROP : need a way to shoehorn the name of the property here
+                        .appendField(desc.optionalProps[minfo.installedProps[i]].displayName);
+                    // CPROP : need to stuff the name of the property in so that we can get it in 
+                    // compose
                     itemBlock.initSvg();
                     connection.connect(itemBlock.previousConnection);
                     connection = itemBlock.nextConnection;
