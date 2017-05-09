@@ -200,7 +200,7 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
 
     getNormalAndSharedVariables(): any[][] {
         let sharedVars = this.getSharedVariablesList();
-        if(sharedVars.length==1 && sharedVars[0][0]==='dummy'){
+        if (sharedVars.length == 1 && sharedVars[0][0] === 'dummy') {
             sharedVars = [];
         }
         let normalVars = this._workspace.variableList;
@@ -208,6 +208,9 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
             ...sharedVars.map(v => [`[shared] ${v[0]}`, `shared_${v[1]}`]),
             ...normalVars.map(v => [v, `normal_${v}`])
         ];
+        if (result.length == 0) {
+            result = [['no variables defined', 'dummy']];
+        }
         return result;
     }
 
