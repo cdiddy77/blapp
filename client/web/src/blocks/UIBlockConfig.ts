@@ -25,7 +25,7 @@ export namespace UIBlockConfig {
     }
 
     var uiBlockDescriptors: jsutil.Map<UIBlockDesc> = {
-        'view-block': {
+        'view_element': {
             optionalProps: {
                 pointerEvents: {
                     name: 'pointerEvents',
@@ -44,10 +44,16 @@ export namespace UIBlockConfig {
                     type: 'func'
                 }
             }
+        },
+        // TEXTIN : lots of optional props here
+        'textinput_element': {
+            optionalProps: {
+
+            }
         }
     };
 
-    export function initAllUIBlockDefs() {
+    export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
 
         // create block items for mutator ui
         for (let p in uiBlockDescriptors) {
@@ -61,8 +67,8 @@ export namespace UIBlockConfig {
             }
         }
 
-        // view-block definition
-        const defName = 'view-block';
+        // view_element definition
+        let defName = 'view_element';
         let viewBlockDef = createUIBlockDef(uiBlockDescriptors[defName]);
         viewBlockDef.init = function () {
             this.appendDummyInput()
@@ -83,9 +89,31 @@ export namespace UIBlockConfig {
             this.setHelpUrl('');
             blockDefInitHelper.call(this, defName);
         }
-        Blockly.Blocks['mutable_block1'] = viewBlockDef;
+        Blockly.Blocks[defName] = viewBlockDef;
 
         // insert more ui block definitions here
+        // TEXTIN : set up the UI block definition
+        Blockly.Blocks['textinput_element'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField(new Blockly.FieldImage("media/content/ic_font_download_white_48dp.png", 16, 16, "*"))
+                    .appendField("text input UI");
+                this.appendDummyInput()
+                    .setAlign(Blockly.ALIGN_RIGHT)
+                    .appendField("storage")
+                    .appendField(new Blockly.FieldDropdown(getStorageVarsProc), "storage");
+                this.appendValueInput("style")
+                    .setCheck("STYLE")
+                    .setAlign(Blockly.ALIGN_RIGHT)
+                    .appendField("formatting");
+                this.setInputsInline(false);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(285);
+                this.setTooltip('');
+                this.setHelpUrl('');
+            }
+        };
 
         // initialize the blocks used in the gear window
         Blockly.Blocks['mutable_block1_container'] = {
@@ -352,11 +380,16 @@ export namespace UIBlockConfig {
             }
         };
     }
-    export function initTestBlockCodegen() {
-        Blockly.JavaScript['mutable_block1'] = function (block: Blockly.Block) {
+    export function initUIBlockCodegen() {
+        Blockly.JavaScript['view_element'] = function (block: Blockly.Block) {
             let statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
+            let value_pointerEvents = block.getFieldValue(getOptPropInputName('pointerEvents'));
+            let statements_onLayout = Blockly.JavaScript.statementToCode(block, getOptPropInputName('onLayout'));
             // properties
             let code = '{\nCgRt.beginProps();\n';
+
+            code += BlocklyConfig.conditionalStringPropertySetting('pointerEvents', `'${value_pointerEvents}'`);
+            code += BlocklyConfig.conditionalFuncPropertySetting('onLayout', statements_onLayout, false);
 
             //styles
             let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
@@ -375,6 +408,43 @@ export namespace UIBlockConfig {
             code += `\nCgRt.pushElem(CgRt.createElement(CgRt.Viewr, ${propsVarName},${childrenVarName}));\n}\n`;
             return code;
         };
+        // TEXTIN : generate code for text input
+        Blockly.JavaScript['textinput_element'] = function (block: Blockly.Block) {
+            var dropdown_storage = block.getFieldValue('storage');
+            // properties
+            let code = '{\nCgRt.beginProps();\n';
 
+            if (dropdown_storage && dropdown_storage !== '') {
+                let callUpdate = '';
+                let isShared: boolean = dropdown_storage.startsWith('shared_');
+                let varName = dropdown_storage.substring(7); // 'normal_' | 'shared_'
+                let onChangeTextStatements: string;
+                if (isShared) {
+                    onChangeTextStatements = `function(text){CgRt.setShareVar('${varName}',text);\nCgRt.updateUI();}`;
+                } else {
+                    onChangeTextStatements = `function(text){${varName} = text;\nCgRt.updateUI();}`;
+                }
+                code += BlocklyConfig.conditionalPropertySetting('onChangeText', onChangeTextStatements);
+                let valueExpression: string;
+                if (isShared) {
+                    valueExpression = `CgRt.getShareVar('${varName}')`;
+                } else {
+                    valueExpression = varName;
+                }
+                code += BlocklyConfig.conditionalPropertySetting('value', valueExpression);
+            }
+
+            //styles
+            let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
+            if (value_style && value_style !== '') {
+                code += '\nCgRt.addProp("style",' + value_style + ');';
+            }
+            //endprops
+            let propsVarName = BlocklyConfig.getVarName('p');
+            code += `\nvar ${propsVarName}=CgRt.getProps();`;
+
+            code += `\nCgRt.pushElem(CgRt.createElement(CgRt.TextInputr,${propsVarName}));\n}\n`;
+            return code;
+        };
     }
 }

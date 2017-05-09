@@ -18,7 +18,7 @@ export interface AppModelData {
     pairingCode: string;
     simplePrompt: SimplePromptModel;
     inputFilePrompt: InputFilePromptModel;
-    statusMessage:string;
+    statusMessage: string;
 }
 
 export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHost {
@@ -30,7 +30,7 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
             pairingCode: null,
             simplePrompt: null,
             inputFilePrompt: null,
-            statusMessage:null
+            statusMessage: null
         });
         CodegenRuntime.setCodegenHost(this);
     }
@@ -76,6 +76,9 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
                 this.setProperty('code', Blockly.JavaScript.workspaceToCode(this._workspace));
                 this.backupWorkspace();
             });
+
+            let getStorageVarsProc = this.getNormalAndSharedVariables.bind(this);
+
             this.initDynamicCategories();
             BlocklyConfig.initBlockDefinitions();
             this.initSharedVariableBlocks();
@@ -84,8 +87,8 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
             BlocklyConfig.initStyleBlockCodeGenerators();
             BlocklyConfig.initIconBlockDefinitions();
             BlocklyConfig.initIconBlockCodeGenerators();
-            UIBlockConfig.initAllUIBlockDefs();
-            UIBlockConfig.initTestBlockCodegen();
+            UIBlockConfig.initAllUIBlockDefs(getStorageVarsProc);
+            UIBlockConfig.initUIBlockCodegen();
             setTimeout(this.restoreWorkspace(), 0);
         });
 
@@ -182,9 +185,9 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
 
     // shared variable stuffs ///////////////////////////////////////////
     //
-    private getSharedVariablesList() {
+    private getSharedVariablesList(): string[][] {
         if (this.sharedVariableNames.length == 0) {
-            return ['dummy', 'dummy'];
+            return [['dummy', 'dummy']];
         } else {
             return this.sharedVariableNames.map((v, i, arr) => {
                 return [v, v];
@@ -193,6 +196,19 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
     }
     private getSharedVariablesListWithWildcard() {
         return [['--any--', '__ANY__'], ...this.getSharedVariablesList()];
+    }
+
+    getNormalAndSharedVariables(): any[][] {
+        let sharedVars = this.getSharedVariablesList();
+        if(sharedVars.length==1 && sharedVars[0][0]==='dummy'){
+            sharedVars = [];
+        }
+        let normalVars = this._workspace.variableList;
+        let result: any[][] = [
+            ...sharedVars.map(v => [`[shared] ${v[0]}`, `shared_${v[1]}`]),
+            ...normalVars.map(v => [v, `normal_${v}`])
+        ];
+        return result;
     }
 
     initSharedVariableBlocks() {
@@ -331,12 +347,12 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
 
     //
     /////////////////////////////////////////////////////////////////////
-setUIStatusMessage(status:string){
-            this.setProperty('statusMessage',status);
-            setTimeout(()=>{
-                this.setProperty('statusMessage',null);
-            },5000);
-        }
+    setUIStatusMessage(status: string) {
+        this.setProperty('statusMessage', status);
+        setTimeout(() => {
+            this.setProperty('statusMessage', null);
+        }, 5000);
+    }
     // save/load stuffs /////////////////////////////////////////////////
     //
     clearWorkspace() {
@@ -371,7 +387,7 @@ setUIStatusMessage(status:string){
             reader.onload = (evt) => {
                 let text = (<any>evt.target).result;
                 let xml = Blockly.Xml.textToDom(text);
-                if(xml.tagName!=='xml'){
+                if (xml.tagName !== 'xml') {
                     this.setUIStatusMessage('could not find blocks in this file');
                     return;
                 }

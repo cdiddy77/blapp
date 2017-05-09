@@ -29,25 +29,25 @@ export namespace BlocklyConfig {
             }
         };
 
-        Blockly.Blocks['container_element'] = {
-            init: function () {
-                this.appendDummyInput()
-                    .appendField(new Blockly.FieldImage("media/av/ic_web_white_48dp.png", 16, 16, "*"))
-                    .appendField("container")
-                    .appendField(new Blockly.FieldTextInput("", null), "NAME");
-                this.appendStatementInput("child elements")
-                    .setCheck(null);
-                this.appendValueInput("style")
-                    .setCheck("STYLE")
-                    .setAlign(Blockly.ALIGN_RIGHT)
-                    .appendField("appearance");
-                this.setPreviousStatement(true, null);
-                this.setNextStatement(true, null);
-                this.setColour(285);
-                this.setTooltip('');
-                this.setHelpUrl('');
-            }
-        };
+        // Blockly.Blocks['container_element'] = {
+        //     init: function () {
+        //         this.appendDummyInput()
+        //             .appendField(new Blockly.FieldImage("media/av/ic_web_white_48dp.png", 16, 16, "*"))
+        //             .appendField("container")
+        //             .appendField(new Blockly.FieldTextInput("", null), "NAME");
+        //         this.appendStatementInput("child elements")
+        //             .setCheck(null);
+        //         this.appendValueInput("style")
+        //             .setCheck("STYLE")
+        //             .setAlign(Blockly.ALIGN_RIGHT)
+        //             .appendField("appearance");
+        //         this.setPreviousStatement(true, null);
+        //         this.setNextStatement(true, null);
+        //         this.setColour(285);
+        //         this.setTooltip('');
+        //         this.setHelpUrl('');
+        //     }
+        // };
 
         Blockly.Blocks['text_element'] = {
             init: function () {
@@ -591,13 +591,20 @@ export namespace BlocklyConfig {
         return prefix + curVarIndex;
     }
 
-    function conditionalStringPropertySetting(prop: string, value: string, defaultValue?: string): string {
+    export function conditionalStringPropertySetting(prop: string, value: string, defaultValue?: string): string {
         if (value && value !== 'null' && value !== 'undefined') {
             value = `String(${value})`;
         }
         return conditionalPropertySetting(prop, value, defaultValue);
     }
-    function conditionalPropertySetting(prop: string, value: string, defaultValue?: string): string {
+    export function conditionalFuncPropertySetting(prop: string, statements: string, updateUI: boolean): string {
+        if (statements && statements !== 'null' && statements !== 'undefined') {
+            let callUpdate = updateUI ? '\nCgRt.updateUI();' : '';
+            statements = `function(){${statements}${callUpdate}}`;
+        }
+        return conditionalPropertySetting(prop, statements);
+    }
+    export function conditionalPropertySetting(prop: string, value: string, defaultValue?: string): string {
         let code: string = '';
         if (value && value != '') {
             code += `\nCgRt.addProp("${prop}",${value});`;
@@ -621,28 +628,28 @@ export namespace BlocklyConfig {
             var code = 'CgRt.updateUI();\n';
             return code;
         };
-        Blockly.JavaScript['container_element'] = (block: Blockly.Block) => {
-            let statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
-            // properties
-            let code = '{\nCgRt.beginProps();\n';
+        // Blockly.JavaScript['container_element'] = (block: Blockly.Block) => {
+        //     let statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
+        //     // properties
+        //     let code = '{\nCgRt.beginProps();\n';
 
-            //styles
-            let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
-            if (value_style && value_style !== '') {
-                code += '\nCgRt.addProp("style",' + value_style + ');';
-            }
-            //endprops
-            let propsVarName = getVarName('p');
-            code += `\nvar ${propsVarName}=CgRt.getProps();`;
+        //     //styles
+        //     let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
+        //     if (value_style && value_style !== '') {
+        //         code += '\nCgRt.addProp("style",' + value_style + ');';
+        //     }
+        //     //endprops
+        //     let propsVarName = getVarName('p');
+        //     code += `\nvar ${propsVarName}=CgRt.getProps();`;
 
-            // children
-            code += '\nCgRt.pushCont();\n{';
-            code += statements_child_elements;
-            let childrenVarName = getVarName('cl');
-            code += `}\nvar ${childrenVarName}=CgRt.popCont();`;
-            code += `\nCgRt.pushElem(CgRt.createElement(CgRt.Viewr, ${propsVarName},${childrenVarName}));\n}\n`;
-            return code;
-        };
+        //     // children
+        //     code += '\nCgRt.pushCont();\n{';
+        //     code += statements_child_elements;
+        //     let childrenVarName = getVarName('cl');
+        //     code += `}\nvar ${childrenVarName}=CgRt.popCont();`;
+        //     code += `\nCgRt.pushElem(CgRt.createElement(CgRt.Viewr, ${propsVarName},${childrenVarName}));\n}\n`;
+        //     return code;
+        // };
 
         Blockly.JavaScript['text_element'] = (block: Blockly.Block) => {
             var value_text_value = Blockly.JavaScript.valueToCode(block, 'text value', Blockly.JavaScript.ORDER_ATOMIC);

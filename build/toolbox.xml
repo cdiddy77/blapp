@@ -2,8 +2,7 @@
   <category name="UI" colour="#935ba5">
     <block type="user_interface"/>
     <block type="force_ui_update"/>
-    <block type="container_element"/>
-    <block type="mutable_block1"/>
+    <block type="view_element"/>
     <block type="text_element">
       <value name="text value">
         <shadow type="text">
@@ -19,12 +18,13 @@
       </value>
     </block>
     <block type="button_element">
-     <value name="title">
+      <value name="title">
         <shadow type="text">
           <field name="title"/>
         </shadow>
       </value>
-      </block>
+    </block>
+    <block type='textinput_element'/>
     <category name="Icons">
       <block type="icon_action"/>
       <block type="icon_alert"/>

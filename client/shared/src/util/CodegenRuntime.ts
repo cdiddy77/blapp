@@ -1,6 +1,6 @@
 import * as jsutil from '../../../shared/src/util/jsutil';
 import * as React from 'react';
-import { View, Text, Image, Button } from 'react-native';
+import { View, Text, Image, Button, TextInput } from 'react-native';
 
 export interface CodegenHost {
 }
@@ -153,4 +153,5 @@ export namespace CodegenRuntime {
     export var Imager = Image;
     export var Textr = Text;
     export var Buttonr = Button;
+    export var TextInputr = TextInput;
 }
