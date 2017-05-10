@@ -17,6 +17,7 @@
         </shadow>
       </value>
     </block>
+    <block type="touchable_element"/>
     <block type="button_element">
       <value name="title">
         <shadow type="text">

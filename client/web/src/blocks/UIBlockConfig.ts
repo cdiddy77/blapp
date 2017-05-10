@@ -46,7 +46,6 @@ export namespace UIBlockConfig {
                 }
             }
         },
-        // TEXTIN : lots of optional props here
         'textinput_element': {
             optionalProps: {
                 onSubmitEditing: {
@@ -169,6 +168,25 @@ export namespace UIBlockConfig {
                     type: 'func'
                 },
             }
+        },
+        'touchable_element': {
+            optionalProps: {
+                disabled: {
+                    name: 'disabled',
+                    displayName: 'disabled',
+                    type: 'bool'
+                },
+                activeOpacity: {
+                    name: 'activeOpacity',
+                    displayName: 'fade when touched',
+                    type: 'val'
+                },
+                underlayColor: {
+                    name: 'underlayColor',
+                    displayName: 'background color when touched',
+                    type: 'val'
+                },
+            }
         }
     };
 
@@ -210,8 +228,6 @@ export namespace UIBlockConfig {
         };
         Blockly.Blocks[defName] = viewBlockDef;
 
-        // insert more ui block definitions here
-        // TEXTIN : set up the UI block definition
         defName = 'textinput_element';
         viewBlockDef = createUIBlockDef(uiBlockDescriptors[defName]);
         viewBlockDef.init = function () {
@@ -235,6 +251,35 @@ export namespace UIBlockConfig {
             blockDefInitHelper.call(this, 'textinput_element');
         };
         Blockly.Blocks[defName] = viewBlockDef;
+
+        defName = 'touchable_element';
+        viewBlockDef = createUIBlockDef(uiBlockDescriptors[defName]);
+        viewBlockDef.init = function () {
+            this.appendDummyInput()
+                .appendField("touchable container UI");
+            this.appendStatementInput("child elements")
+                .setCheck(null);
+            this.appendValueInput("style")
+                .setCheck("STYLE")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("formatting");
+            this.appendStatementInput("onPress")
+                .setCheck(null)
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("when pressed");
+            this.setInputsInline(false);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(285);
+            this.setTooltip('');
+            this.setHelpUrl('');
+            blockDefInitHelper.call(this, 'touchable_element');
+        };
+        Blockly.Blocks[defName] = viewBlockDef;
+        /////////////////////////////////////////////////
+        //
+        // insert more ui block definitions here
+        //
 
         // initialize the blocks used in the gear window
         Blockly.Blocks['mutable_block1_container'] = {
@@ -538,13 +583,12 @@ export namespace UIBlockConfig {
             code += `\nCgRt.pushElem(CgRt.createElement(CgRt.Viewr, ${propsVarName},${childrenVarName}));\n}\n`;
             return code;
         };
-        // TEXTIN : generate code for text input
         Blockly.JavaScript['textinput_element'] = function (block: Blockly.Block) {
             let blockdesc = uiBlockDescriptors['textinput_element'];
             let dropdown_storage = Blockly.JavaScript.variableDB_.getName(
-                block.getFieldValue('storage'), 
+                block.getFieldValue('storage'),
                 Blockly.Variables.NAME_TYPE);
- 
+
             // properties
             let code = '{\nCgRt.beginProps();\n';
             let statements_onChangeText = Blockly.JavaScript.statementToCode(block, getOptPropInputName('onChangeText'));
@@ -602,6 +646,43 @@ export namespace UIBlockConfig {
             code += `\nvar ${propsVarName}=CgRt.getProps();`;
 
             code += `\nCgRt.pushElem(CgRt.createElement(CgRt.TextInputr,${propsVarName}));\n}\n`;
+            return code;
+        };
+
+        Blockly.JavaScript['touchable_element'] = function (block: Blockly.Block) {
+            let blockdesc = uiBlockDescriptors['touchable_element'];
+            var statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
+            var statements_onpress = Blockly.JavaScript.statementToCode(block, 'onPress');
+            // TODO: Assemble JavaScript into code variable.
+            let code = '{\nCgRt.beginProps();\n';
+
+            code += BlocklyConfig.conditionalPropertySetting('onPress', `function(){${statements_onpress}\nCgRt.updateUI();}`);
+
+            code += generateOptPropCode(blockdesc.optionalProps['disabled'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['activeOpacity'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['underlayColor'], block);
+            // code += BlocklyConfig.conditionalStringPropertySetting('pointerEvents', `'${value_pointerEvents}'`);
+            // code += BlocklyConfig.conditionalFuncPropertySetting('onLayout', statements_onLayout, false);
+
+            //styles
+            var value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
+            if (value_style && value_style !== '') {
+                code += '\nCgRt.addProp("style",' + value_style + ');';
+            }
+            //endprops
+            let propsVarName = BlocklyConfig.getVarName('p');
+            code += `\nvar ${propsVarName}=CgRt.getProps();`;
+
+            // children
+            code += '\nCgRt.pushCont();\n{';
+            if (statements_child_elements && statements_child_elements != '') {
+                code += statements_child_elements;
+            } else {
+                code += 'CgRt.pushElem(CgRt.createElement(CgRt.Textr,{style:{textAlign:"center"}},["\<empty\>"]));'
+            }
+            let childrenVarName = BlocklyConfig.getVarName('cl');
+            code += `}\nvar ${childrenVarName}=CgRt.popCont();`;
+            code += `\nCgRt.pushElem(CgRt.createElement(CgRt.TouchableHighlightr, ${propsVarName},${childrenVarName}));\n}\n`;
             return code;
         };
     }

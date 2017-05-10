@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Text, Image,Button } from 'react-native';
+import { View, Text, Image, Button, TouchableHighlight } from 'react-native';
 import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
 
 export class TestTarget extends React.Component<{}, {}>{
@@ -36,7 +36,9 @@ export class TestTarget extends React.Component<{}, {}>{
                     backgroundColor:"#c0c0c0",
                     padding:10,
                 }}>dfdfd</Text>*/}
-                <Button title='i am sfasdf' onPress={CodegenRuntime.testProc} disabled={false}/>
+                <TouchableHighlight>
+                 
+                </TouchableHighlight>
                 {/*</View>*/}
             </View>
         );

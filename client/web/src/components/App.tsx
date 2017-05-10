@@ -51,6 +51,7 @@ class App extends React.Component<AppProps, AppState> {
     return (
       <div className="App">
         <div className="App-header">
+          <p className='rightLink'><a target='_blank' href='https://www.youtube.com/playlist?list=PLCRKPBgyt2IYvEp0Dw92HfSHb9zo25X4X'>Videos</a></p>
           <p>The Blapp</p>
           <p>pairing code: {modelData.pairingCode}</p>
         </div>

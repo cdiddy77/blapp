@@ -125,6 +125,10 @@ body {
   transition: opacity 300ms ease-in;
 }
 
+.rightLink{
+  float:right;
+}
+
 /*.clearfix:after {
   content: "";
   display: table;
