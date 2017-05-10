@@ -205,12 +205,10 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
         }
         let normalVars = this._workspace.variableList;
         let result: any[][] = [
+            ['---','dummy'],
             ...sharedVars.map(v => [`[shared] ${v[0]}`, `shared_${v[1]}`]),
             ...normalVars.map(v => [v, `normal_${v}`])
         ];
-        if (result.length == 0) {
-            result = [['no variables defined', 'dummy']];
-        }
         return result;
     }
 

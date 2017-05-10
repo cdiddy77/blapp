@@ -51,7 +51,7 @@ class App extends React.Component<AppProps, AppState> {
     return (
       <div className="App">
         <div className="App-header">
-          <p>Le Blappage du Jour</p>
+          <p>The Blapp</p>
           <p>pairing code: {modelData.pairingCode}</p>
         </div>
         <div id='blocksArea' ref={(elem) => { this.blocksArea = elem; }}

@@ -572,6 +572,7 @@ declare namespace Blockly {
     namespace Variables {
         function allVariables(wp: Workspace): string[];
         let flyoutCategory: (wp: Workspace) => HTMLElement[];
+        const NAME_TYPE:string;
     }
 
     namespace ContextMenu {

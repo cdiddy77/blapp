@@ -74,10 +74,10 @@ export namespace UIBlockConfig {
                     displayName: 'when the text changes',
                     type: 'func'
                 },
-                placeholder:{
-                    name:'placeholder',
-                    displayName:'placeholder text',
-                    type:'text'
+                placeholder: {
+                    name: 'placeholder',
+                    displayName: 'placeholder text',
+                    type: 'text'
                 },
                 defaultValue: {
                     name: 'defaultValue',
@@ -112,15 +112,15 @@ export namespace UIBlockConfig {
                         ['send', 'send'],
                     ]
                 },
-                secureTextEntry:{
-                    name:'secureTextEntry',
-                    displayName:'password',
-                    type:'bool'
+                secureTextEntry: {
+                    name: 'secureTextEntry',
+                    displayName: 'password',
+                    type: 'bool'
                 },
-                selectTextOnFocus:{
-                    name:'selectTextOnFocus',
-                    displayName:'select on focus',
-                    type:'bool'
+                selectTextOnFocus: {
+                    name: 'selectTextOnFocus',
+                    displayName: 'select on focus',
+                    type: 'bool'
                 },
                 maxLength: {
                     name: 'maxLength',
@@ -206,7 +206,7 @@ export namespace UIBlockConfig {
             this.setColour(285);
             this.setTooltip('');
             this.setHelpUrl('');
-            blockDefInitHelper.call(this, defName);
+            blockDefInitHelper.call(this, 'view_element');
         };
         Blockly.Blocks[defName] = viewBlockDef;
 
@@ -218,9 +218,9 @@ export namespace UIBlockConfig {
             this.appendDummyInput()
                 .appendField(new Blockly.FieldImage("media/content/ic_font_download_white_48dp.png", 16, 16, "*"))
                 .appendField("text input UI");
-            this.appendDummyInput()
+            this.appendDummyInput("storage")
                 .setAlign(Blockly.ALIGN_RIGHT)
-                .appendField("storage")
+                .appendField("stored in variable")
                 .appendField(new Blockly.FieldDropdown(getStorageVarsProc), "storage");
             this.appendValueInput("style")
                 .setCheck("STYLE")
@@ -232,7 +232,7 @@ export namespace UIBlockConfig {
             this.setColour(285);
             this.setTooltip('');
             this.setHelpUrl('');
-            blockDefInitHelper.call(this, defName);
+            blockDefInitHelper.call(this, 'textinput_element');
         };
         Blockly.Blocks[defName] = viewBlockDef;
 
@@ -509,14 +509,17 @@ export namespace UIBlockConfig {
     }
     export function initUIBlockCodegen() {
         Blockly.JavaScript['view_element'] = function (block: Blockly.Block) {
+            let blockdesc = uiBlockDescriptors['view_element'];
             let statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
-            let value_pointerEvents = block.getFieldValue(getOptPropInputName('pointerEvents'));
-            let statements_onLayout = Blockly.JavaScript.statementToCode(block, getOptPropInputName('onLayout'));
+            // let value_pointerEvents = block.getFieldValue(getOptPropInputName('pointerEvents'));
+            // let statements_onLayout = Blockly.JavaScript.statementToCode(block, getOptPropInputName('onLayout'));
             // properties
             let code = '{\nCgRt.beginProps();\n';
 
-            code += BlocklyConfig.conditionalStringPropertySetting('pointerEvents', `'${value_pointerEvents}'`);
-            code += BlocklyConfig.conditionalFuncPropertySetting('onLayout', statements_onLayout, false);
+            code += generateOptPropCode(blockdesc.optionalProps['pointerEvents'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['onLayout'], block);
+            // code += BlocklyConfig.conditionalStringPropertySetting('pointerEvents', `'${value_pointerEvents}'`);
+            // code += BlocklyConfig.conditionalFuncPropertySetting('onLayout', statements_onLayout, false);
 
             //styles
             let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
@@ -538,7 +541,10 @@ export namespace UIBlockConfig {
         // TEXTIN : generate code for text input
         Blockly.JavaScript['textinput_element'] = function (block: Blockly.Block) {
             let blockdesc = uiBlockDescriptors['textinput_element'];
-            let dropdown_storage = block.getFieldValue('storage');
+            let dropdown_storage = Blockly.JavaScript.variableDB_.getName(
+                block.getFieldValue('storage'), 
+                Blockly.Variables.NAME_TYPE);
+ 
             // properties
             let code = '{\nCgRt.beginProps();\n';
             let statements_onChangeText = Blockly.JavaScript.statementToCode(block, getOptPropInputName('onChangeText'));
