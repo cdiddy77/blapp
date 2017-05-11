@@ -187,7 +187,85 @@ export namespace UIBlockConfig {
                     type: 'val'
                 },
             }
-        }
+        },
+        'scrollview_element': {
+            optionalProps: {
+                // inherited from view_element ///////
+                pointerEvents: {
+                    name: 'pointerEvents',
+                    displayName: 'pointer events',
+                    type: 'enum',
+                    enumVals: [
+                        ['box-none', 'box-none'],
+                        ['none', 'none'],
+                        ['box-only', 'box-only'],
+                        ['normal', 'auto']
+                    ]
+                },
+                onLayout: {
+                    name: 'onLayout',
+                    displayName: 'when sized',
+                    type: 'func'
+                },
+                ///////////////////////////////////////
+                contentContainerStyle: {
+                    name: 'contentContainerStyle',
+                    displayName: 'container appearance',
+                    type: 'val'
+                },
+                horizontal: {
+                    name: 'horizontal',
+                    displayName: 'should scroll horizontally',
+                    type: 'bool'
+                },
+                keyboardDismissMode: {
+                    name: 'keyboardDismissMode',
+                    displayName: 'keyboard dismissed on drag?',
+                    type: 'enum',
+                    enumVals: [
+                        ['none', 'none'],
+                        ['interactive', 'interactive'],
+                        ['on drag', 'on-drag'],
+                    ]
+                },
+                keyboardShouldPersistTaps: {
+                    name: 'keyboardShouldPersistTaps',
+                    displayName: 'keyboard visible after tap?',
+                    type: 'enum',
+                    enumVals: [
+                        ['always', 'always'],
+                        ['never', 'never'],
+                        ['handled', 'handled'],
+                    ]
+                },
+                // refreshControl:{
+                //     name:'refreshControl',
+                //     displayName:'UI',
+                //     type:'func'
+                // },
+                scrollEnabled: {
+                    name: 'scrollEnabled',
+                    displayName: 'scrolling enabled?',
+                    type: 'val'
+                },
+                showsHorizontalScrollIndicator: {
+                    name: 'showsHorizontalScrollIndicator',
+                    displayName: 'show horizontal scroll indicator',
+                    type: 'bool'
+                },
+                showsVerticalScrollIndicator: {
+                    name: 'showsVerticalScrollIndicator',
+                    displayName: 'show vertical scroll indicator',
+                    type: 'bool'
+                },
+                pagingEnabled: {
+                    name: 'pagingEnabled',
+                    displayName: 'paging enabled?',
+                    type: 'bool'
+                },
+            }
+        },
+
     };
 
     export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
@@ -204,7 +282,6 @@ export namespace UIBlockConfig {
             }
         }
 
-        // view_element definition
         let defName = 'view_element';
         let viewBlockDef = createUIBlockDef(uiBlockDescriptors[defName]);
         viewBlockDef.init = function () {
@@ -225,6 +302,29 @@ export namespace UIBlockConfig {
             this.setTooltip('');
             this.setHelpUrl('');
             blockDefInitHelper.call(this, 'view_element');
+        };
+        Blockly.Blocks[defName] = viewBlockDef;
+
+        defName = 'scrollview_element';
+        viewBlockDef = createUIBlockDef(uiBlockDescriptors[defName]);
+        viewBlockDef.init = function () {
+            this.appendDummyInput()
+                .appendField(new Blockly.FieldImage("media/av/ic_web_white_48dp.png", 16, 16, "*"))
+                .appendField("scrolling container")
+                .appendField(new Blockly.FieldTextInput("", null), "NAME");
+            this.appendStatementInput("child elements")
+                .setCheck(null);
+            this.appendValueInput("style")
+                .setCheck("STYLE")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("appearance");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setInputsInline(false);
+            this.setColour(285);
+            this.setTooltip('');
+            this.setHelpUrl('');
+            blockDefInitHelper.call(this, 'scrollview_element');
         };
         Blockly.Blocks[defName] = viewBlockDef;
 
@@ -581,6 +681,40 @@ export namespace UIBlockConfig {
             let childrenVarName = BlocklyConfig.getVarName('cl');
             code += `}\nvar ${childrenVarName}=CgRt.popCont();`;
             code += `\nCgRt.pushElem(CgRt.createElement(CgRt.Viewr, ${propsVarName},${childrenVarName}));\n}\n`;
+            return code;
+        };
+        Blockly.JavaScript['scrollview_element'] = function (block: Blockly.Block) {
+            let blockdesc = uiBlockDescriptors['scrollview_element'];
+            let statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
+            // properties
+            let code = '{\nCgRt.beginProps();\n';
+
+            code += generateOptPropCode(blockdesc.optionalProps['pointerEvents'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['onLayout'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['contentContainerStyle'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['horizontal'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['keyboardDismissMode'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['keyboardShouldPersistTaps'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['scrollEnabled'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['showsHorizontalScrollIndicator'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['showsVerticalScrollIndicator'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['pagingEnabled'], block);
+
+            //styles
+            let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
+            if (value_style && value_style !== '') {
+                code += '\nCgRt.addProp("style",' + value_style + ');';
+            }
+            //endprops
+            let propsVarName = BlocklyConfig.getVarName('p');
+            code += `\nvar ${propsVarName}=CgRt.getProps();`;
+
+            // children
+            code += '\nCgRt.pushCont();\n{';
+            code += statements_child_elements;
+            let childrenVarName = BlocklyConfig.getVarName('cl');
+            code += `}\nvar ${childrenVarName}=CgRt.popCont();`;
+            code += `\nCgRt.pushElem(CgRt.createElement(CgRt.ScrollViewr, ${propsVarName},${childrenVarName}));\n}\n`;
             return code;
         };
         Blockly.JavaScript['textinput_element'] = function (block: Blockly.Block) {

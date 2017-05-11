@@ -18,6 +18,7 @@
       </value>
     </block>
     <block type="touchable_element"/>
+    <block type="scrollview_element"/>
     <block type="button_element">
       <value name="title">
         <shadow type="text">
@@ -310,22 +311,6 @@
     </block>
     <block type="text_trim">
       <field name="MODE">BOTH</field>
-      <value name="TEXT">
-        <shadow type="text">
-          <field name="TEXT">abc</field>
-        </shadow>
-      </value>
-    </block>
-    <block type="text_print">
-      <value name="TEXT">
-        <shadow type="text">
-          <field name="TEXT">abc</field>
-        </shadow>
-      </value>
-    </block>
-    <block type="text_prompt_ext">
-      <mutation type="TEXT"/>
-      <field name="TYPE">TEXT</field>
       <value name="TEXT">
         <shadow type="text">
           <field name="TEXT">abc</field>
