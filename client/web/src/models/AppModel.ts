@@ -64,6 +64,15 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
                 scrollbars: true,
                 sounds: true,
                 oneBasedIndex: true,
+                zoom:
+                {
+                    controls: true,
+                    wheel: true,
+                    startScale: 1.0,
+                    maxScale: 3,
+                    minScale: 0.3,
+                    scaleSpeed: 1.2
+                },
                 // grid: {
                 //   spacing: 20,
                 //   length: 0,
@@ -205,7 +214,7 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
         }
         let normalVars = this._workspace.variableList;
         let result: any[][] = [
-            ['---','dummy'],
+            ['---', 'dummy'],
             ...sharedVars.map(v => [`[shared] ${v[0]}`, `shared_${v[1]}`]),
             ...normalVars.map(v => [v, `normal_${v}`])
         ];
