@@ -251,6 +251,19 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
                 this.setHelpUrl('');
             }
         };
+        Blockly.Blocks['sharvar_force_update'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField(new Blockly.FieldImage("media/social/ic_share_white_48dp.png", 16, 16, "*"))
+                    .appendField("update shared")
+                    .appendField(new Blockly.FieldDropdown(getSharedVarsListProc), "varname");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(230);
+                this.setTooltip('');
+                this.setHelpUrl('');
+            }
+        };
         Blockly.Blocks['on_sharvar_change'] = {
             init: function () {
                 this.appendStatementInput("statements")
@@ -348,6 +361,10 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
             block = document.createElementNS(null, 'block');
             block.setAttribute('type', 'sharvar_set');
             xmlList.push(block);
+
+            block = document.createElementNS(null, 'block');
+            block.setAttribute('type', 'sharvar_force_update');
+            xmlList.push(block);
         }
         let block = document.createElementNS(null, 'block');
         block.setAttribute('type', 'on_sharvar_change');
@@ -413,4 +430,19 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
     }
     //
     ////////////////////////////////////////////////////////////////////
+
+    undo() {
+        this._workspace.undo();
+    }
+    redo() {
+        this._workspace.redo();
+    }
+    resetApplication() {
+        let resetProc = CodegenRuntime.getResetApplicationProc();
+        if (resetProc) {
+            resetProc();
+            // force all the clients to reload
+            this.setProperty('code',this.data.code);
+        }
+    }
 }

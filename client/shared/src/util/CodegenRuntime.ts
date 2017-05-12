@@ -18,6 +18,7 @@ export namespace CodegenRuntime {
     var targetRenderProc: () => any;
     var forceTargetUpdateProc: () => void;
     var shareVarSetProc: (name: string, value: any) => void;
+    var resetApplicationProc: () => void;
 
     var shareVarUpdateWildCardHandlers: ShareVarUpdatedCallback[] = [];
     var shareVarUpdateHandlers: jsutil.Map<ShareVarUpdatedCallback[]> = {};
@@ -30,7 +31,9 @@ export namespace CodegenRuntime {
 
     export function resetCodeState() {
         setTargetRenderProc(null);
+        setResetApplicationProc(null);
         clearAllShareVarUpdateHandlers();
+        clearAllIntervalHandlers();
     }
 
     export function setTargetRenderProc(renderProc: () => any) {
@@ -50,6 +53,12 @@ export namespace CodegenRuntime {
     }
     export function getShareVarSetProc(): (name: string, value: any) => void {
         return shareVarSetProc;
+    }
+    export function setResetApplicationProc(proc: () => void) {
+        resetApplicationProc = proc;
+    }
+    export function getResetApplicationProc(): () => void {
+        return resetApplicationProc;
     }
 
     export function onVarUpdated(name: string, value: any) {
@@ -130,6 +139,12 @@ export namespace CodegenRuntime {
         if (shareVarSetProc)
             shareVarSetProc(name, val);
     }
+    export function forceUpdateShareVar(name: string): void {
+        let val = sharedVars[name];
+        if (val && shareVarSetProc) {
+            shareVarSetProc(name, val);
+        }
+    }
 
     export function testProc() {
         console.log('testProc called');
@@ -145,6 +160,27 @@ export namespace CodegenRuntime {
         if (!v) return null;
 
         return String(v);
+    }
+
+    var intervalHandlers: number[] = [];
+    var timeoutHandlers: number[] = [];
+    export function setTimeoutr(fn: () => void, delayMs: number) {
+        timeoutHandlers.push(setTimeout(fn, delayMs));
+    }
+
+    export function setIntervalr(fn: () => void, delayMs: number) {
+        intervalHandlers.push(setInterval(fn, delayMs));
+    }
+
+    function clearAllIntervalHandlers() {
+        for (let i = 0; i < intervalHandlers.length; i++) {
+            clearInterval(intervalHandlers[i]);
+        }
+        intervalHandlers.splice(0);
+        for (let i = 0; i < timeoutHandlers.length; i++) {
+            clearTimeout(timeoutHandlers[i]);
+        }
+        timeoutHandlers.splice(0);
     }
 
     // export var createElement = React.createElement;

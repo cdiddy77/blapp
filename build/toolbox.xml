@@ -1,4 +1,5 @@
-<xml xmlns="http://www.w3.org/1999/xhtml" id="toolbox" style="display: none;">
+<xml 
+  xmlns="http://www.w3.org/1999/xhtml" id="toolbox" style="display: none;">
   <category name="UI" colour="#935ba5">
     <block type="user_interface"/>
     <block type="force_ui_update"/>
@@ -431,4 +432,10 @@
   <category name="Variables" colour="#A65C81" custom="VARIABLE"/>
   <category name="Functions" colour="#9A5CA6" custom="PROCEDURE"/>
   <category name="Shared Variables" colour="#A65C81" custom="SHARED_VARS_PALETTE"/>
+  <category name="Time" colour="#A6745C">
+    <block type="set_timeout"/>
+    <block type="set_interval"/>
+    <block type="when_app_reset"/>
+    <block type="reset_app"/>
+  </category>
 </xml>

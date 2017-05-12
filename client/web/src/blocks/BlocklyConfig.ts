@@ -137,6 +137,60 @@ export namespace BlocklyConfig {
             }
         };
 
+        Blockly.Blocks['set_timeout'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField("after ")
+                    .appendField(new Blockly.FieldNumber(500, 0), "timeout")
+                    .appendField("milliseconds");
+                this.appendStatementInput("statements")
+                    .setCheck(null);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(230);
+                this.setTooltip('');
+                this.setHelpUrl('');
+            }
+        };
+        Blockly.Blocks['set_interval'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField("every ")
+                    .appendField(new Blockly.FieldNumber(500, 0), "timeout")
+                    .appendField("milliseconds");
+                this.appendStatementInput("statements")
+                    .setCheck(null);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(230);
+                this.setTooltip('');
+                this.setHelpUrl('');
+            }
+        };
+        Blockly.Blocks['when_app_reset'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField(new Blockly.FieldImage("/icons/dark/appbar.flag.wavy.png", 25, 25, "*"))
+                    .appendField("When Application is Reset");
+                this.appendStatementInput("statements")
+                    .setCheck(null);
+                this.setColour(230);
+                this.setTooltip('');
+                this.setHelpUrl('');
+            }
+        };
+        Blockly.Blocks['reset_app'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField("Reset Application");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(230);
+                this.setTooltip('');
+                this.setHelpUrl('');
+            }
+        };
+
     }
     export function initStyleBlockDefinitions(): void {
 
@@ -755,6 +809,45 @@ export namespace BlocklyConfig {
             }
             code += statements_statements;
             code += "\n});"
+            return code;
+        };
+        Blockly.JavaScript['sharvar_force_update'] = function (block: Blockly.Block) {
+            var dropdown_varname = block.getFieldValue('varname');
+            // TODO: Assemble JavaScript into code variable.
+            var code = `CgRt.getShareVar('${dropdown_varname}')`;
+            // TODO: Change ORDER_NONE to the correct strength.
+            return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+        };
+      // settimeout
+        Blockly.JavaScript['set_timeout'] = function (block: Blockly.Block) {
+            let number_timeout = block.getFieldValue('timeout');
+            let statements_statements = Blockly.JavaScript.statementToCode(block, 'statements');
+
+            let code = '';
+            code += `\nCgRt.setTimeoutr(function(){`;
+            code += statements_statements;
+            code += `\n},${number_timeout});`
+            return code;
+        };
+        Blockly.JavaScript['set_interval'] = function (block: Blockly.Block) {
+            let number_timeout = block.getFieldValue('timeout');
+            let statements_statements = Blockly.JavaScript.statementToCode(block, 'statements');
+
+            let code = '';
+            code += `\nCgRt.setIntervalr(function(){\n`;
+            code += statements_statements;
+            code += `\n},${number_timeout});`
+            return code;
+        };
+        Blockly.JavaScript['when_app_reset'] = function (block: Blockly.Block) {
+            var statements_statements = Blockly.JavaScript.statementToCode(block, 'statements');
+            let code = '\nCgRt.setResetApplicationProc(function(){';
+            code += statements_statements;
+            code += '\n});';
+            return code;
+        };
+        Blockly.JavaScript['reset_app'] = function (block: Blockly.Block) {
+            var code = 'if(CgRt.getResetApplicationProc()) CgRt.getResetApplicationProc()();\n';
             return code;
         };
     }

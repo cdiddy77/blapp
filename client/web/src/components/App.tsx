@@ -80,9 +80,9 @@ class App extends React.Component<AppProps, AppState> {
             <TabPane display={modelData.lastEvalError ? 'Preview(ERR)' : 'Preview'}>
               <div><Target model={this.props.model} /></div>
             </TabPane>
-            <TabPane display="Test">
+            {/*<TabPane display="Test">
               <div><TestTarget /></div>
-            </TabPane>
+            </TabPane>*/}
           </TabbedArea>
         </div>
         <SimplePrompt {...modelData.simplePrompt} />
@@ -92,6 +92,12 @@ class App extends React.Component<AppProps, AppState> {
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.clearWorkspace()}>Clear all</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.saveWorkspaceToFile()}>Save</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.loadWorkspaceFromFile()}>Load</button>
+            <button type='button' className='btn btn-primary' onClick={() => this.props.model.undo()}>Undo</button>
+            <button type='button' className='btn btn-primary' onClick={() => this.props.model.redo()}>Redo</button>
+            <button type='button' className='btn btn-primary' onClick={() => this.props.model.resetApplication()}>
+              <img src='/icons/dark/appbar.flag.wavy.png' style={{width:20,height:20}}/>
+              Reset Application
+              </button>
             <CSSTransitionGroup
               transitionName='statusMessage'
               transitionEnterTimeout={0}
