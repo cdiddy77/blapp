@@ -259,7 +259,7 @@ declare namespace Blockly {
     }
 
     class FieldTextInput extends Field {
-        constructor(text: string, validator: any);
+        constructor(text: string, validator?: any);
         static numberValidator: any;
     }
 

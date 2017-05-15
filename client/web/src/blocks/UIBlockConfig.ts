@@ -416,6 +416,34 @@ export namespace UIBlockConfig {
 
     }
 
+    export function initUIMethodDefs() {
+        // METHBLOCK : scrollToEnd
+        Blockly.Blocks['scroll_scrolltoend_method'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField("scroll to end")
+                    .appendField(new Blockly.FieldTextInput(""), "element id");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(230);
+                this.setTooltip('');
+                this.setHelpUrl('');
+            }
+        };
+        Blockly.Blocks['console_log'] = {
+            init: function () {
+                this.appendValueInput("message")
+                    .setCheck(null)
+                    .appendField("report message");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(230);
+                this.setTooltip('');
+                this.setHelpUrl('');
+            }
+        }
+    }
+
     function blockDefInitHelper(defName: string) {
         this.mutateInfo_ = {
             descriptorName: defName,
@@ -646,15 +674,18 @@ export namespace UIBlockConfig {
             }
         };
     }
+
     export function initUIBlockCodegen() {
         Blockly.JavaScript['view_element'] = function (block: Blockly.Block) {
             let blockdesc = uiBlockDescriptors['view_element'];
             let statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
+
             // let value_pointerEvents = block.getFieldValue(getOptPropInputName('pointerEvents'));
             // let statements_onLayout = Blockly.JavaScript.statementToCode(block, getOptPropInputName('onLayout'));
             // properties
             let code = '{\nCgRt.beginProps();\n';
 
+            code += generateRefPropCode(block);
             code += generateOptPropCode(blockdesc.optionalProps['pointerEvents'], block);
             code += generateOptPropCode(blockdesc.optionalProps['onLayout'], block);
             // code += BlocklyConfig.conditionalStringPropertySetting('pointerEvents', `'${value_pointerEvents}'`);
@@ -682,6 +713,8 @@ export namespace UIBlockConfig {
             let statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
             // properties
             let code = '{\nCgRt.beginProps();\n';
+
+            code += generateRefPropCode(block);
 
             code += generateOptPropCode(blockdesc.optionalProps['pointerEvents'], block);
             code += generateOptPropCode(blockdesc.optionalProps['onLayout'], block);
@@ -813,6 +846,37 @@ export namespace UIBlockConfig {
             code += `\nCgRt.pushElem(CgRt.createElement(CgRt.TouchableHighlightr, ${propsVarName},${childrenVarName}));\n}\n`;
             return code;
         };
+    }
+
+    export function initUIMethodCodegen() {
+        // METHBLOCK : scrollToEnd
+        Blockly.JavaScript['scroll_scrolltoend_method'] = function (block: Blockly.Block) {
+            var text_element_id = block.getFieldValue('element id');
+            let elemVarName = BlocklyConfig.getVarName('elem');
+            let code: string = '';
+            code = `var ${elemVarName}=CgRt.getIdElem('${text_element_id}');\n`
+            code += `if(${elemVarName}&&${elemVarName}.scrollToEnd)\n${elemVarName}.scrollToEnd();\nelse if(${elemVarName}&&${elemVarName}.scrollTo)${elemVarName}.scrollTo({x:1000000,y:1000000,animated:true});\n`;
+            return code;
+        };
+        Blockly.JavaScript['console_log'] = function (block: Blockly.Block) {
+            var value_message = Blockly.JavaScript.valueToCode(block, 'message', Blockly.JavaScript.ORDER_NONE);
+            let code = `console.log(${value_message});\n`;
+            return code;
+        };
+    }
+
+    function generateRefPropCode(block: Blockly.Block) {
+        let name = block.getFieldValue('NAME');
+        if (name && name != '') {
+            let elemId = Blockly.JavaScript.variableDB_.getName(
+                name,
+                Blockly.Variables.NAME_TYPE);
+            // goal: CgRt.addProp('ref',function(e){CgRt.setIdElem('name',e);});
+            return BlocklyConfig.conditionalPropertySetting('ref',
+                `function(e){CgRt.setIdElem('${elemId}',e);}`);
+        }
+
+
     }
     function generateOptPropCode(desc: UIBlockOptPropDesc, block: Blockly.Block): string {
         if (desc.type == 'val') {

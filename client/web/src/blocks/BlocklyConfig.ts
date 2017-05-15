@@ -675,7 +675,7 @@ export namespace BlocklyConfig {
             code += '\nCgRt.pushCont();\n';
             code += statements_elements;
             code += '\nvar cl=CgRt.popCont();';
-            code += '\nreturn CgRt.createElement(CgRt.Viewr, {style:{backgroundColor:"red",flex:1}}, cl);\n});';
+            code += '\nreturn CgRt.createElement(CgRt.Viewr, {style:{backgroundColor:"white",flex:1}}, cl);\n});';
             return code;
         };
         Blockly.JavaScript['force_ui_update'] = function (block: Blockly.Block) {

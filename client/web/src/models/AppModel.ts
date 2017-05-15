@@ -42,6 +42,7 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
     ///////////////////////////////////////////////////////
 
     private _workspace: Blockly.Workspace;
+    private _performResetOnLoad: boolean = false;
 
     initializeBlockly(container: HTMLElement): Promise<void> {
         let result: Promise<void> = jsutil.requestURL({
@@ -97,7 +98,9 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
             BlocklyConfig.initIconBlockDefinitions();
             BlocklyConfig.initIconBlockCodeGenerators();
             UIBlockConfig.initAllUIBlockDefs(getStorageVarsProc);
+            UIBlockConfig.initUIMethodDefs();
             UIBlockConfig.initUIBlockCodegen();
+            UIBlockConfig.initUIMethodCodegen();
             setTimeout(this.restoreWorkspace(), 0);
         });
 
@@ -169,6 +172,13 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
         try {
             eval(this.data.code);
             this.setProperty('lastEvalError', null);
+            if (this._performResetOnLoad) {
+                let resetProc = CodegenRuntime.getResetApplicationProc();
+                if (resetProc)
+                    resetProc();
+
+                this._performResetOnLoad = false;
+            }
         } catch (e) {
             this.setProperty('lastEvalError', e);
         }
@@ -179,7 +189,7 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
         if ('localStorage' in window && window.localStorage[url]) {
             var xml = Blockly.Xml.textToDom(window.localStorage[url]);
             Blockly.Xml.domToWorkspace(xml, this._workspace);
-
+            this._performResetOnLoad = true;
             // and then walk the workspace, find all of the 
             // shared variables, and keep them in our own list
             this.findAllSharedVariables(true);
@@ -420,6 +430,7 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
                 }
                 this._workspace.clear();
                 Blockly.Xml.domToWorkspace(xml, this._workspace);
+                this._performResetOnLoad = true;
 
                 // and then walk the workspace, find all of the 
                 // shared variables, and keep them in our own list
@@ -442,7 +453,7 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
         if (resetProc) {
             resetProc();
             // force all the clients to reload
-            this.setProperty('code',this.data.code);
+            this.setProperty('code', this.data.code);
         }
     }
 }

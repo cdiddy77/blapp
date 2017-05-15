@@ -2,7 +2,6 @@
   xmlns="http://www.w3.org/1999/xhtml" id="toolbox" style="display: none;">
   <category name="UI" colour="#935ba5">
     <block type="user_interface"/>
-    <block type="force_ui_update"/>
     <block type="view_element"/>
     <block type="text_element">
       <value name="text value">
@@ -45,6 +44,11 @@
       <block type="icon_places"/>
       <block type="icon_social"/>
       <block type="icon_toggle"/>
+    </category>
+    <category name="Actions">
+      <block type="force_ui_update"/>
+      <block type="scroll_scrolltoend_method"/>
+      <block type="console_log"/>
     </category>
   </category>
   <category name="Styles" colour="#935ba5">

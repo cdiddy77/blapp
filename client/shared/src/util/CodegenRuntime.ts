@@ -34,6 +34,7 @@ export namespace CodegenRuntime {
         setResetApplicationProc(null);
         clearAllShareVarUpdateHandlers();
         clearAllIntervalHandlers();
+        clearIdentifiedElements();
     }
 
     export function setTargetRenderProc(renderProc: () => any) {
@@ -182,6 +183,20 @@ export namespace CodegenRuntime {
         }
         timeoutHandlers.splice(0);
     }
+
+    var identifiedElements: jsutil.Map<any> = {};
+    export function setIdElem(name: string, elem: any): void {
+        identifiedElements[name] = elem;
+    }
+    export function getIdElem(name: string): any {
+        if (name)
+            return identifiedElements[name];
+    }
+
+    function clearIdentifiedElements() {
+        identifiedElements = {};
+    }
+
 
     // export var createElement = React.createElement;
 

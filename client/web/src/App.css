@@ -34,8 +34,8 @@ body {
   width: 100%;
 }
 
-.btn{
-  margin-right:5px;
+.btn {
+  margin-right: 5px;
 }
 
 .App-intro {
@@ -59,10 +59,16 @@ body {
   margin: 10px;
 }
 
-.previewWrapper{
-  height: 90%;
-  display:flex;
+.codeWrapper{
+  height: 100%;
+  overflow: scroll;
 }
+
+.previewWrapper {
+  height: 100%;
+  display: flex;
+}
+
 
 /*Tab controls */
 
@@ -113,8 +119,8 @@ body {
   height: 100%;
 }
 
-.TabbedContentSection{
-  height:100%;
+.TabbedContentSection {
+  height: 100%;
 }
 
 .statusMessage-enter {
@@ -135,9 +141,10 @@ body {
   transition: opacity 300ms ease-in;
 }
 
-.rightLink{
-  float:right;
+.rightLink {
+  float: right;
 }
+
 
 /*.clearfix:after {
   content: "";

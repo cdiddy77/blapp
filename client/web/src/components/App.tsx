@@ -75,7 +75,7 @@ class App extends React.Component<AppProps, AppState> {
           <TabbedArea activeIndex={1}>
             <TabPane display="Code">
               <div className='codeWrapper'>
-                <pre>{modelData.code}</pre>
+                <pre className='codePre'>{modelData.code}</pre>
               </div>
             </TabPane>
             <TabPane display={modelData.lastEvalError ? 'Preview(ERR)' : 'Preview'}>
