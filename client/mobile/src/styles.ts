@@ -16,15 +16,14 @@ export var screenDims = {
 export const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    borderColor: 'red',
     borderWidth: 1,
     margin: 2,
     alignItems: 'flex-start'
   },
   column: {
     flexDirection: 'column',
-    borderColor: 'green',
-    borderWidth: 1,
+    // borderColor: 'green',
+    // borderWidth: 1,
     margin: 2
   }, 
   redBorder: {

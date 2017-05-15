@@ -69,6 +69,7 @@ class App extends React.Component<AppProps, AppState> {
             left: divider,
             width: width - divider,
             height: window.innerHeight - (headerHeight + footerHeight),
+            overflow: 'scroll',
             top: headerHeight
           }}>
           <TabbedArea activeIndex={1}>
@@ -78,7 +79,7 @@ class App extends React.Component<AppProps, AppState> {
               </div>
             </TabPane>
             <TabPane display={modelData.lastEvalError ? 'Preview(ERR)' : 'Preview'}>
-              <div><Target model={this.props.model} /></div>
+              <div className='previewWrapper'><Target model={this.props.model} /></div>
             </TabPane>
             {/*<TabPane display="Test">
               <div><TestTarget /></div>

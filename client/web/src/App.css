@@ -59,6 +59,10 @@ body {
   margin: 10px;
 }
 
+.previewWrapper{
+  height: 90%;
+  display:flex;
+}
 
 /*Tab controls */
 
@@ -69,6 +73,7 @@ body {
   color: #555;
   font-size: 14px;
   line-height: 24px;
+  height: 90%;
 }
 
 .Tab {
@@ -105,6 +110,11 @@ body {
   padding: 5px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
   background: #ddd;
+  height: 100%;
+}
+
+.TabbedContentSection{
+  height:100%;
 }
 
 .statusMessage-enter {

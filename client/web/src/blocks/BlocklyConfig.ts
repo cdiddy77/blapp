@@ -675,7 +675,7 @@ export namespace BlocklyConfig {
             code += '\nCgRt.pushCont();\n';
             code += statements_elements;
             code += '\nvar cl=CgRt.popCont();';
-            code += '\nreturn CgRt.createElement(CgRt.Viewr, {style:{backgroundColor:"white",height:CgRt.screenHeight}}, cl);\n});';
+            code += '\nreturn CgRt.createElement(CgRt.Viewr, {style:{backgroundColor:"red",flex:1}}, cl);\n});';
             return code;
         };
         Blockly.JavaScript['force_ui_update'] = function (block: Blockly.Block) {
@@ -814,9 +814,9 @@ export namespace BlocklyConfig {
         Blockly.JavaScript['sharvar_force_update'] = function (block: Blockly.Block) {
             var dropdown_varname = block.getFieldValue('varname');
             // TODO: Assemble JavaScript into code variable.
-            var code = `CgRt.getShareVar('${dropdown_varname}')`;
+            var code = `CgRt.forceUpdateShareVar('${dropdown_varname}');\n`;
             // TODO: Change ORDER_NONE to the correct strength.
-            return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+            return code;
         };
       // settimeout
         Blockly.JavaScript['set_timeout'] = function (block: Blockly.Block) {

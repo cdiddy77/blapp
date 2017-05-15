@@ -472,7 +472,6 @@ export namespace UIBlockConfig {
              * @this Blockly.Block
              */
             mutationToDom: function () {
-                console.log('mutationToDom', this.type);
                 var container = document.createElement('mutation');
                 // persist set of properties included
                 container.setAttribute('items', this.itemCount_);
@@ -487,7 +486,6 @@ export namespace UIBlockConfig {
              * @this Blockly.Block
              */
             domToMutation: function (xmlElement) {
-                console.log('domToMutation', this.type);
                 // read the set of properties that are included
                 this.itemCount_ = parseInt(xmlElement.getAttribute('items'), 10);
                 this.mutateInfo_ = {
@@ -507,7 +505,6 @@ export namespace UIBlockConfig {
              * @this Blockly.Block
              */
             decompose: function (workspace: Blockly.Workspace) {
-                console.log('decompose', this.type);
                 var containerBlock = workspace.newBlock('mutable_block1_container');
                 containerBlock.initSvg();
                 var connection = containerBlock.getInput('STACK').connection;
@@ -531,7 +528,6 @@ export namespace UIBlockConfig {
              * @this Blockly.Block
              */
             compose: function (containerBlock: Blockly.Block) {
-                console.log('compose', this.type);
                 let self: Blockly.Block = this;
                 var itemBlock: OptPropMutatorItemBlock = containerBlock.getInputTargetBlock('STACK');
                 // Count number of inputs.
@@ -576,7 +572,6 @@ export namespace UIBlockConfig {
              * @this Blockly.Block
              */
             saveConnections: function (containerBlock) {
-                console.log('saveConnections', this.type);
                 var itemBlock: OptPropMutatorItemBlock = containerBlock.getInputTargetBlock('STACK');
                 var i = 0;
                 // stash the connections defined on the UI block in the connections of 
@@ -595,7 +590,6 @@ export namespace UIBlockConfig {
              * @this Blockly.Block
              */
             updateShape_: function () {
-                console.log('updateShape_', this.type);
                 // CPROP : I think we can just get rid of the empty business
                 // if (this.itemCount_ && this.getInput('EMPTY')) {
                 //     this.removeInput('EMPTY');

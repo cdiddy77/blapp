@@ -45,7 +45,7 @@ export class TabbedArea extends React.Component<TabbedAreaProps, TabbedAreaState
                     {tabNodes}
                 </ul>
 
-                <section>
+                <section className="TabbedContentSection">
                     {contentNodes}
                 </section>
             </div>
