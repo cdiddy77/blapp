@@ -81,9 +81,9 @@ class App extends React.Component<AppProps, AppState> {
             <TabPane display={modelData.lastEvalError ? 'Preview(ERR)' : 'Preview'}>
               <div className='previewWrapper'><Target model={this.props.model} /></div>
             </TabPane>
-            {/*<TabPane display="Test">
+            <TabPane display="Test">
               <div><TestTarget /></div>
-            </TabPane>*/}
+            </TabPane>
           </TabbedArea>
         </div>
         <SimplePrompt {...modelData.simplePrompt} />
