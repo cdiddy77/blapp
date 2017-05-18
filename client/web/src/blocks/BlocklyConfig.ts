@@ -249,7 +249,7 @@ export namespace BlocklyConfig {
         Blockly.Blocks['styleprop_justifycontent'] = {
             init: function () {
                 this.appendDummyInput()
-                    .appendField("arrange children")
+                    .appendField("justify content")
                     .appendField(new Blockly.FieldDropdown([["start", "flex-start"], ["end", "flex-end"], ["center", "center"], ["space between", "space-between"], ["space around", "space-around"]]), "VALUE");
                 this.setPreviousStatement(true, "STYLEPROP");
                 this.setNextStatement(true, "STYLEPROP");
