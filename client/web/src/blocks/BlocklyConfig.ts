@@ -1067,7 +1067,7 @@ export namespace BlocklyConfig {
 
                 code += '\nCgRt.addProp("source",{uri:"';
                 code += dropdown_value && dropdown_value !== ''
-                    ? ("media/" + k + "/ic_" + dropdown_value + "_" + dropdown_shade + "_48dp.png")
+                    ? ("http://theblapp.azurewebsites.net/media/" + k + "/ic_" + dropdown_value + "_" + dropdown_shade + "_48dp.png")
                     : "''";
                 code += '"});'
 
