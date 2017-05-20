@@ -197,7 +197,6 @@ export namespace CodegenRuntime {
         identifiedElements = {};
     }
 
-
     // export var createElement = React.createElement;
 
     export var Viewr = View;

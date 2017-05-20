@@ -190,7 +190,28 @@ export namespace BlocklyConfig {
                 this.setHelpUrl('');
             }
         };
-
+        Blockly.Blocks['check_is_number'] = {
+            init: function () {
+                this.appendValueInput("VALUE")
+                    .setCheck("String")
+                    .appendField("is a number");
+                this.setOutput(true, "Boolean");
+                this.setColour(230);
+                this.setTooltip('');
+                this.setHelpUrl('');
+            }
+        };
+        Blockly.Blocks['parse_number'] = {
+            init: function () {
+                this.appendValueInput("VALUE")
+                    .setCheck("String")
+                    .appendField("get number from text");
+                this.setOutput(true, "Number");
+                this.setColour(230);
+                this.setTooltip('turn the text into a number, if possible');
+                this.setHelpUrl('');
+            }
+        };
     }
     export function initStyleBlockDefinitions(): void {
 
@@ -579,7 +600,7 @@ export namespace BlocklyConfig {
             init: function () {
                 this.appendDummyInput()
                     .appendField("alignment")
-                    .appendField(new Blockly.FieldDropdown([["auto", "auto"], ["left", "left"], ["right", "right"], ["center", "center"], ["justify", "justify"]]), "value");
+                    .appendField(new Blockly.FieldDropdown([["auto", "inherit"], ["left", "left"], ["right", "right"], ["center", "center"], ["justify", "justify"], ["justify-all", "justify-all"]]), "value");
                 this.setPreviousStatement(true, "STYLEPROP");
                 this.setNextStatement(true, "STYLEPROP");
                 this.setColour(285);
@@ -818,7 +839,7 @@ export namespace BlocklyConfig {
             // TODO: Change ORDER_NONE to the correct strength.
             return code;
         };
-      // settimeout
+        // settimeout
         Blockly.JavaScript['set_timeout'] = function (block: Blockly.Block) {
             let number_timeout = block.getFieldValue('timeout');
             let statements_statements = Blockly.JavaScript.statementToCode(block, 'statements');
@@ -849,6 +870,20 @@ export namespace BlocklyConfig {
         Blockly.JavaScript['reset_app'] = function (block: Blockly.Block) {
             var code = 'if(CgRt.getResetApplicationProc()) CgRt.getResetApplicationProc()();\n';
             return code;
+        };
+        Blockly.JavaScript['check_is_number'] = function (block: Blockly.Block) {
+            let value = Blockly.JavaScript.valueToCode(block, 'VALUE', Blockly.JavaScript.ORDER_FUNCTION_CALL);
+            // TODO: Assemble JavaScript into code variable.
+            let code = `!Number.isNaN(Number(${value}))`;
+            // TODO: Change ORDER_NONE to the correct strength.
+            return [code,Blockly.JavaScript.ORDER_FUNCTION_CALL];
+        };
+        Blockly.JavaScript['parse_number'] = function (block: Blockly.Block) {
+            let value = Blockly.JavaScript.valueToCode(block, 'VALUE', Blockly.JavaScript.ORDER_FUNCTION_CALL);
+            // TODO: Assemble JavaScript into code variable.
+            let code = `Number(${value})`;
+            // TODO: Change ORDER_NONE to the correct strength.
+            return [code,Blockly.JavaScript.ORDER_FUNCTION_CALL];
         };
     }
 

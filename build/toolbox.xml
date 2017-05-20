@@ -13,19 +13,23 @@
     <block type="image_element">
       <value name="URL">
         <shadow type="text">
-          <field name="URL">favicon.ico</field>
+          <field name="TEXT">favicon.ico</field>
         </shadow>
       </value>
     </block>
-    <block type="touchable_element"/>
+    <block type="touchable_element">
+      <value name="child elements">
+        <shadow type="text_element">
+          <value name="text value">
+            <shadow type="text">
+              <field name="TEXT">Button</field>
+            </shadow>
+          </value>
+        </shadow>
+      </value>
+    </block>
     <block type="scrollview_element"/>
-    <block type="button_element">
-      <value name="title">
-        <shadow type="text">
-          <field name="title"/>
-        </shadow>
-      </value>
-    </block>
+    <block type="button_element"/>
     <block type='textinput_element'/>
     <category name="Icons">
       <block type="icon_action"/>
@@ -244,6 +248,8 @@
       </value>
     </block>
     <block type="math_random_float"/>
+    <block type="check_is_number"/>
+    <block type="parse_number"/>
   </category>
   <category name="Text" colour="#5CA68D">
     <block type="text_charAt">
