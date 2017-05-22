@@ -1,6 +1,19 @@
-import * as jsutil from '../../../shared/src/util/jsutil';
+import * as jsutil from './jsutil';
 import * as React from 'react';
-import { View, Text, Image, Button, TextInput, TouchableHighlight, ScrollView } from 'react-native';
+import {
+    View,
+    Text,
+    Image,
+    Button,
+    TextInput,
+    TouchableHighlight,
+    ScrollView
+} from 'react-native';
+
+import { GroupBlock } from '../components/GroupBlock';
+import { ScrollerBlock } from '../components/ScrollerBlock';
+import { ButtonBlock } from '../components/ButtonBlock';
+import { TextBlock } from '../components/TextBlock';
 
 export interface CodegenHost {
 }
@@ -206,4 +219,13 @@ export namespace CodegenRuntime {
     export var TextInputr = TextInput;
     export var TouchableHighlightr = TouchableHighlight;
     export var ScrollViewr = ScrollView;
+
+    export var GroupBlockf = GroupBlock;
+    export var ScrollerBlockf = ScrollerBlock;
+    export var ButtonBlockf = ButtonBlock;
+    // FRIENDLY : text
+    export var TextBlockf = TextBlock;
+    // FRIENDLY : image
+    // FRIENDLY : textinput
+    // FRIENDLY : rectangle
 }

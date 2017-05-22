@@ -2,35 +2,41 @@
   xmlns="http://www.w3.org/1999/xhtml" id="toolbox" style="display: none;">
   <category name="UI" colour="#935ba5">
     <block type="user_interface"/>
-    <block type="view_element"/>
-    <block type="text_element">
-      <value name="text value">
-        <shadow type="text">
-          <field name="text value"/>
-        </shadow>
-      </value>
-    </block>
-    <block type="image_element">
-      <value name="URL">
-        <shadow type="text">
-          <field name="TEXT">favicon.ico</field>
-        </shadow>
-      </value>
-    </block>
-    <block type="touchable_element">
-      <value name="child elements">
-        <shadow type="text_element">
-          <value name="text value">
-            <shadow type="text">
-              <field name="TEXT">Button</field>
-            </shadow>
-          </value>
-        </shadow>
-      </value>
-    </block>
-    <block type="scrollview_element"/>
-    <block type="button_element"/>
-    <block type='textinput_element'/>
+    <!-- // FRIENDLY: friendly controls -->
+    <block type='friendly_group_element'/>
+    <block type='friendly_scroller_element'/>
+    <block type='friendly_button_element'/>
+    <category name="Primitive">
+      <block type="view_element"/>
+      <block type="text_element">
+        <value name="text value">
+          <shadow type="text">
+            <field name="text value"/>
+          </shadow>
+        </value>
+      </block>
+      <block type="image_element">
+        <value name="URL">
+          <shadow type="text">
+            <field name="TEXT">favicon.ico</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="touchable_element">
+        <value name="child elements">
+          <shadow type="text_element">
+            <value name="text value">
+              <shadow type="text">
+                <field name="TEXT">Button</field>
+              </shadow>
+            </value>
+          </shadow>
+        </value>
+      </block>
+      <block type="scrollview_element"/>
+      <block type="button_element"/>
+      <block type='textinput_element'/>
+    </category>
     <category name="Icons">
       <block type="icon_action"/>
       <block type="icon_alert"/>

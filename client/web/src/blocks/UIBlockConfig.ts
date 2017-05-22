@@ -25,7 +25,148 @@ export namespace UIBlockConfig {
         desc_?: UIBlockOptPropDesc;
     }
 
+    var friendlyThemePropDesc: UIBlockOptPropDesc = {
+        name: 'theme',
+        displayName: 'theme',
+        type: 'enum',
+        enumVals: [
+            ['first', 'firstTheme']
+        ]
+    };
+    var friendlyStylePropDesc: UIBlockOptPropDesc = {
+        name: 'style',
+        displayName: 'visuals',
+        type: 'val'
+    };
+
+    // FRIENDLY : HERE BE block descriptors
     var uiBlockDescriptors: jsutil.Map<UIBlockDesc> = {
+        // FRIENDLY : group
+        'friendly_group_element': {
+            optionalProps: {
+                theme: friendlyThemePropDesc,
+                style: friendlyStylePropDesc,
+                onLayout: {
+                    name: 'onLayout',
+                    displayName: 'when sized',
+                    type: 'func'
+                }
+            }
+        },
+        // FRIENDLY : scroller
+        'friendly_scroller_element': {
+            optionalProps: {
+                theme: friendlyThemePropDesc,
+                style: friendlyStylePropDesc,
+                horizontal: {
+                    name: 'horizontal',
+                    displayName: 'should scroll horizontally',
+                    type: 'bool'
+                },
+                // inherited from view_element ///////
+                pointerEvents: {
+                    name: 'pointerEvents',
+                    displayName: 'pointer events',
+                    type: 'enum',
+                    enumVals: [
+                        ['box-none', 'box-none'],
+                        ['none', 'none'],
+                        ['box-only', 'box-only'],
+                        ['normal', 'auto']
+                    ]
+                },
+                onLayout: {
+                    name: 'onLayout',
+                    displayName: 'when sized',
+                    type: 'func'
+                },
+                ///////////////////////////////////////
+                contentContainerStyle: {
+                    name: 'contentContainerStyle',
+                    displayName: 'container appearance',
+                    type: 'val'
+                },
+
+                keyboardDismissMode: {
+                    name: 'keyboardDismissMode',
+                    displayName: 'keyboard dismissed on drag?',
+                    type: 'enum',
+                    enumVals: [
+                        ['none', 'none'],
+                        ['interactive', 'interactive'],
+                        ['on drag', 'on-drag'],
+                    ]
+                },
+                keyboardShouldPersistTaps: {
+                    name: 'keyboardShouldPersistTaps',
+                    displayName: 'keyboard visible after tap?',
+                    type: 'enum',
+                    enumVals: [
+                        ['always', 'always'],
+                        ['never', 'never'],
+                        ['handled', 'handled'],
+                    ]
+                },
+                // refreshControl:{
+                //     name:'refreshControl',
+                //     displayName:'UI',
+                //     type:'func'
+                // },
+                scrollEnabled: {
+                    name: 'scrollEnabled',
+                    displayName: 'scrolling enabled?',
+                    type: 'val'
+                },
+                showsHorizontalScrollIndicator: {
+                    name: 'showsHorizontalScrollIndicator',
+                    displayName: 'show horizontal scroll indicator',
+                    type: 'bool'
+                },
+                showsVerticalScrollIndicator: {
+                    name: 'showsVerticalScrollIndicator',
+                    displayName: 'show vertical scroll indicator',
+                    type: 'bool'
+                },
+                pagingEnabled: {
+                    name: 'pagingEnabled',
+                    displayName: 'paging enabled?',
+                    type: 'bool'
+                },
+            }
+        },
+        // FRIENDLY : button
+        'friendly_button_element': {
+            optionalProps: {
+                theme: friendlyThemePropDesc,
+                style: friendlyStylePropDesc,
+                disabled: {
+                    name: 'disabled',
+                    displayName: 'disabled',
+                    type: 'bool'
+                },
+                activeOpacity: {
+                    name: 'activeOpacity',
+                    displayName: 'fade when touched',
+                    type: 'val'
+                },
+                underlayColor: {
+                    name: 'underlayColor',
+                    displayName: 'background color when touched',
+                    type: 'val'
+                },
+            }
+        },
+        // FRIENDLY : text
+        'friendly_text_element': {
+            optionalProps: {
+                theme: friendlyThemePropDesc,
+                style: friendlyStylePropDesc,
+                // FRIENDLY : text optional properties
+            }
+        },
+        // FRIENDLY : image
+        // FRIENDLY : textinput
+        // FRIENDLY : rectangle
         'view_element': {
             optionalProps: {
                 pointerEvents: {
@@ -380,6 +521,135 @@ export namespace UIBlockConfig {
         //
         // insert more ui block definitions here
         //
+        // FRIENDLY : HERE BE block definitions
+        // FRIENDLY : group
+        defName = 'friendly_group_element';
+        viewBlockDef = createUIBlockDef(uiBlockDescriptors[defName]);
+        viewBlockDef.init = function () {
+            this.appendDummyInput()
+                // .appendField(new Blockly.FieldImage("media/av/ic_web_white_48dp.png", 16, 16, "*"))
+                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField("Group")
+                // .appendField("child direction")
+                .appendField(new Blockly.FieldDropdown([["row", "row"], ["column", "column"], ["reverse-row", "row-reverse"], ["reverse-column", "column-reverse"]]), "child direction")
+                .appendField(new Blockly.FieldImage("/media/action/ic_open_with_white_48dp.png", 16, 16, "*"))
+                // .appendField("flex?")
+                .appendField(new Blockly.FieldCheckbox("FALSE"), "isFlex")
+                .appendField("class")
+                .appendField(new Blockly.FieldDropdown([
+                    ["panel", "panel"],
+                    ["frame", "frame"],
+                    ["framed panel", "framepanel"],
+                    ["header", "header"],
+                    ["footer", "footer"],
+                    ["row", "row"],
+                    ["(none)", "none"]
+                ]),
+                "visual purpose");
+            this.appendStatementInput("children")
+                .setCheck(null)
+                .appendField("children");
+            this.setInputsInline(true);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip('container to put other UI elements into');
+            this.setHelpUrl('');
+            blockDefInitHelper.call(this, 'friendly_group_element');
+        };
+        Blockly.Blocks[defName] = viewBlockDef;
+        // FRIENDLY : scroller
+        defName = 'friendly_scroller_element';
+        viewBlockDef = createUIBlockDef(uiBlockDescriptors[defName]);
+        viewBlockDef.init = function () {
+            this.appendDummyInput()
+                // .appendField(new Blockly.FieldImage("https://www.gstatic.com/codesite/ph/images/star_on.gif", 15, 15, "*"))
+                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField("Scroller")
+                .appendField(new Blockly.FieldImage("/media/action/ic_open_with_white_48dp.png", 16, 16, "*"))
+                // .appendField("flex?")
+                .appendField(new Blockly.FieldCheckbox("FALSE"), "isFlex")
+                .appendField("class")
+                .appendField(new Blockly.FieldDropdown([
+                    ["panel", "panel"],
+                    ["frame", "frame"],
+                    ["framed panel", "framepanel"],
+                    ["header", "header"],
+                    ["footer", "footer"],
+                    ["row", "row"],
+                    ["(none)", "none"]
+                ]),
+                "visual purpose");
+            this.appendStatementInput("children")
+                .setCheck(null)
+                .appendField("children");
+            // this.setInputsInline(false);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip('');
+            this.setHelpUrl('');
+            blockDefInitHelper.call(this, 'friendly_scroller_element');
+        };
+        Blockly.Blocks[defName] = viewBlockDef;
+        // FRIENDLY : button
+        defName = 'friendly_button_element';
+        viewBlockDef = createUIBlockDef(uiBlockDescriptors[defName]);
+        viewBlockDef.init = function () {
+            this.appendDummyInput()
+                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField("Button")
+                .appendField(new Blockly.FieldImage("/media/action/ic_open_with_white_48dp.png", 16, 16, "*"))
+                // .appendField("flex?")
+                .appendField(new Blockly.FieldCheckbox("FALSE"), "isFlex")
+                .appendField("class")
+                .appendField(new Blockly.FieldDropdown([
+                    ["small", "small"],
+                    ["medium", "medium"],
+                    ["large", "large"],
+                    ["emphasis (sm)", "smallstrong"],
+                    ["emphasis (md)", "mediumstrong"],
+                    ["emphasis (lg)", "largestrong"],
+                    ["(none)", "none"]
+                ]), "visual purpose");
+            this.appendStatementInput("child elements")
+                .setCheck(null)
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("children");
+            this.appendStatementInput("onPress")
+                .setCheck(null)
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("when pressed");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip('create an element that can be clicked or touched to execute code');
+            this.setHelpUrl('');
+            blockDefInitHelper.call(this, 'friendly_button_element');
+        };
+        Blockly.Blocks[defName] = viewBlockDef;
+        // FRIENDLY : text
+        defName = 'friendly_text_element';
+        viewBlockDef = createUIBlockDef(uiBlockDescriptors[defName]);
+        viewBlockDef.init = function () {
+            this.appendValueInput("text value")
+                .setCheck(null)
+                .appendField("Text")
+                .appendField("flex?")
+                .appendField(new Blockly.FieldCheckbox("FALSE"), "isFlex")
+                .appendField("class")
+                .appendField(new Blockly.FieldDropdown([["(none)", "none"], ["button", "button"], ["menu", "menu"], ["caption", "caption"], ["body1", "body1"], ["body2", "body2"], ["subtitle", "subtitle"], ["title", "title"], ["headline1", "headline1"], ["headline2", "headline2"], ["headline3", "headline3"], ["headline4", "headline4"]]), "visual purpose");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip('create an element that can be clicked or touched to execute code');
+            this.setHelpUrl('');
+            blockDefInitHelper.call(this, 'friendly_text_element');
+        };
+        Blockly.Blocks[defName] = viewBlockDef;
+        // FRIENDLY : image
+        // FRIENDLY : textinput
+        // FRIENDLY : rectangle    
 
         // initialize the blocks used in the gear window
         Blockly.Blocks['mutable_block1_container'] = {
@@ -677,7 +947,7 @@ export namespace UIBlockConfig {
 
     export function initUIBlockCodegen() {
         Blockly.JavaScript['view_element'] = function (block: Blockly.Block) {
-            let blockdesc = uiBlockDescriptors['view_element'];
+            let blockdesc = uiBlockDescriptors[block.type];
             let statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
 
             // let value_pointerEvents = block.getFieldValue(getOptPropInputName('pointerEvents'));
@@ -709,7 +979,7 @@ export namespace UIBlockConfig {
             return code;
         };
         Blockly.JavaScript['scrollview_element'] = function (block: Blockly.Block) {
-            let blockdesc = uiBlockDescriptors['scrollview_element'];
+            let blockdesc = uiBlockDescriptors[block.type];
             let statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
             // properties
             let code = '{\nCgRt.beginProps();\n';
@@ -745,7 +1015,7 @@ export namespace UIBlockConfig {
             return code;
         };
         Blockly.JavaScript['textinput_element'] = function (block: Blockly.Block) {
-            let blockdesc = uiBlockDescriptors['textinput_element'];
+            let blockdesc = uiBlockDescriptors[block.type];
             let dropdown_storage = Blockly.JavaScript.variableDB_.getName(
                 block.getFieldValue('storage'),
                 Blockly.Variables.NAME_TYPE);
@@ -811,7 +1081,7 @@ export namespace UIBlockConfig {
         };
 
         Blockly.JavaScript['touchable_element'] = function (block: Blockly.Block) {
-            let blockdesc = uiBlockDescriptors['touchable_element'];
+            let blockdesc = uiBlockDescriptors[block.type];
             var statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
             var statements_onpress = Blockly.JavaScript.statementToCode(block, 'onPress');
             // TODO: Assemble JavaScript into code variable.
@@ -846,6 +1116,151 @@ export namespace UIBlockConfig {
             code += `\nCgRt.pushElem(CgRt.createElement(CgRt.TouchableHighlightr, ${propsVarName},${childrenVarName}));\n}\n`;
             return code;
         };
+        // FRIENDLY : HERE BE block codegen
+        // FRIENDLY : group
+        Blockly.JavaScript['friendly_group_element'] = function (block: Blockly.Block) {
+            let text_name = block.getFieldValue('NAME');
+            let dropdown_child_direction = block.getFieldValue('child direction');
+            let checkbox_isflex = block.getFieldValue('isFlex') == 'TRUE';
+            let statements_children = Blockly.JavaScript.statementToCode(block, 'children');
+            let dropdown_visual_purpose = block.getFieldValue('visual purpose');
+
+            let blockdesc = uiBlockDescriptors[block.type];
+            // let statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
+
+            // let value_pointerEvents = block.getFieldValue(getOptPropInputName('pointerEvents'));
+            // let statements_onLayout = Blockly.JavaScript.statementToCode(block, getOptPropInputName('onLayout'));
+            // properties
+            let code = '{\nCgRt.beginProps();\n';
+
+            code += generateRefPropCode(block);
+            code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
+            code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('childDirection', dropdown_child_direction);
+            code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('visualPurpose', dropdown_visual_purpose);
+            code += generateOptPropCode(blockdesc.optionalProps['theme'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['onLayout'], block);
+            // code += BlocklyConfig.conditionalStringPropertySetting('pointerEvents', `'${value_pointerEvents}'`);
+            // code += BlocklyConfig.conditionalFuncPropertySetting('onLayout', statements_onLayout, false);
+
+            //styles
+            let value_style = Blockly.JavaScript.valueToCode(block, getOptPropInputName('style'), Blockly.JavaScript.ORDER_ATOMIC);
+            if (value_style && value_style !== '') {
+                code += '\nCgRt.addProp("style",' + value_style + ');';
+            }
+            //endprops
+            let propsVarName = BlocklyConfig.getVarName('p');
+            code += `\nvar ${propsVarName}=CgRt.getProps();`;
+
+            // children
+            code += '\nCgRt.pushCont();\n{';
+            code += statements_children;
+            let childrenVarName = BlocklyConfig.getVarName('cl');
+            code += `}\nvar ${childrenVarName}=CgRt.popCont();`;
+            code += `\nCgRt.pushElem(CgRt.createElement(CgRt.GroupBlockf, ${propsVarName},${childrenVarName}));\n}\n`;
+            return code;
+        };
+        // FRIENDLY : scroller
+        Blockly.JavaScript['friendly_scroller_element'] = function (block: Blockly.Block) {
+            var text_name = block.getFieldValue('NAME');
+            var checkbox_isflex = block.getFieldValue('isFlex') == 'TRUE';
+            var statements_children = Blockly.JavaScript.statementToCode(block, 'children');
+            let dropdown_visual_purpose = block.getFieldValue('visual purpose');
+
+            let blockdesc = uiBlockDescriptors[block.type];
+            // let statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
+
+            // let value_pointerEvents = block.getFieldValue(getOptPropInputName('pointerEvents'));
+            // let statements_onLayout = Blockly.JavaScript.statementToCode(block, getOptPropInputName('onLayout'));
+            // properties
+            let code = '{\nCgRt.beginProps();\n';
+
+            code += generateRefPropCode(block);
+            code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
+            code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('visualPurpose', dropdown_visual_purpose);
+            code += generateOptPropCode(blockdesc.optionalProps['theme'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['pointerEvents'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['onLayout'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['contentContainerStyle'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['horizontal'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['keyboardDismissMode'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['keyboardShouldPersistTaps'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['scrollEnabled'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['showsHorizontalScrollIndicator'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['showsVerticalScrollIndicator'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['pagingEnabled'], block);
+
+            //styles
+            let value_style = Blockly.JavaScript.valueToCode(block, getOptPropInputName('style'), Blockly.JavaScript.ORDER_ATOMIC);
+            if (value_style && value_style !== '') {
+                code += '\nCgRt.addProp("style",' + value_style + ');';
+            }
+            //endprops
+            let propsVarName = BlocklyConfig.getVarName('p');
+            code += `\nvar ${propsVarName}=CgRt.getProps();`;
+
+            // children
+            code += '\nCgRt.pushCont();\n{';
+            code += statements_children;
+            let childrenVarName = BlocklyConfig.getVarName('cl');
+            code += `}\nvar ${childrenVarName}=CgRt.popCont();`;
+            code += `\nCgRt.pushElem(CgRt.createElement(CgRt.ScrollerBlockf, ${propsVarName},${childrenVarName}));\n}\n`;
+            return code;
+        };
+        // FRIENDLY : button
+        Blockly.JavaScript['friendly_button_element'] = function (block: Blockly.Block) {
+            let blockdesc = uiBlockDescriptors[block.type];
+            var checkbox_isflex = block.getFieldValue('isFlex') == 'TRUE';
+            var dropdown_visual_purpose = block.getFieldValue('visual purpose');
+            var statements_child_elements = Blockly.JavaScript.statementToCode(block, 'child elements');
+            var statements_onpress = Blockly.JavaScript.statementToCode(block, 'onPress');
+
+            let code = '{\nCgRt.beginProps();\n';
+
+            code += generateRefPropCode(block);
+            code += BlocklyConfig.conditionalPropertySetting('onPress', `function(){${statements_onpress}\nCgRt.updateUI();}`);
+
+            code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
+            code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('visualPurpose', dropdown_visual_purpose);
+            code += generateOptPropCode(blockdesc.optionalProps['theme'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['disabled'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['activeOpacity'], block);
+            code += generateOptPropCode(blockdesc.optionalProps['underlayColor'], block);
+            // code += BlocklyConfig.conditionalStringPropertySetting('pointerEvents', `'${value_pointerEvents}'`);
+            // code += BlocklyConfig.conditionalFuncPropertySetting('onLayout', statements_onLayout, false);
+
+            //styles
+            var value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
+            if (value_style && value_style !== '') {
+                code += '\nCgRt.addProp("style",' + value_style + ');';
+            }
+            //endprops
+            let propsVarName = BlocklyConfig.getVarName('p');
+            code += `\nvar ${propsVarName}=CgRt.getProps();`;
+
+            // children
+            code += '\nCgRt.pushCont();\n{';
+            if (statements_child_elements && statements_child_elements != '') {
+                code += statements_child_elements;
+            } else {
+                code += 'CgRt.pushElem(CgRt.createElement(CgRt.Textr,{style:{textAlign:"center"}},["\<empty\>"]));'
+            }
+            let childrenVarName = BlocklyConfig.getVarName('cl');
+            code += `}\nvar ${childrenVarName}=CgRt.popCont();`;
+            code += `\nCgRt.pushElem(CgRt.createElement(CgRt.ButtonBlockf, ${propsVarName},${childrenVarName}));\n}\n`;
+            return code;
+        };
+        // FRIENDLY : text
+        Blockly.JavaScript['friendly_text_element'] = function (block: Blockly.Block) {
+                var checkbox_isflex = block.getFieldValue('isFlex') == 'TRUE';
+                var dropdown_visual_purpose = block.getFieldValue('visual purpose');
+                var value_text_value = Blockly.JavaScript.valueToCode(block, 'text value', Blockly.JavaScript.ORDER_ATOMIC);
+                // TODO: Assemble JavaScript into code variable.
+                var code = '...;\n';
+                return code;
+        };
+        // FRIENDLY : image
+        // FRIENDLY : textinput
+        // FRIENDLY : rectangle    
     }
 
     export function initUIMethodCodegen() {
@@ -886,11 +1301,11 @@ export namespace UIBlockConfig {
         } else if (desc.type == 'text') {
             let value = Blockly.JavaScript.valueToCode(block, getOptPropInputName(desc.name), Blockly.JavaScript.ORDER_COMMA);
             if (!value || value == '') return '';
-            return BlocklyConfig.conditionalStringPropertySetting(desc.name, value);
+            return BlocklyConfig.conditionalValueToCodeAsStringPropertySetting(desc.name, value);
         } else if (desc.type == 'enum') {
             let value = block.getFieldValue(getOptPropInputName(desc.name));
             if (!value || value == '') return '';
-            return BlocklyConfig.conditionalStringPropertySetting(desc.name, `'${value}'`);
+            return BlocklyConfig.conditionalValueToCodeAsStringPropertySetting(desc.name, `'${value}'`);
         } else if (desc.type == 'bool') {
             let value = block.getFieldValue(getOptPropInputName(desc.name));
             if (!value || value == '') return '';

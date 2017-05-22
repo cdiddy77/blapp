@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { View } from 'react-native';
+import { ScrollView } from 'react-native';
 import * as BlockThemes from '../util/BlockThemes';
 
-export class GroupBlock extends React.Component<any, any>{
+export class ScrollerBlock extends React.Component<any, any>{
     constructor(props: any) {
         super(props);
     }
@@ -10,7 +10,6 @@ export class GroupBlock extends React.Component<any, any>{
         let {
             style,
             theme,
-            childDirection,
             visualPurpose,
             isFlex,
             children,
@@ -22,7 +21,7 @@ export class GroupBlock extends React.Component<any, any>{
         // if there is a theme, then grab the correct
         // style from the theme, otherwise use the default
         // theme, whatever that is
-        if (visualPurpose != 'none') {
+      if (visualPurpose != 'none') {
             let themeBlock: BlockThemes.BlockTheme;
             if (theme) {
                 themeBlock = BlockThemes.getThemeByName(theme);
@@ -30,17 +29,13 @@ export class GroupBlock extends React.Component<any, any>{
                 themeBlock = BlockThemes.getDefaultTheme();
             }
             if (themeBlock)
-                viewStyles.push(themeBlock['group_' + visualPurpose]);
+                viewStyles.push(themeBlock['scroller_' + visualPurpose]);
         }
-
         // some of the properties apply indirectly to styles
         // if any of these properties are present, then create
         // a style block just for them 
-        if (isFlex || childDirection) {
+        if (isFlex) {
             let propStyle: React.CSSProperties = {};
-            if (childDirection) {
-                propStyle.flexDirection = childDirection;
-            }
             if (isFlex) {
                 propStyle.flex = 1;
             }
@@ -52,9 +47,9 @@ export class GroupBlock extends React.Component<any, any>{
             viewStyles.push(style);
         }
         return (
-            <View {...other} style={viewStyles}>
+            <ScrollView {...other} style={viewStyles}>
                 {this.props.children}
-            </View>
+            </ScrollView>
         );
     }
 }

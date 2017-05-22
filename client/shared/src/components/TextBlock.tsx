@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { View } from 'react-native';
+import { Text } from 'react-native';
 import * as BlockThemes from '../util/BlockThemes';
 
-export class GroupBlock extends React.Component<any, any>{
+export class TextBlock extends React.Component<any, any>{
     constructor(props: any) {
         super(props);
     }
@@ -10,7 +10,6 @@ export class GroupBlock extends React.Component<any, any>{
         let {
             style,
             theme,
-            childDirection,
             visualPurpose,
             isFlex,
             children,
@@ -30,17 +29,14 @@ export class GroupBlock extends React.Component<any, any>{
                 themeBlock = BlockThemes.getDefaultTheme();
             }
             if (themeBlock)
-                viewStyles.push(themeBlock['group_' + visualPurpose]);
+                viewStyles.push(themeBlock['button_' + visualPurpose]);
         }
 
         // some of the properties apply indirectly to styles
         // if any of these properties are present, then create
         // a style block just for them 
-        if (isFlex || childDirection) {
+        if (isFlex) {
             let propStyle: React.CSSProperties = {};
-            if (childDirection) {
-                propStyle.flexDirection = childDirection;
-            }
             if (isFlex) {
                 propStyle.flex = 1;
             }
@@ -52,9 +48,9 @@ export class GroupBlock extends React.Component<any, any>{
             viewStyles.push(style);
         }
         return (
-            <View {...other} style={viewStyles}>
-                {this.props.children}
-            </View>
+            <Text {...other} style={viewStyles}>
+                    {this.props.children}
+            </Text>
         );
     }
 }

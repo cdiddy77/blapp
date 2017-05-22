@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { View, Text, Image, Button, TouchableHighlight } from 'react-native';
 import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
-import { GroupBlock } from '../../../shared/src/components/GroupBlock';
+import { ButtonBlock } from '../../../shared/src/components/ButtonBlock';
+import { TextBlock } from '../../../shared/src/components/TextBlock';
 
 export class TestTarget extends React.Component<{}, {}>{
     ball: Image;
@@ -20,9 +21,16 @@ export class TestTarget extends React.Component<{}, {}>{
     }
     render() {
         return (
-            <GroupBlock  background='red'>
-                <Text>foobar</Text>
-            </GroupBlock>
+            <View>
+                <ButtonBlock onPress={() => { console.log('pressed') }}
+                    visualPurpose='medium'>
+                    <TextBlock>foobar</TextBlock>
+                </ButtonBlock>
+                <ButtonBlock onPress={() => { console.log('pressed') }}
+                    visualPurpose='medium'>
+                    <Text>foobar</Text>
+                </ButtonBlock>
+            </View>
         );
     }
 }

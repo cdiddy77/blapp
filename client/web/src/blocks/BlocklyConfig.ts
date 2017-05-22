@@ -666,9 +666,15 @@ export namespace BlocklyConfig {
         return prefix + curVarIndex;
     }
 
-    export function conditionalStringPropertySetting(prop: string, value: string, defaultValue?: string): string {
+    export function conditionalValueToCodeAsStringPropertySetting(prop: string, value: string, defaultValue?: string): string {
         if (value && value !== 'null' && value !== 'undefined') {
             value = `String(${value})`;
+        }
+        return conditionalPropertySetting(prop, value, defaultValue);
+    }
+    export function conditionalAddQuotesToFieldValuePropertySetting(prop: string, value: string, defaultValue?: string): string {
+        if (value && value !== 'null' && value !== 'undefined') {
+            value = `'${value}'`;
         }
         return conditionalPropertySetting(prop, value, defaultValue);
     }
@@ -678,6 +684,13 @@ export namespace BlocklyConfig {
             statements = `function(){${statements}${callUpdate}}`;
         }
         return conditionalPropertySetting(prop, statements);
+    }
+    export function conditionalBoolStringPropertySetting(prop: string, value: string) {
+        if (!value || value == '') return '';
+        return conditionalPropertySetting(prop, value == "TRUE" ? 'true' : 'false');
+    }
+    export function conditionalBoolPropertySetting(prop: string, value: boolean) {
+        return conditionalPropertySetting(prop, value ? 'true' : 'false');
     }
     export function conditionalPropertySetting(prop: string, value: string, defaultValue?: string): string {
         let code: string = '';
@@ -696,7 +709,7 @@ export namespace BlocklyConfig {
             code += '\nCgRt.pushCont();\n';
             code += statements_elements;
             code += '\nvar cl=CgRt.popCont();';
-            code += '\nreturn CgRt.createElement(CgRt.Viewr, {style:{backgroundColor:"white",flex:1}}, cl);\n});';
+            code += '\nreturn CgRt.createElement(CgRt.Viewr, {style:{backgroundColor:"white",flex:1,overflow:"hidden"}}, cl);\n});';
             return code;
         };
         Blockly.JavaScript['force_ui_update'] = function (block: Blockly.Block) {
@@ -775,8 +788,8 @@ export namespace BlocklyConfig {
             //properties
             let code = '\n{\nCgRt.beginProps();\n';
             //code += `var testProc=function(){console.log("foo was here");};`;
-            code += conditionalStringPropertySetting('color', value_color);
-            code += conditionalStringPropertySetting('title', value_title);
+            code += conditionalValueToCodeAsStringPropertySetting('color', value_color);
+            code += conditionalValueToCodeAsStringPropertySetting('title', value_title);
             // BUTTON doesn't support styles
             // let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
             // if (value_style && value_style !== '') {
@@ -876,14 +889,14 @@ export namespace BlocklyConfig {
             // TODO: Assemble JavaScript into code variable.
             let code = `!Number.isNaN(Number(${value}))`;
             // TODO: Change ORDER_NONE to the correct strength.
-            return [code,Blockly.JavaScript.ORDER_FUNCTION_CALL];
+            return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
         };
         Blockly.JavaScript['parse_number'] = function (block: Blockly.Block) {
             let value = Blockly.JavaScript.valueToCode(block, 'VALUE', Blockly.JavaScript.ORDER_FUNCTION_CALL);
             // TODO: Assemble JavaScript into code variable.
             let code = `Number(${value})`;
             // TODO: Change ORDER_NONE to the correct strength.
-            return [code,Blockly.JavaScript.ORDER_FUNCTION_CALL];
+            return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
         };
     }
 
