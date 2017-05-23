@@ -23,8 +23,8 @@ export class TestTarget extends React.Component<{}, {}>{
         return (
             <View>
                 <ButtonBlock onPress={() => { console.log('pressed') }}
-                    visualPurpose='medium'>
-                    <TextBlock>foobar</TextBlock>
+                    visualPurpose='small'>
+                    <TextBlock visualPurpose='button'>foobar</TextBlock>
                 </ButtonBlock>
                 <ButtonBlock onPress={() => { console.log('pressed') }}
                     visualPurpose='medium'>

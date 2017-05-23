@@ -14,6 +14,10 @@ import { GroupBlock } from '../components/GroupBlock';
 import { ScrollerBlock } from '../components/ScrollerBlock';
 import { ButtonBlock } from '../components/ButtonBlock';
 import { TextBlock } from '../components/TextBlock';
+import { ImageBlock } from '../components/ImageBlock';
+import { TextInputBlock } from '../components/TextInputBlock';
+import { DividerBlock } from '../components/DividerBlock';
+import * as BlockThemes from '../util/BlockThemes';
 
 export interface CodegenHost {
 }
@@ -73,6 +77,15 @@ export namespace CodegenRuntime {
     }
     export function getResetApplicationProc(): () => void {
         return resetApplicationProc;
+    }
+
+    export function setDefaultTheme(theme: string): void {
+        BlockThemes.setDefaultTheme(BlockThemes.themes[theme]);
+        if (theme == 'darkTheme') {
+            rootStyle.backgroundColor = 'black';
+        } else {
+            rootStyle.backgroundColor = 'white';
+        }
     }
 
     export function onVarUpdated(name: string, value: any) {
@@ -142,6 +155,15 @@ export namespace CodegenRuntime {
         } else {
             return React.createElement(typ, props);
         }
+    }
+
+    var rootStyle: any = {
+        backgroundColor: "white",
+        flex: 1,
+        overflow: "hidden"
+    };
+    export function getRootStyle(): any {
+        return rootStyle;
     }
 
     export function getShareVar(name: string): any {
@@ -226,6 +248,9 @@ export namespace CodegenRuntime {
     // FRIENDLY : text
     export var TextBlockf = TextBlock;
     // FRIENDLY : image
+    export var ImageBlockf = ImageBlock;
     // FRIENDLY : textinput
+    export var TextInputBlockf = TextInputBlock;
     // FRIENDLY : rectangle
+    export var DividerBlockf = DividerBlock;
 }

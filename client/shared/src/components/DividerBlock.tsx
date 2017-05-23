@@ -15,7 +15,7 @@ export class DividerBlock extends React.Component<any, any>{
             ...other
         } = this.props;
 
-        let viewStyles = [];
+        let viewStyles: any = [];
 
         // if there is a theme, then grab the correct
         // style from the theme, otherwise use the default
@@ -47,7 +47,7 @@ export class DividerBlock extends React.Component<any, any>{
             viewStyles.push(style);
         }
         return (
-            <View {...other} style={viewStyles}/>
+            <View {...other} style={viewStyles} />
         );
     }
 }

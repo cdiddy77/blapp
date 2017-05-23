@@ -6,8 +6,20 @@
     <block type='friendly_group_element'/>
     <block type='friendly_scroller_element'/>
     <block type='friendly_button_element'/>
-    <block type='friendly_text_element'/>
-    <block type='friendly_image_element'/>
+    <block type='friendly_text_element'>
+      <value name="text value">
+        <shadow type="text">
+          <field name="TEXT">Lorem Ipsum</field>
+        </shadow>
+      </value>
+    </block>
+    <block type='friendly_image_element'>
+        <value name="URL">
+          <shadow type="text">
+            <field name="TEXT">favicon.ico</field>
+          </shadow>
+        </value>
+    </block>
     <block type='friendly_textinput_element'/>
     <block type='friendly_divider_element'/>
     <category name="Primitive">

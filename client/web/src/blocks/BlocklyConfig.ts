@@ -8,9 +8,16 @@ export namespace BlocklyConfig {
         Blockly.BlockSvg.START_HAT = true;
         Blockly.Blocks['user_interface'] = {
             init: function () {
+                this.appendDummyInput()
+                    .appendField("UI")
+                    .appendField("theme")
+                    .appendField(new Blockly.FieldDropdown([
+                        ["calm", "firstTheme"],
+                        ["bright", "brightTheme"],
+                        ["wickeddaak", "darkTheme"]
+                    ]), "theme");
                 this.appendStatementInput("elements")
-                    .setCheck(null)
-                    .appendField("UI");
+                    .setCheck(null);
                 this.setColour(285);
                 this.setTooltip('insert the elements of the UI');
                 this.setHelpUrl('');
@@ -704,12 +711,13 @@ export namespace BlocklyConfig {
     export function initCodeGenerators(): void {
 
         Blockly.JavaScript['user_interface'] = (block: Blockly.Block) => {
+            var dropdown_theme = block.getFieldValue('theme');
             var statements_elements = Blockly.JavaScript.statementToCode(block, 'elements');
-            let code = '\nvar __f,result={};\nCgRt.setTargetRenderProc(function(){';
+            let code = `\nvar __f,result={};\nCgRt.setDefaultTheme('${dropdown_theme}');\nCgRt.setTargetRenderProc(function(){`;
             code += '\nCgRt.pushCont();\n';
             code += statements_elements;
             code += '\nvar cl=CgRt.popCont();';
-            code += '\nreturn CgRt.createElement(CgRt.Viewr, {style:{backgroundColor:"white",flex:1,overflow:"hidden"}}, cl);\n});';
+            code += '\nreturn CgRt.createElement(CgRt.Viewr, {style:CgRt.getRootStyle()}, cl);\n});';
             return code;
         };
         Blockly.JavaScript['force_ui_update'] = function (block: Blockly.Block) {

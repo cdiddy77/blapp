@@ -745,9 +745,9 @@ export namespace UIBlockConfig {
                     ["small", "small"],
                     ["medium", "medium"],
                     ["large", "large"],
-                    ["emphasis (sm)", "smallstrong"],
-                    ["emphasis (md)", "mediumstrong"],
-                    ["emphasis (lg)", "largestrong"],
+                    ["small (accented)", "small_accent"],
+                    ["medium (accented)", "medium_accent"],
+                    ["large (accented)", "large_accent"],
                     ["(none)", "none"]
                 ]), "visual purpose");
             this.appendStatementInput("child elements")
@@ -780,16 +780,13 @@ export namespace UIBlockConfig {
                 .appendField(new Blockly.FieldDropdown([
                     ["label", "label"],
                     ["button", "button"],
+                    ["accented button", "button_accent"],
                     ["menu", "menu"],
                     ["caption", "caption"],
-                    ["body1", "body1"],
-                    ["body2", "body2"],
+                    ["body", "body"],
                     ["subtitle", "subtitle"],
                     ["title", "title"],
-                    ["headline1", "headline1"],
-                    ["headline2", "headline2"],
-                    ["headline3", "headline3"],
-                    ["headline4", "headline4"],
+                    ["headline", "headline"],
                     ["(none)", "none"],
                 ]), "visual purpose");
             this.setPreviousStatement(true, null);
@@ -865,10 +862,8 @@ export namespace UIBlockConfig {
                 .appendField(new Blockly.FieldDropdown([
                     ["vertical left", "verticalleft"],
                     ["vertical right", "verticalright"],
-                    ["vertical mid", "verticalmid"],
-                    ["horizontal left", "horizontalleft"],
-                    ["horizontal right", "horizontalright"],
-                    ["horizontal mid", "horizontalmid"],
+                    ["horizontal top", "horizontaltop"],
+                    ["horizontal bottom", "horizontalbottom"],
                     ["(none)", "none"],
                 ]), "visual purpose");
             this.setPreviousStatement(true, null);
@@ -1363,7 +1358,8 @@ export namespace UIBlockConfig {
             let code = '{\nCgRt.beginProps();\n';
 
             code += generateRefPropCode(block);
-            code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
+            if (checkbox_isflex)
+                code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
             code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('childDirection', dropdown_child_direction);
             code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('visualPurpose', dropdown_visual_purpose);
             code += generateOptPropCode(blockdesc.optionalProps['theme'], block);
@@ -1404,7 +1400,8 @@ export namespace UIBlockConfig {
             let code = '{\nCgRt.beginProps();\n';
 
             code += generateRefPropCode(block);
-            code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
+            if (checkbox_isflex)
+                code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
             code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('visualPurpose', dropdown_visual_purpose);
             code += generateOptPropCode(blockdesc.optionalProps['theme'], block);
             code += generateOptPropCode(blockdesc.optionalProps['pointerEvents'], block);
@@ -1448,7 +1445,8 @@ export namespace UIBlockConfig {
             code += generateRefPropCode(block);
             code += BlocklyConfig.conditionalPropertySetting('onPress', `function(){${statements_onpress}\nCgRt.updateUI();}`);
 
-            code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
+            if (checkbox_isflex)
+                code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
             code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('visualPurpose', dropdown_visual_purpose);
             code += generateOptPropCode(blockdesc.optionalProps['theme'], block);
             code += generateOptPropCode(blockdesc.optionalProps['disabled'], block);
@@ -1488,7 +1486,8 @@ export namespace UIBlockConfig {
 
             code += generateRefPropCode(block);
 
-            code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
+            if (checkbox_isflex)
+                code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
             code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('visualPurpose', dropdown_visual_purpose);
 
             //styles
@@ -1512,7 +1511,29 @@ export namespace UIBlockConfig {
             let text_width = block.getFieldValue('width');
             let text_height = block.getFieldValue('height');
             let value_url = Blockly.JavaScript.valueToCode(block, 'URL', Blockly.JavaScript.ORDER_ATOMIC);
-            let code = '...;\n';
+
+            //properties
+            let code = '\n{\nCgRt.beginProps();\n';
+
+            code += '\nCgRt.addProp("source",{uri:';
+            code += value_url && value_url !== '' ? value_url : "''";
+            code += '});'
+
+            if (checkbox_isflex)
+                code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
+            code += BlocklyConfig.conditionalPropertySetting('width', text_width);
+            code += BlocklyConfig.conditionalPropertySetting('height', text_height);
+
+            //styles
+            let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
+            if (value_style && value_style !== '') {
+                code += '\nCgRt.addProp("style",' + value_style + ');';
+            }
+
+            //endprops
+            code += '\nvar p=CgRt.getProps();';
+
+            code += '\nCgRt.pushElem(CgRt.createElement(CgRt.ImageBlockf,p));\n}';
             return code;
         };
         // FRIENDLY : textinput
@@ -1552,7 +1573,8 @@ export namespace UIBlockConfig {
             }
 
             code += generateRefPropCode(block);
-            code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
+            if (checkbox_isflex)
+                code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
             code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('visualPurpose', dropdown_visual_purpose);
 
             code += generateOptPropCode(blockdesc.optionalProps['autoCapitalize'], block);
@@ -1584,11 +1606,11 @@ export namespace UIBlockConfig {
             let propsVarName = BlocklyConfig.getVarName('p');
             code += `\nvar ${propsVarName}=CgRt.getProps();`;
 
-            code += `\nCgRt.pushElem(CgRt.createElement(CgRt.TextInputBlockf,${propsVarName}));\n}\n`;
+            code += `\nCgRt.pushElem(CgRt.createElement(CgRt.TextInputBlockf,${propsVarName},[]));\n}\n`;
             return code;
         };
         // FRIENDLY : rectangle    
-   Blockly.JavaScript['friendly_divider_element'] = function (block: Blockly.Block) {
+        Blockly.JavaScript['friendly_divider_element'] = function (block: Blockly.Block) {
             let dropdown_visual_purpose = block.getFieldValue('visual purpose');
 
             let blockdesc = uiBlockDescriptors[block.type];
@@ -1618,7 +1640,7 @@ export namespace UIBlockConfig {
             code += `\nCgRt.pushElem(CgRt.createElement(CgRt.DividerBlockf, ${propsVarName}));\n}\n`;
             return code;
         };
-     }
+    }
 
     export function initUIMethodCodegen() {
         // METHBLOCK : scrollToEnd

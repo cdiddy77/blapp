@@ -17,7 +17,7 @@ export class GroupBlock extends React.Component<any, any>{
             ...other
         } = this.props;
 
-        let viewStyles = [];
+        let viewStyles: any = [];
 
         // if there is a theme, then grab the correct
         // style from the theme, otherwise use the default

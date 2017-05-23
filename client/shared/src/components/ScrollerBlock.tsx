@@ -16,12 +16,12 @@ export class ScrollerBlock extends React.Component<any, any>{
             ...other
         } = this.props;
 
-        let viewStyles = [];
+        let viewStyles: any = [];
 
         // if there is a theme, then grab the correct
         // style from the theme, otherwise use the default
         // theme, whatever that is
-      if (visualPurpose != 'none') {
+        if (visualPurpose != 'none') {
             let themeBlock: BlockThemes.BlockTheme;
             if (theme) {
                 themeBlock = BlockThemes.getThemeByName(theme);
