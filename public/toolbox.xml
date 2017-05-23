@@ -6,6 +6,10 @@
     <block type='friendly_group_element'/>
     <block type='friendly_scroller_element'/>
     <block type='friendly_button_element'/>
+    <block type='friendly_text_element'/>
+    <block type='friendly_image_element'/>
+    <block type='friendly_textinput_element'/>
+    <block type='friendly_divider_element'/>
     <category name="Primitive">
       <block type="view_element"/>
       <block type="text_element">

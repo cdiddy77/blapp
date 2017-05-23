@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { Text } from 'react-native';
+import { Image } from 'react-native';
 import * as BlockThemes from '../util/BlockThemes';
 
-export class TextBlock extends React.Component<any, any>{
+export class ImageBlock extends React.Component<any, any>{
     constructor(props: any) {
         super(props);
     }
@@ -10,6 +10,8 @@ export class TextBlock extends React.Component<any, any>{
         let {
             style,
             theme,
+            width,
+            height,
             visualPurpose,
             isFlex,
             ...other
@@ -28,16 +30,22 @@ export class TextBlock extends React.Component<any, any>{
                 themeBlock = BlockThemes.getDefaultTheme();
             }
             if (themeBlock)
-                viewStyles.push(themeBlock['text_' + visualPurpose]);
+                viewStyles.push(themeBlock['image_' + visualPurpose]);
         }
 
         // some of the properties apply indirectly to styles
         // if any of these properties are present, then create
         // a style block just for them 
-        if (isFlex) {
+        if (isFlex || width || height) {
             let propStyle: React.CSSProperties = {};
             if (isFlex) {
                 propStyle.flex = 1;
+            }
+            if (width) {
+                propStyle.width = width;
+            }
+            if (height) {
+                propStyle.height = height;
             }
             viewStyles.push(propStyle);
         }
@@ -47,9 +55,7 @@ export class TextBlock extends React.Component<any, any>{
             viewStyles.push(style);
         }
         return (
-            <Text {...other} style={viewStyles}>
-                    {this.props.children}
-            </Text>
+            <Image {...other} style={viewStyles}/>
         );
     }
 }

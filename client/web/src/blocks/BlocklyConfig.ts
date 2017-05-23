@@ -649,7 +649,7 @@ export namespace BlocklyConfig {
                     this.appendValueInput("style")
                         .setCheck("STYLE")
                         .setAlign(Blockly.ALIGN_RIGHT)
-                        .appendField("visuals");
+                        .appendField("design");
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour(75);

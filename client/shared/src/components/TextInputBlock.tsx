@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { Text } from 'react-native';
+import { TextInput } from 'react-native';
 import * as BlockThemes from '../util/BlockThemes';
 
-export class TextBlock extends React.Component<any, any>{
+export class TextInputBlock extends React.Component<any, any>{
     constructor(props: any) {
         super(props);
     }
@@ -28,7 +28,7 @@ export class TextBlock extends React.Component<any, any>{
                 themeBlock = BlockThemes.getDefaultTheme();
             }
             if (themeBlock)
-                viewStyles.push(themeBlock['text_' + visualPurpose]);
+                viewStyles.push(themeBlock['textinput_' + visualPurpose]);
         }
 
         // some of the properties apply indirectly to styles
@@ -47,9 +47,7 @@ export class TextBlock extends React.Component<any, any>{
             viewStyles.push(style);
         }
         return (
-            <Text {...other} style={viewStyles}>
-                    {this.props.children}
-            </Text>
+            <TextInput {...other} style={viewStyles}/>
         );
     }
 }

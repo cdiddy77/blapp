@@ -20,9 +20,11 @@ var screenDims = {
 // button:
 //      small,medium,large,smallstrong,mediumstrong,largestrong,
 // text:
-//      button,menu,caption,body1,body2,subtitle,title,headline1,headline2,headline3,headline4
+//      label,button,menu,caption,body1,body2,subtitle,title,headline1,headline2,headline3,headline4
 // textinput:
 //      inline,form,headline,
+// image:(TBD)
+//      smallsquare,medsquare,largesquare,thumbnail
 // divider:
 //      verticalleft,verticalright,verticalmid,horizontaltop,horizontalbottom,horizontalmiddle
 
@@ -46,6 +48,7 @@ export interface BlockTheme {
     button_smallstrong?: CSSProperties;
     button_mediumstrong?: CSSProperties;
     button_largestrong?: CSSProperties;
+    text_label?: CSSProperties;
     text_button?: CSSProperties;
     text_menu?: CSSProperties;
     text_caption?: CSSProperties;
@@ -112,7 +115,7 @@ export const themes: jsutil.Map<BlockTheme> = {
 
 // FRIENDLY : bubbles, more saturated
 
-// FRIENDLY : Black and white with borders
+// FRIENDLY : dark
 
 var defaultTheme = themes.firstTheme;
 
