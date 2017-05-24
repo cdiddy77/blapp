@@ -5,7 +5,18 @@
     <!-- // FRIENDLY: friendly controls -->
     <block type='friendly_group_element'/>
     <block type='friendly_scroller_element'/>
-    <block type='friendly_button_element'/>
+    <block type='friendly_button_element'>
+      <value name="child elements">
+        <shadow type="friendly_text_element">
+          <field name="visual purpose">button</field>
+          <value name="text value">
+            <shadow type="text">
+              <field name="TEXT">Button</field>
+            </shadow>
+          </value>
+        </shadow>
+      </value>
+    </block>
     <block type='friendly_text_element'>
       <value name="text value">
         <shadow type="text">
@@ -14,11 +25,11 @@
       </value>
     </block>
     <block type='friendly_image_element'>
-        <value name="URL">
-          <shadow type="text">
-            <field name="TEXT">favicon.ico</field>
-          </shadow>
-        </value>
+      <value name="URL">
+        <shadow type="text">
+          <field name="TEXT">favicon.ico</field>
+        </shadow>
+      </value>
     </block>
     <block type='friendly_textinput_element'/>
     <block type='friendly_divider_element'/>

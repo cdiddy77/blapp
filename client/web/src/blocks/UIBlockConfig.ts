@@ -1456,7 +1456,7 @@ export namespace UIBlockConfig {
             // code += BlocklyConfig.conditionalFuncPropertySetting('onLayout', statements_onLayout, false);
 
             //styles
-            var value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
+            var value_style = Blockly.JavaScript.valueToCode(block, getOptPropInputName('style'), Blockly.JavaScript.ORDER_ATOMIC);
             if (value_style && value_style !== '') {
                 code += '\nCgRt.addProp("style",' + value_style + ');';
             }
@@ -1491,7 +1491,7 @@ export namespace UIBlockConfig {
             code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('visualPurpose', dropdown_visual_purpose);
 
             //styles
-            let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
+            let value_style = Blockly.JavaScript.valueToCode(block, getOptPropInputName('style'), Blockly.JavaScript.ORDER_ATOMIC);
             if (value_style && value_style !== '') {
                 code += '\nCgRt.addProp("style",' + value_style + ');';
             }
@@ -1525,7 +1525,7 @@ export namespace UIBlockConfig {
             code += BlocklyConfig.conditionalPropertySetting('height', text_height);
 
             //styles
-            let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
+            let value_style = Blockly.JavaScript.valueToCode(block, getOptPropInputName('style'), Blockly.JavaScript.ORDER_ATOMIC);
             if (value_style && value_style !== '') {
                 code += '\nCgRt.addProp("style",' + value_style + ');';
             }
@@ -1598,7 +1598,7 @@ export namespace UIBlockConfig {
             code += generateOptPropCode(blockdesc.optionalProps['selectTextOnFocus'], block);
 
             //styles
-            let value_style = Blockly.JavaScript.valueToCode(block, 'style', Blockly.JavaScript.ORDER_ATOMIC);
+            let value_style = Blockly.JavaScript.valueToCode(block, getOptPropInputName('style'), Blockly.JavaScript.ORDER_ATOMIC);
             if (value_style && value_style !== '') {
                 code += '\nCgRt.addProp("style",' + value_style + ');';
             }

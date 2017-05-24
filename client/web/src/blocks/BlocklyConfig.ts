@@ -811,6 +811,12 @@ export namespace BlocklyConfig {
             return code;
         };
         Blockly.JavaScript['styledef'] = (block: Blockly.Block) => {
+            // for some reason, the code generates a compile error if it sits by itself.
+            // since it does nothing, we just won't generate it
+            if(!block.parentBlock_){
+                return '';
+            }
+            
             let statements_name = Blockly.JavaScript.statementToCode(block, 'STYLES');
             let code = '\nfunction(){\nvar result={};';
             code += statements_name;
