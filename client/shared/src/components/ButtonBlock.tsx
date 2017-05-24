@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { TouchableHighlight, View } from 'react-native';
+import { View, TouchableHighlight } from 'react-native';
 import * as BlockThemes from '../util/BlockThemes';
 
 export class ButtonBlock extends React.Component<any, any>{
+     HackView = View;
     constructor(props: any) {
         super(props);
     }
@@ -17,8 +18,7 @@ export class ButtonBlock extends React.Component<any, any>{
         } = this.props;
 
         let viewStyles: any = [];
-
-        // if there is a theme, then grab the correct
+        // if we have a theme, then grab the correct
         // style from the theme, otherwise use the default
         // theme, whatever that is
         if (visualPurpose != 'none') {
@@ -49,7 +49,7 @@ export class ButtonBlock extends React.Component<any, any>{
         }
         return (
             <TouchableHighlight {...other} style={viewStyles}>
-                <View style={{ flexDirection: 'row', flex: 1 }}>
+                <View style={{ flexDirection: 'row', }}>
                     {this.props.children}
                 </View>
             </TouchableHighlight>

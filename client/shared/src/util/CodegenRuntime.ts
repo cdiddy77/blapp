@@ -79,16 +79,7 @@ export namespace CodegenRuntime {
         return resetApplicationProc;
     }
 
-    export function setDefaultTheme(theme: string): void {
-        BlockThemes.setDefaultTheme(BlockThemes.themes[theme]);
-        if (theme == 'darkTheme') {
-            rootStyle.backgroundColor = 'black';
-        } else {
-            rootStyle.backgroundColor = 'white';
-        }
-    }
-
-    export function onVarUpdated(name: string, value: any) {
+     export function onVarUpdated(name: string, value: any) {
         sharedVars[name] = value;
         for (let i = 0; i < shareVarUpdateWildCardHandlers.length; i++) {
             shareVarUpdateWildCardHandlers[i].call(this);
@@ -157,13 +148,35 @@ export namespace CodegenRuntime {
         }
     }
 
-    var rootStyle: any = {
+    var rootStyleCalm: any = {
         backgroundColor: "white",
         flex: 1,
         overflow: "hidden"
     };
+    var rootStyleBright: any = {
+        backgroundColor: "white",
+        flex: 1,
+        overflow: "hidden"
+    };
+    var rootStyleDark: any = {
+        backgroundColor: "black",
+        flex: 1,
+        overflow: "hidden"
+    };
+    var currentRootStyle: any=rootStyleCalm;
     export function getRootStyle(): any {
-        return rootStyle;
+        return currentRootStyle;
+    }
+
+   export function setDefaultTheme(theme: string): void {
+        BlockThemes.setDefaultTheme(BlockThemes.themes[theme]);
+        if (theme == 'darkTheme') {
+            currentRootStyle = rootStyleDark;
+        } else if (theme == 'brightTheme') {
+            currentRootStyle = rootStyleBright;
+        } else {
+            currentRootStyle = rootStyleCalm;
+        }
     }
 
     export function getShareVar(name: string): any {
@@ -245,12 +258,8 @@ export namespace CodegenRuntime {
     export var GroupBlockf = GroupBlock;
     export var ScrollerBlockf = ScrollerBlock;
     export var ButtonBlockf = ButtonBlock;
-    // FRIENDLY : text
     export var TextBlockf = TextBlock;
-    // FRIENDLY : image
     export var ImageBlockf = ImageBlock;
-    // FRIENDLY : textinput
     export var TextInputBlockf = TextInputBlock;
-    // FRIENDLY : rectangle
     export var DividerBlockf = DividerBlock;
 }
