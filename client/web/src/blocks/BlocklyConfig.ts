@@ -542,7 +542,7 @@ export namespace BlocklyConfig {
             init: function () {
                 this.appendDummyInput()
                     .appendField("font family")
-                    .appendField(new Blockly.FieldTextInput("sans-serif", null), "VALUE");
+                    .appendField(new Blockly.FieldTextInput("helvetica", null), "VALUE");
                 this.setPreviousStatement(true, "STYLEPROP");
                 this.setNextStatement(true, "STYLEPROP");
                 this.setColour(285);

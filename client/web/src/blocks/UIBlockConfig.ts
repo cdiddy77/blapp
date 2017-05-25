@@ -860,10 +860,10 @@ export namespace UIBlockConfig {
                 .appendField("Divider")
                 .appendField("class")
                 .appendField(new Blockly.FieldDropdown([
-                    ["vertical left", "verticalleft"],
-                    ["vertical right", "verticalright"],
                     ["horizontal top", "horizontaltop"],
                     ["horizontal bottom", "horizontalbottom"],
+                    ["vertical left", "verticalleft"],
+                    ["vertical right", "verticalright"],
                     ["(none)", "none"],
                 ]), "visual purpose");
             this.setPreviousStatement(true, null);
