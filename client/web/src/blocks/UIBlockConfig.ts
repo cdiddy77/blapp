@@ -83,7 +83,7 @@ export namespace UIBlockConfig {
                 ///////////////////////////////////////
                 contentContainerStyle: {
                     name: 'contentContainerStyle',
-                    displayName: 'container appearance',
+                    displayName: 'container design',
                     type: 'val'
                 },
 
@@ -489,7 +489,7 @@ export namespace UIBlockConfig {
                 ///////////////////////////////////////
                 contentContainerStyle: {
                     name: 'contentContainerStyle',
-                    displayName: 'container appearance',
+                    displayName: 'container design',
                     type: 'val'
                 },
                 horizontal: {
