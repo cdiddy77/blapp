@@ -1,16 +1,17 @@
 /// <reference path="../refs.d.ts" />
 /// <reference path="../localtypings/blockly.d.ts" />
 /// <reference path="../../../../node_modules/@types/jquery/index.d.ts" />
-
-
-
 import * as jsutil from '../../../shared/src/util/jsutil';
 import { ModelWithEvents } from './ModelWithEvents';
-import { BlocklyConfig } from '../blocks/BlocklyConfig';
-import { UIBlockConfig } from '../blocks/UIBlockConfig';
+import * as BlocklyConfig from '../blocks/BlocklyConfig';
+import * as UIBlockConfig from '../blocks/UIBlockConfig';
+import * as UIBlockDefs from '../blocks/UIBlockDefs';
+import * as UIMethodDefs from '../blocks/UIMethodDefs';
+import * as SpriteCanvasDefs from '../blocks/SpriteCanvasDefs';
 import { CodegenRuntime, CodegenHost } from '../../../shared/src/util/CodegenRuntime';
 import { SimplePromptModel } from './SimplePromptModel';
 import { InputFilePromptModel } from './InputFilePromptModel';
+import * as svcConn from '../util/ServiceConnection';
 
 export interface AppModelData {
     lastEvalError: Error;
@@ -97,10 +98,12 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
             BlocklyConfig.initStyleBlockCodeGenerators();
             BlocklyConfig.initIconBlockDefinitions();
             BlocklyConfig.initIconBlockCodeGenerators();
-            UIBlockConfig.initAllUIBlockDefs(getStorageVarsProc);
-            UIBlockConfig.initUIMethodDefs();
-            UIBlockConfig.initUIBlockCodegen();
-            UIBlockConfig.initUIMethodCodegen();
+            UIBlockDefs.initAllUIBlockDefs(getStorageVarsProc);
+            UIMethodDefs.initUIMethodDefs();
+            UIBlockDefs.initUIBlockCodegen();
+            UIMethodDefs.initUIMethodCodegen();
+            SpriteCanvasDefs.initBlockDefs();
+            SpriteCanvasDefs.initCodegen();
             setTimeout(this.restoreWorkspace(), 0);
         });
 
@@ -455,5 +458,9 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
             // force all the clients to reload
             this.setProperty('code', this.data.code);
         }
+    }
+
+    resetPairingCode(){
+ svcConn.createNewSession();       
     }
 }

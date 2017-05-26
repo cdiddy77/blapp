@@ -9,7 +9,7 @@ import { AppModel } from '../models/AppModel';
 import { TabbedArea, TabPane } from './TabbedArea';
 import { Target } from './Target';
 import { TestTarget } from './TestTarget';
-import * as svcConn from '../util/ServiceConnection';
+// import * as svcConn from '../util/ServiceConnection';
 import { SimplePrompt } from './SimplePrompt';
 import { InputFilePrompt } from './InputFilePrompt';
 
@@ -47,13 +47,17 @@ class App extends React.Component<AppProps, AppState> {
     let headerHeight = 60;
     let footerHeight = 60;
     let modelData = this.props.model.data;
-    
+
     return (
       <div className="App">
         <div className="App-header">
-          <p className='rightLink'><a target='_blank' href='https://www.youtube.com/playlist?list=PLCRKPBgyt2IYvEp0Dw92HfSHb9zo25X4X'>Videos</a></p>
-          <p>The Blapp</p>
-          <p>pairing code: {modelData.pairingCode}</p>
+          <p className='rightLink'>
+            <a target='_blank' href='https://www.youtube.com/playlist?list=PLCRKPBgyt2IYvEp0Dw92HfSHb9zo25X4X'>Videos</a>
+            <br />
+            pairing code: {modelData.pairingCode}&nbsp;
+               <button type='button' className='btn btn-link' onClick={() => this.props.model.resetPairingCode()}>New Pairing Code</button>
+          </p>
+          <p>In Blapp We Trust</p>
         </div>
         <div id='blocksArea' ref={(elem) => { this.blocksArea = elem; }}
           style={{
@@ -96,7 +100,7 @@ class App extends React.Component<AppProps, AppState> {
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.undo()}>Undo</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.redo()}>Redo</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.resetApplication()}>
-              <img src='/icons/dark/appbar.flag.wavy.png' style={{width:20,height:20}}/>
+              <img src='/icons/dark/appbar.flag.wavy.png' style={{ width: 20, height: 20 }} />
               Reset Application
               </button>
             <CSSTransitionGroup

@@ -33,6 +33,53 @@
     </block>
     <block type='friendly_textinput_element'/>
     <block type='friendly_divider_element'/>
+    <block type='screen_width'/>
+    <block type='screen_height'/>
+    <category name="Icons">
+      <block type="icon_action"/>
+      <block type="icon_alert"/>
+      <block type="icon_av"/>
+      <block type="icon_communication"/>
+      <block type="icon_content"/>
+      <block type="icon_device"/>
+      <block type="icon_editor"/>
+      <block type="icon_file"/>
+      <block type="icon_hardware"/>
+      <block type="icon_image"/>
+      <block type="icon_maps"/>
+      <block type="icon_navigation"/>
+      <block type="icon_notification"/>
+      <block type="icon_places"/>
+      <block type="icon_social"/>
+      <block type="icon_toggle"/>
+    </category>
+    <category name="Sprites">
+      <block type='sprite_element'/>
+      <block type='canvas_element'/>
+      <block type='sprite_get_x'/>
+      <block type='sprite_get_y'/>
+      <block type='sprite_get_direction'/>
+      <block type='sprite_get_scale'/>
+      <block type='sprite_set_x'/>
+      <block type='sprite_set_y'/>
+      <block type='sprite_set_position'/>
+      <block type='sprite_set_direction'/>
+      <block type='sprite_set_scale'/>
+      <block type='sprite_rotate_left'/>
+      <block type='sprite_rotate_right'/>
+      <block type='sprite_change_x'/>
+      <block type='sprite_change_y'/>
+      <block type='sprite_change_position'/>
+      <block type='sprite_change_scale'/>
+      <block type='sprite_move'/>
+      <block type='sprite_intersecting_edge'/>
+      <block type='sprite_intersecting_sprite'/>
+    </category>
+    <category name="Actions">
+      <block type="force_ui_update"/>
+      <block type="scroll_scrolltoend_method"/>
+      <block type="console_log"/>
+    </category>
     <category name="Primitive">
       <block type="view_element"/>
       <block type="text_element">
@@ -64,33 +111,11 @@
       <block type="button_element"/>
       <block type='textinput_element'/>
     </category>
-    <category name="Icons">
-      <block type="icon_action"/>
-      <block type="icon_alert"/>
-      <block type="icon_av"/>
-      <block type="icon_communication"/>
-      <block type="icon_content"/>
-      <block type="icon_device"/>
-      <block type="icon_editor"/>
-      <block type="icon_file"/>
-      <block type="icon_hardware"/>
-      <block type="icon_image"/>
-      <block type="icon_maps"/>
-      <block type="icon_navigation"/>
-      <block type="icon_notification"/>
-      <block type="icon_places"/>
-      <block type="icon_social"/>
-      <block type="icon_toggle"/>
-    </category>
-    <category name="Actions">
-      <block type="force_ui_update"/>
-      <block type="scroll_scrolltoend_method"/>
-      <block type="console_log"/>
-    </category>
   </category>
   <category name="Styles" colour="#935ba5">
     <block type="styledef"/>
     <block type="stylejoindef"/>
+    <block type="styleprop_generic"/>
     <category name="Layout">
       <block type="styleprop_aligncontent"/>
       <block type="styleprop_alignitems"/>

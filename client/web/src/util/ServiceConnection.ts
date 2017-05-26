@@ -4,39 +4,43 @@ import * as io from 'socket.io-client';
 import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
 
 
-var sessionId: string;
+var pairingCode: string = null;
 var socket: SocketIOClient.Socket = io({
     port: '8080'
 });
 
 export function init(appModel: AppModel) {
     CodegenRuntime.setShareVarSetProc((name, value) => {
-        if (!socket || !sessionId) {
+        if (!socket || !pairingCode) {
             return;
         }
-        socket.emit('setShareVar', sessionId, { name: name, value: value });
+        socket.emit('setShareVar', pairingCode, { name: name, value: value });
     });
     appModel.on('change', (prop) => {
-        if (sessionId == null) {
+        if (pairingCode == null) {
             console.log('app changed, but we have no session id, ignoring');
             return;
         }
         if (prop == 'code') {
             socket.emit(
                 'simctrlmsg',
-                sessionId,
+                pairingCode,
                 svcTypes.createCodeChangeControlMessage(appModel.data.code));
             console.log('sent code_change');
         } else if (prop === 'lastEvalError') {
-            socket.emit('simctrlmsg', sessionId,
+            socket.emit('simctrlmsg', pairingCode,
                 svcTypes.createEvalStatusChangeControlMessage(appModel.data.lastEvalError));
             console.log('sent evalstatus_change');
         }
     });
 
     socket.on('connect', () => {
-        console.log('connected, requesting createSessionRequest');
-        socket.emit('createSessionRequest');
+        pairingCode = window.localStorage.getItem('pairingCode');
+        if (pairingCode) {
+            joinSession();
+        } else {
+            createSession();
+        }
     });
     socket.on('connect_error', (err: any) => {
         console.log('connect_error', err);
@@ -49,13 +53,20 @@ export function init(appModel: AppModel) {
     });
     socket.on('createSessionResponse', (data: svcTypes.CreateSessionResponseMessage) => {
         console.log('createSessionResponse', data);
-        sessionId = data.pairingCode;
-        appModel.setProperty('pairingCode', sessionId);
+        setPairingCode(data.pairingCode, appModel);
+    });
+    socket.on('joinSessionResponse', (data: svcTypes.JoinSessionResponseMessage) => {
+        if (data.pairingCode == 'noexist') {
+            createSession();
+        } else {
+            setPairingCode(data.pairingCode, appModel);
+        }
+        console.log('joinSessionResponse', data);
     });
     socket.on('disconnect', () => {
         console.log('disconnect');
         // appModel.setProperty('connectionState', 'disconnected');
-        sessionId = null;
+        pairingCode = null;
     });
 
     socket.on('simctrlmsg', (data: svcTypes.ControlMessage) => {
@@ -64,5 +75,34 @@ export function init(appModel: AppModel) {
     socket.on('shareVarUpdated', (data: svcTypes.ShareVarUpdatedMessage) => {
         CodegenRuntime.onVarUpdated(data.name, data.value);
     });
+}
+
+function createSession() {
+    console.log('calling createSessionRequest');
+    pairingCode = null;
+    socket.emit('createSessionRequest');
+}
+function joinSession() {
+    console.log('calling joinSessionRequest');
+    socket.emit('joinSessionRequest', pairingCode);
+}
+function leaveSession() {
+    console.log('calling leaveSessionRequest');
+    socket.emit('leaveSessionRequest', pairingCode);
+}
+
+function setPairingCode(pc: string, appModel: AppModel) {
+    pairingCode = pc;
+    window.localStorage.setItem('pairingCode', pairingCode);
+    appModel.setProperty('pairingCode', pairingCode);
+}
+
+export function createNewSession() {
+    // leave current session
+    if (pairingCode) {
+        leaveSession();
+    }
+    // create new session
+    createSession();
 }
 

@@ -36,6 +36,13 @@ export interface KVP<K, V> {
     value: V;
 }
 
+export interface Rect {
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+}
+
 export function mapSelectApply<T, U>(src: Map<T>, dest: Map<U>, s: (t: T) => U): void {
     for (var p in src) {
         dest[p] = s(src[p]);
@@ -164,4 +171,11 @@ export function requestURL(opts: RequestURLOpts): Promise<string> {
         }
         xhr.send(params);
     });
+}
+
+export function rectsIntersect(r1: Rect, r2: Rect): boolean {
+    return !(r2.left > r1.right ||
+        r2.right < r1.left ||
+        r2.top > r1.bottom ||
+        r2.bottom < r1.top);
 }
