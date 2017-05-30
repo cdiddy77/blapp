@@ -554,10 +554,10 @@ export const uiBlockDescriptors: jsutil.Map<UIBlockDesc> = {
                     ['rectangle', 'rectangle'],
                 ]
             },
-            color:{
-                name:'color',
-                displayName:'color',
-                type:'val'
+            color: {
+                name: 'color',
+                displayName: 'color',
+                type: 'val'
             }
         }
     },
@@ -565,7 +565,11 @@ export const uiBlockDescriptors: jsutil.Map<UIBlockDesc> = {
         optionalProps: {
             theme: friendlyThemePropDesc,
             style: friendlyStylePropDesc,
-            
+            gestureHandler: {
+                name: 'gestureHandler',
+                displayName: 'how to handle user touches',
+                type: 'val'
+            }
         }
     },
 

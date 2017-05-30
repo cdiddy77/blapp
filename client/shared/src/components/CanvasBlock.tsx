@@ -50,6 +50,7 @@ export class CanvasBlock extends React.Component<any, any>{
         if (style) {
             viewStyles.push(style);
         }
+        // GESTURE : add panresponder whooey if the property is set
         return (
             <View {...other} style={viewStyles}
                 onLayout={(e) => {

@@ -471,6 +471,8 @@ export function initCodegen() {
         code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('visualPurpose', dropdown_visual_purpose);
         code += UIBlockConfig.generateOptPropCode(blockdesc.optionalProps['theme'], block);
 
+        // GESTURES : handle the handleGestures optional property
+        
         //styles
         let value_style = Blockly.JavaScript.valueToCode(block, UIBlockConfig.getOptPropInputName('style'), Blockly.JavaScript.ORDER_ATOMIC);
         if (value_style && value_style !== '') {
@@ -637,5 +639,4 @@ export function initCodegen() {
         let code = `\nCgRt.spriteBounceOnSpriteIntersect('${text_name}','${text_other}',${value_speed},${value_other_speed});`;
         return code;
     };
-
 }

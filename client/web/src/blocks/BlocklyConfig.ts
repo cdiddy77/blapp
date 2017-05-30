@@ -239,9 +239,46 @@ export function initBlockDefinitions(): void {
             this.setHelpUrl('');
         }
     };
+    Blockly.Blocks['gesture_handler'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("User Touch");
+            this.appendStatementInput("down_handler")
+                .setCheck(null)
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("begins");
+            this.appendStatementInput("move_handler")
+                .setCheck(null)
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("moves");
+            this.appendStatementInput("up_handler")
+                .setCheck(null)
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("ends");
+            this.setOutput(true, null);
+            this.setColour(230);
+            this.setTooltip('');
+            this.setHelpUrl('');
+        }
+    };
 
-
-
+    Blockly.Blocks['touch_data'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField(new Blockly.FieldDropdown([
+                    ["touch start x position", "touchdown_x"],
+                    ["touch start y position", "touchdown_y"],
+                    ["touch move x position", "touchmove_x"],
+                    ["touch move y position", "touchmove_y"],
+                    ["touch move x distance", "touchdelta_x"],
+                    ["touch move y distance", "touchdelta_y"]
+                ]), "datum");
+            this.setOutput(true, "Number");
+            this.setColour(230);
+            this.setTooltip('');
+            this.setHelpUrl('');
+        }
+    };
 }
 export function initStyleBlockDefinitions(): void {
 
@@ -336,7 +373,7 @@ export function initStyleBlockDefinitions(): void {
         }
     };
 
-  Blockly.Blocks['styleprop_offset'] = {
+    Blockly.Blocks['styleprop_offset'] = {
         init: function () {
             this.appendDummyInput()
                 .appendField("offset")
@@ -1007,7 +1044,42 @@ export function initCodeGenerators(): void {
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
 
+    // GESTURE : add gesture handler codegen
 
+    Blockly.JavaScript['gesture_handler'] = function (block: Blockly.Block) {
+        let statements_down_handler = Blockly.JavaScript.statementToCode(block, 'down_handler');
+        let statements_move_handler = Blockly.JavaScript.statementToCode(block, 'move_handler');
+        let statements_up_handler = Blockly.JavaScript.statementToCode(block, 'up_handler');
+        let code = `CgRt.createGestureHandler(\nfunction(){${statements_down_handler}},\nfunction(){${statements_move_handler}},\nfunction(){${statements_up_handler}})`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+
+    // GESTURE : add gesture datum codegen
+    Blockly.JavaScript['touch_data'] = function (block: Blockly.Block) {
+        let dropdown_datum = block.getFieldValue('datum');
+        let code = 'CgRt.';
+        switch (dropdown_datum) {
+            case "touchdown_x":
+            code += 'getTouchDownX()';
+                break;
+            case "touchdown_y":
+            code += 'getTouchDownY()';
+                break;
+            case "touchmove_x":
+            code += 'getTouchMoveX()';
+                break;
+            case "touchmove_y":
+            code += 'getTouchMoveY()';
+                break;
+            case "touchdelta_x":
+            code += 'getTouchDeltaX()';
+                break;
+            case "touchdelta_y":
+            code += 'getTouchDeltaX()';
+                break;
+        }
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
 }
 
 function genStyleStringProp(name: string, value: string): string {
@@ -1067,14 +1139,14 @@ export function initStyleBlockCodeGenerators(): void {
         return code;
     };
 
-     Blockly.JavaScript['styleprop_position'] = (block: Blockly.Block) => {
+    Blockly.JavaScript['styleprop_position'] = (block: Blockly.Block) => {
         if (!block.parentBlock_) return '';
         var dropdown_value = block.getFieldValue('VALUE');
         var code = genStyleStringProp('position', dropdown_value);
         return code;
     };
 
-   Blockly.JavaScript['styleprop_offset'] = (block: Blockly.Block) => {
+    Blockly.JavaScript['styleprop_offset'] = (block: Blockly.Block) => {
         if (!block.parentBlock_) return '';
         var dropdown_name = block.getFieldValue('NAME');
         var number_value = block.getFieldValue('VALUE');

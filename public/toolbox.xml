@@ -83,6 +83,8 @@
       <block type="force_ui_update"/>
       <block type="scroll_scrolltoend_method"/>
       <block type="console_log"/>
+      <block type="gesture_handler"/>
+      <block type="touch_data"/>
     </category>
     <category name="Primitive">
       <block type="view_element"/>
