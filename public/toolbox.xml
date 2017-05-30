@@ -1,5 +1,5 @@
 <xml 
-  xmlns="http://www.w3.org/1999/xhtml" id="toolbox" style="display: none;">
+ xmlns="http://www.w3.org/1999/xhtml" id="toolbox" style="display: none;">
   <category name="UI" colour="#935ba5">
     <block type="user_interface"/>
     <!-- // FRIENDLY: friendly controls -->
@@ -72,8 +72,12 @@
       <block type='sprite_change_position'/>
       <block type='sprite_change_scale'/>
       <block type='sprite_move'/>
-      <block type='sprite_intersecting_edge'/>
-      <block type='sprite_intersecting_sprite'/>
+      <block type='sprite_intersect_edge'/>
+      <block type='sprite_intersect_edge_bounce'/>
+      <block type='sprite_intersect_sprite'/>
+      <block type='sprite_intersect_sprite_bounce'/>
+      <block type='canvas_get_width'/>
+      <block type='canvas_get_height'/>
     </category>
     <category name="Actions">
       <block type="force_ui_update"/>
@@ -124,6 +128,7 @@
       <block type="styleprop_justifycontent"/>
       <block type="styleprop_flexwrap"/>
       <block type="styleprop_position"/>
+      <block type="styleprop_offset"/>
       <block type="styleprop_size"/>
       <block type="styleprop_flexvalues"/>
       <block type="styleprop_aspectratio"/>

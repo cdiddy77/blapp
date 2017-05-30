@@ -230,6 +230,7 @@ const firstTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         backgroundColor: colors.firstThemeButtonGray,
         alignItems: "center",
         overflow: 'hidden',
+        justifyContent:'center',
     },
     button_medium: {
         margin: constants.firstThemeGridSize,
@@ -237,6 +238,7 @@ const firstTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         backgroundColor: colors.firstThemeButtonGray,
         alignItems: 'center',
         overflow: 'hidden',
+        justifyContent:'center',
     },
     button_large: {
         margin: constants.firstThemeGridSize,
@@ -244,6 +246,7 @@ const firstTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         backgroundColor: colors.firstThemeButtonGray,
         alignItems: "center",
         overflow: 'hidden',
+        justifyContent:'center',
     },
     button_small_accent: {
         margin: constants.firstThemeGridSize,
@@ -251,6 +254,7 @@ const firstTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         backgroundColor: colors.firstThemeAccentButton,
         alignItems: "center",
         overflow: 'hidden',
+        justifyContent:'center',
     },
     button_medium_accent: {
         margin: constants.firstThemeGridSize,
@@ -258,6 +262,7 @@ const firstTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         backgroundColor: colors.firstThemeAccentButton,
         alignItems: "center",
         overflow: 'hidden',
+        justifyContent:'center',
     },
     button_large_accent: {
         margin: constants.firstThemeGridSize,
@@ -265,6 +270,7 @@ const firstTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         backgroundColor: colors.firstThemeAccentButton,
         alignItems: "center",
         overflow: 'hidden',
+        justifyContent:'center',
     },
     text_label: {
         fontSize: 12,
@@ -511,6 +517,8 @@ const brightTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         borderColor: colors.brightThemeBorder,
         backgroundColor: colors.brightThemeLightBkgd,
         alignItems: "center",
+        overflow: 'hidden',
+        justifyContent:'center',
     },
     button_medium: {
         margin: constants.brightThemeGridSize,
@@ -519,8 +527,9 @@ const brightTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         borderWidth: constants.brightThemeBorderWidth,
         borderColor: colors.brightThemeBorder,
         backgroundColor: colors.brightThemeLightBkgd,
-        alignItems: 'center',
+         alignItems: "center",
         overflow: 'hidden',
+        justifyContent:'center',
     },
     button_large: {
         margin: constants.brightThemeGridSize,
@@ -529,33 +538,37 @@ const brightTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         borderWidth: constants.brightThemeBorderWidth,
         borderColor: colors.brightThemeBorder,
         backgroundColor: colors.brightThemeLightBkgd,
-        alignItems: "center",
+         alignItems: "center",
         overflow: 'hidden',
-    },
+        justifyContent:'center',
+   },
     button_small_accent: {
         margin: constants.brightThemeGridSize,
         padding: constants.brightThemeGridSize,
         borderRadius: constants.brightThemeStdRadius,
         backgroundColor: colors.brightThemeAccentButton,
-        alignItems: "center",
+          alignItems: "center",
         overflow: 'hidden',
+        justifyContent:'center',
     },
     button_medium_accent: {
         margin: constants.brightThemeGridSize,
         padding: constants.brightThemeGridSize * 2,
         borderRadius: constants.brightThemeStdRadius,
         backgroundColor: colors.brightThemeAccentButton,
-        alignItems: "center",
+          alignItems: "center",
         overflow: 'hidden',
-    },
+        justifyContent:'center',
+   },
     button_large_accent: {
         margin: constants.brightThemeGridSize,
         padding: constants.brightThemeGridSize * 4,
         borderRadius: constants.brightThemeStdRadius,
         backgroundColor: colors.brightThemeAccentButton,
-        alignItems: "center",
+           alignItems: "center",
         overflow: 'hidden',
-    },
+        justifyContent:'center',
+  },
     text_label: {
         fontSize: 14,
         fontFamily: 'helvetica',
@@ -802,6 +815,7 @@ const darkTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         backgroundColor: colors.darkThemeButton,
         alignItems: "center",
         overflow: 'hidden',
+        justifyContent:'center',
     },
     button_medium: {
         margin: constants.darkThemeGridSize,
@@ -812,6 +826,7 @@ const darkTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         backgroundColor: colors.darkThemeButton,
         alignItems: 'center',
         overflow: 'hidden',
+        justifyContent:'center',
     },
     button_large: {
         margin: constants.darkThemeGridSize,
@@ -822,6 +837,7 @@ const darkTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         backgroundColor: colors.darkThemeButton,
         alignItems: "center",
         overflow: 'hidden',
+        justifyContent:'center',
     },
     button_small_accent: {
         margin: constants.darkThemeGridSize,
@@ -830,6 +846,7 @@ const darkTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         backgroundColor: colors.darkThemeAccentButton,
         alignItems: "center",
         overflow: 'hidden',
+        justifyContent:'center',
     },
     button_medium_accent: {
         margin: constants.darkThemeGridSize,
@@ -838,6 +855,7 @@ const darkTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         backgroundColor: colors.darkThemeAccentButton,
         alignItems: "center",
         overflow: 'hidden',
+        justifyContent:'center',
     },
     button_large_accent: {
         margin: constants.darkThemeGridSize,
@@ -846,6 +864,7 @@ const darkTheme: BlockTheme = StyleSheet.create<BlockTheme>({
         backgroundColor: colors.darkThemeAccentButton,
         alignItems: "center",
         overflow: 'hidden',
+        justifyContent:'center',
     },
     text_label: {
         fontSize: 12,

@@ -314,7 +314,7 @@ export function initStyleBlockDefinitions(): void {
         init: function () {
             this.appendDummyInput()
                 .appendField("wrap content")
-                .appendField(new Blockly.FieldDropdown([["yes", "wrap"], ["no", "nowrap"], ["option", "OPTIONNAME"], ["option", "OPTIONNAME"], ["option", "OPTIONNAME"], ["option", "OPTIONNAME"]]), "VALUE");
+                .appendField(new Blockly.FieldDropdown([["yes", "wrap"], ["no", "nowrap"]]), "VALUE");
             this.setPreviousStatement(true, "STYLEPROP");
             this.setNextStatement(true, "STYLEPROP");
             this.setColour(285);
@@ -327,6 +327,19 @@ export function initStyleBlockDefinitions(): void {
         init: function () {
             this.appendDummyInput()
                 .appendField("position")
+                .appendField(new Blockly.FieldDropdown([["absolute", "absolute"], ["relative", "relative"]]), "VALUE");
+            this.setPreviousStatement(true, "STYLEPROP");
+            this.setNextStatement(true, "STYLEPROP");
+            this.setColour(285);
+            this.setTooltip('');
+            this.setHelpUrl('');
+        }
+    };
+
+  Blockly.Blocks['styleprop_offset'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("offset")
                 .appendField(new Blockly.FieldDropdown([["bottom", "bottom"], ["left", "left"], ["right", "right"], ["top", "top"], ["z-index", "zIndex"]]), "NAME")
                 .appendField("value")
                 .appendField(new Blockly.FieldNumber(0), "VALUE");
@@ -1054,7 +1067,14 @@ export function initStyleBlockCodeGenerators(): void {
         return code;
     };
 
-    Blockly.JavaScript['styleprop_position'] = (block: Blockly.Block) => {
+     Blockly.JavaScript['styleprop_position'] = (block: Blockly.Block) => {
+        if (!block.parentBlock_) return '';
+        var dropdown_value = block.getFieldValue('VALUE');
+        var code = genStyleStringProp('position', dropdown_value);
+        return code;
+    };
+
+   Blockly.JavaScript['styleprop_offset'] = (block: Blockly.Block) => {
         if (!block.parentBlock_) return '';
         var dropdown_name = block.getFieldValue('NAME');
         var number_value = block.getFieldValue('VALUE');

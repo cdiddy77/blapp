@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { Image } from 'react-native';
+import { Image, View } from 'react-native';
 import * as BlockThemes from '../util/BlockThemes';
-import { EdgeKind, CodegenComponent, CodegenRuntime } from '../util/CodegenRuntime';
+import { EdgeKind, EdgeKinds, CodegenComponent, CodegenRuntime } from '../util/CodegenRuntime';
 import * as jsutil from '../util/jsutil';
 
 const defaultWidth = 100;
@@ -26,14 +26,7 @@ export class SpriteBlock extends React.Component<any, any> implements CodegenCom
     constructor(props: any) {
         super(props);
         this.resetState();
-        this.width = props.width || defaultWidth;
-        this.height = props.height || defaultHeight;
-        this.canvasId = props.canvasId;
     }
-
-    width: number;
-    height: number;
-    canvasId: string;
 
     // CodegenComponent implementation ///////////////////////////////////////////////
     //
@@ -52,15 +45,17 @@ export class SpriteBlock extends React.Component<any, any> implements CodegenCom
     //////////////////////////////////////////////////////////////////////////////////
 
     spriteState: SpriteState;
-    img: Image;
+    img: Image | View;
 
     // WARNING : Currently does not take into account rotation
     boundingBox(): jsutil.Rect {
+        let width = this.props.width || defaultWidth;
+        let height = this.props.height || defaultHeight;
         return {
             left: this.spriteState.translateX,
             top: this.spriteState.translateY,
-            right: this.spriteState.translateX + (this.width * this.spriteState.scale),
-            bottom: this.spriteState.translateY + (this.height * this.spriteState.scale)
+            right: this.spriteState.translateX + (width * this.spriteState.scale),
+            bottom: this.spriteState.translateY + (height * this.spriteState.scale)
         };
     }
 
@@ -135,23 +130,114 @@ export class SpriteBlock extends React.Component<any, any> implements CodegenCom
         if (this.img)
             this.img.setNativeProps({ style: { transform: this.createTransformValue() } });
     }
-    isIntersectingEdge(): EdgeKind {
-        let canvasWidth = CodegenRuntime.canvasGetWidth(this.canvasId);
-        let canvasHeight = CodegenRuntime.canvasGetHeight(this.canvasId);
+    isIntersectingEdge(edgeKinds: EdgeKinds): EdgeKind {
+        let canvasWidth = CodegenRuntime.canvasGetWidth(this.props.canvasId);
+        let canvasHeight = CodegenRuntime.canvasGetHeight(this.props.canvasId);
         if (!canvasWidth || canvasWidth == 0 || !canvasHeight || canvasHeight == 0)
             return 'none';
 
         let bb = this.boundingBox();
-        if (bb.left <= 0) return 'left';
-        if (bb.top <= 0) return 'top';
-        if (bb.right >= canvasWidth) return 'right';
-        if (bb.bottom >= canvasHeight) return 'bottom';
+        if ((edgeKinds == 'any' || edgeKinds == 'horizontal' || edgeKinds == 'left') && bb.left <= 0) return 'left';
+        if ((edgeKinds == 'any' || edgeKinds == 'vertical' || edgeKinds == 'top') && bb.top <= 0) return 'top';
+        if ((edgeKinds == 'any' || edgeKinds == 'horizontal' || edgeKinds == 'right') && bb.right >= canvasWidth) return 'right';
+        if ((edgeKinds == 'any' || edgeKinds == 'vertical' || edgeKinds == 'bottom') && bb.bottom >= canvasHeight) return 'bottom';
 
         return 'none';
     }
+
     isIntersectingSprite(other: SpriteBlock): boolean {
-        return false;
+        if (!other) return false;
+        let thisbb = this.boundingBox();
+        let otherbb = other.boundingBox();
+
+        return jsutil.rectsIntersect(thisbb, otherbb);
     }
+
+    bounceOnEdgeIntersect(edgeKinds: EdgeKinds, speed: number): void {
+        let canvasWidth = CodegenRuntime.canvasGetWidth(this.props.canvasId);
+        let canvasHeight = CodegenRuntime.canvasGetHeight(this.props.canvasId);
+        let bb = this.boundingBox();
+        let dir = jsutil.Vector.fromMagnitudeAndDirection(speed, this.getDirection());
+
+        let sortedByTime = [];
+        if (edgeKinds == 'any' || edgeKinds == 'horizontal' || edgeKinds == 'left') {
+            let leftEdge: jsutil.Rect = { left: -1, right: 0, top: 0, bottom: canvasHeight };
+            let intersectData = jsutil.rectIntersection(bb, leftEdge, dir);
+            if (intersectData.intersects) {
+                sortedByTime.push(intersectData);
+                intersectData.normal = -90;
+            }
+        }
+        if (edgeKinds == 'any' || edgeKinds == 'vertical' || edgeKinds == 'top') {
+            let topEdge: jsutil.Rect = { left: 0, right: canvasWidth, top: -1, bottom: 0 };
+            let intersectData = jsutil.rectIntersection(bb, topEdge, dir);
+            if (intersectData.intersects) {
+                sortedByTime.push(intersectData);
+                intersectData.normal = 180;
+            }
+        }
+        if (edgeKinds == 'any' || edgeKinds == 'horizontal' || edgeKinds == 'right') {
+            let rightEdge: jsutil.Rect = { left: canvasWidth, right: canvasWidth + 1, top: 0, bottom: canvasHeight };
+            let intersectData = jsutil.rectIntersection(bb, rightEdge, dir);
+            if (intersectData.intersects) {
+                sortedByTime.push(intersectData);
+                intersectData.normal = 90;
+            }
+        }
+        if (edgeKinds == 'any' || edgeKinds == 'vertical' || edgeKinds == 'bottom') {
+            let bottomEdge: jsutil.Rect = { left: 0, right: canvasWidth, top: canvasHeight, bottom: canvasHeight + 1 };
+            let intersectData = jsutil.rectIntersection(bb, bottomEdge, dir);
+            if (intersectData.intersects) {
+                sortedByTime.push(intersectData);
+                intersectData.normal = 0;
+            }
+        }
+
+        // let remainingSpeed = speed;
+        let usedTime = 0;
+        let currentDirection = this.getDirection();
+
+        // for each of the sides which we intersected with, we are going to go in order
+        // by time, 
+        if (sortedByTime.length > 1)
+            sortedByTime.sort((a, b) => a.tEnter - b.tEnter);
+
+        for (let i = 0; i < sortedByTime.length && sortedByTime[i].tEnter <= 1; i++) {
+            let idata = sortedByTime[i];
+            // move
+            this.move(speed * (idata.tEnter - usedTime));
+            // change direction
+            currentDirection = jsutil.reflect(currentDirection, idata.normal);
+            this.setDirection(currentDirection);
+            // subtract speed
+            usedTime = idata.tEnter;
+        }
+        if (sortedByTime.length > 0) {
+            // then move the remaining time
+            this.move(speed * (1 - usedTime));
+        }
+    }
+
+    bounceOnSpriteIntersect(speed: number, other: SpriteBlock, otherSpeed: number): void {
+        // COLLIDE : implement this
+        let thisRect = this.boundingBox();
+        let otherRect = other.boundingBox();
+        let thisDir = jsutil.Vector.fromMagnitudeAndDirection(speed, this.getDirection());
+        let otherDir = jsutil.Vector.fromMagnitudeAndDirection(otherSpeed, other.getDirection());
+        let dir = thisDir.subtract(otherDir);
+        let idata = jsutil.rectIntersection(thisRect, otherRect, dir);
+        if (idata.intersects) {
+            this.move(speed * idata.tEnter);
+            // change direction
+            let newDirection = jsutil.reflect(this.getDirection(), idata.normal);
+            this.setDirection(newDirection);
+            // subtract speed
+            // then move the remaining time
+
+            this.move(speed * (1 - idata.tEnter));
+        }
+    }
+
 
     createTransformValue(): any[] {
         let transformValue = [];
@@ -178,7 +264,10 @@ export class SpriteBlock extends React.Component<any, any> implements CodegenCom
             width,
             height,
             url,
-            elementId,
+            color,
+            // elementId,
+            graphicType,
+            canvasId,
             ...other
         } = this.props;
 
@@ -193,12 +282,19 @@ export class SpriteBlock extends React.Component<any, any> implements CodegenCom
         // a style block just for them 
         if (width === undefined) width = defaultWidth;
         if (height === undefined) height = defaultHeight;
+        if (!color) color = 'black';
+        if (!graphicType) graphicType = 'image';
 
         let propStyle: React.CSSProperties = {};
+        propStyle.position = 'absolute';
         propStyle.width = width;
         propStyle.height = height;
         propStyle.left = 0; // -width / 2;
         propStyle.top = 0; // -height / 2;
+        if (graphicType == 'rectangle') {
+            propStyle.backgroundColor = color;
+        }
+
         let transformValue = this.createTransformValue();
         if (transformValue.length > 0) {
             propStyle.transform = transformValue;
@@ -210,8 +306,14 @@ export class SpriteBlock extends React.Component<any, any> implements CodegenCom
         if (style) {
             viewStyles.push(style);
         }
-        return (
-            <Image {...other} ref={(c: any) => this.img = c} source={{ uri: url }} resizeMode='stretch' style={viewStyles} />
-        );
+        if (graphicType == 'image') {
+            return (
+                <Image {...other} ref={(c: any) => this.img = c} source={{ uri: url }} resizeMode='stretch' style={viewStyles} />
+            );
+        } else if (graphicType == 'rectangle') {
+            return (
+                <View {...other} ref={(c: any) => this.img = c} style={viewStyles} />
+            );
+        }
     }
 }

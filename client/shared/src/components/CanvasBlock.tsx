@@ -7,8 +7,8 @@ export class CanvasBlock extends React.Component<any, any>{
         super(props);
     }
 
-    width: number;
-    height: number;
+    laidoutWidth: number;
+    laidoutHeight: number;
     render() {
         let {
             style,
@@ -53,8 +53,8 @@ export class CanvasBlock extends React.Component<any, any>{
         return (
             <View {...other} style={viewStyles}
                 onLayout={(e) => {
-                    this.width = e.nativeEvent.layout.width;
-                    this.height = e.nativeEvent.layout.height;
+                    this.laidoutWidth = e.nativeEvent.layout.width;
+                    this.laidoutHeight = e.nativeEvent.layout.height;
                 }}
             >
                 {this.props.children}

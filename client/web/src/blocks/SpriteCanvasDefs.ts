@@ -18,6 +18,7 @@ export function initBlockDefs() {
             .appendField("height")
             .appendField(new Blockly.FieldNumber(100), "height")
             .appendField("URL");
+        this.setInputsInline(false);
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
         this.setColour(230);
@@ -77,6 +78,32 @@ export function initBlockDefs() {
                 .appendField("sprite")
                 .appendField(new Blockly.FieldTextInput(""), "NAME")
                 .appendField("y position");
+            this.setOutput(true, "Number");
+            this.setColour(230);
+            this.setTooltip('');
+            this.setHelpUrl('');
+        }
+    };
+
+    Blockly.Blocks['canvas_get_width'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("canvas")
+                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField("width");
+            this.setOutput(true, "Number");
+            this.setColour(230);
+            this.setTooltip('');
+            this.setHelpUrl('');
+        }
+    };
+
+    Blockly.Blocks['canvas_get_height'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("canvas")
+                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField("height");
             this.setOutput(true, "Number");
             this.setColour(230);
             this.setTooltip('');
@@ -303,27 +330,85 @@ export function initBlockDefs() {
         }
     };
 
-    Blockly.Blocks['sprite_intersecting_edge'] = {
+    Blockly.Blocks['sprite_intersect_edge'] = {
         init: function () {
             this.appendDummyInput()
                 .appendField("sprite")
                 .appendField(new Blockly.FieldTextInput(""), "NAME")
-                .appendField("touching edge?");
-            this.setOutput(true, null);
+                .appendField("touches side")
+                .appendField(new Blockly.FieldDropdown([
+                    ["any", "any"],
+                    ["left", "left"],
+                    ["top", "top"],
+                    ["right", "right"],
+                    ["bottom", "bottom"],
+                    ["left+right", "horizontal"],
+                    ["top+bottom", "vertical"]
+                ]), "edgetype");
+            this.setOutput(true, "String");
             this.setColour(230);
             this.setTooltip('');
             this.setHelpUrl('');
         }
     };
 
-    Blockly.Blocks['sprite_intersecting_sprite'] = {
+    Blockly.Blocks['sprite_intersect_edge_bounce'] = {
+        init: function () {
+            this.appendValueInput("speed")
+                .setCheck(null)
+                .appendField("if sprite")
+                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField("will touch side")
+                .appendField(new Blockly.FieldDropdown([
+                    ["any", "any"],
+                    ["left", "left"],
+                    ["top", "top"],
+                    ["right", "right"],
+                    ["bottom", "bottom"],
+                    ["left+right", "horizontal"],
+                    ["top+bottom", "vertical"]
+                ]), "edgetype")
+                .appendField("at speed");
+            this.appendDummyInput()
+                .appendField("then bounce");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip('');
+            this.setHelpUrl('');
+        }
+    };
+
+    Blockly.Blocks['sprite_intersect_sprite'] = {
         init: function () {
             this.appendDummyInput()
                 .appendField("sprite")
                 .appendField(new Blockly.FieldTextInput(""), "NAME")
-                .appendField("is touching other sprite")
+                .appendField("touches sprite")
                 .appendField(new Blockly.FieldTextInput(""), "OTHER");
-            this.setOutput(true, null);
+            this.setOutput(true, "Boolean");
+            this.setColour(230);
+            this.setTooltip('');
+            this.setHelpUrl('');
+        }
+    };
+
+    Blockly.Blocks['sprite_intersect_sprite_bounce'] = {
+        init: function () {
+            this.appendValueInput("speed")
+                .setCheck(null)
+                .appendField("if sprite")
+                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField("at speed");
+            this.appendValueInput("other speed")
+                .setCheck(null)
+                .appendField("will touch sprite")
+                .appendField(new Blockly.FieldTextInput(""), "OTHER")
+                .appendField("at speed");
+            this.appendDummyInput()
+                .appendField("then bounce");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
             this.setColour(230);
             this.setTooltip('');
             this.setHelpUrl('');
@@ -336,20 +421,24 @@ export function initCodegen() {
         let text_name = block.getFieldValue('NAME');
         let number_width = block.getFieldValue('width');
         let number_height = block.getFieldValue('height');
-        let value_url = Blockly.JavaScript.valueToCode(block, 'URL', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_url = Blockly.JavaScript.valueToCode(block, 'URL', Blockly.JavaScript.ORDER_COMMA);
 
         let blockdesc = UIBlockConfig.uiBlockDescriptors[block.type];
 
         //properties
         let code = '\n{\nCgRt.beginProps();\n';
-        code += `\nif(CgRt.getContOpts().canvasId)CgRt.addProp('canvasId',CgRt.getContOpts().canvasId);`;
+
+        code += `\nif(CgRt.getContOpts()&& CgRt.getContOpts().canvasId)CgRt.addProp('canvasId',CgRt.getContOpts().canvasId);`;
 
         code += UIBlockConfig.generateRefPropCode(block);
 
         code += BlocklyConfig.conditionalPropertySetting('url', value_url);
         code += BlocklyConfig.conditionalPropertySetting('width', number_width);
         code += BlocklyConfig.conditionalPropertySetting('height', number_height);
-        code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('elementId', text_name);
+        code += UIBlockConfig.generateOptPropCode(blockdesc.optionalProps['graphicType'], block);
+        code += UIBlockConfig.generateOptPropCode(blockdesc.optionalProps['color'], block);
+
+        // code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('elementId', text_name);
 
         //styles
         let value_style = Blockly.JavaScript.valueToCode(block, UIBlockConfig.getOptPropInputName('style'), Blockly.JavaScript.ORDER_ATOMIC);
@@ -376,7 +465,7 @@ export function initCodegen() {
         // properties
         let code = '{\nCgRt.beginProps();\n';
 
-        code += UIBlockConfig.generateRefPropCode(block);
+        code += UIBlockConfig.generateRefPropCode(block, text_name);
         if (checkbox_isflex)
             code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
         code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('visualPurpose', dropdown_visual_purpose);
@@ -407,6 +496,17 @@ export function initCodegen() {
     Blockly.JavaScript['sprite_get_y'] = function (block: Blockly.Block) {
         let text_name = block.getFieldValue('NAME');
         let code = `CgRt.spriteGetY('${text_name}')`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+
+    Blockly.JavaScript['canvas_get_width'] = function (block: Blockly.Block) {
+        let text_name = block.getFieldValue('NAME');
+        let code = `CgRt.canvasGetWidth('${text_name}')`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+    Blockly.JavaScript['canvas_get_height'] = function (block: Blockly.Block) {
+        let text_name = block.getFieldValue('NAME');
+        let code = `CgRt.canvasGetHeight('${text_name}')`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
 
@@ -507,16 +607,35 @@ export function initCodegen() {
         return code;
     };
 
-    Blockly.JavaScript['sprite_intersecting_edge'] = function (block: Blockly.Block) {
-        let text_name = block.getFieldValue('NAME');
-        let code = `CgRt.spriteIsIntersectingEdge('${text_name}')`;
+    Blockly.JavaScript['sprite_intersect_edge'] = function (block: Blockly.Block) {
+        var text_name = block.getFieldValue('NAME');
+        var dropdown_edgetype = block.getFieldValue('edgetype');
+        var code = `CgRt.spriteIsIntersectingEdge('${text_name}','${dropdown_edgetype}')`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
 
-    Blockly.JavaScript['sprite_intersecting_sprite'] = function (block: Blockly.Block) {
-        let text_name = block.getFieldValue('NAME');
-        let text_other = block.getFieldValue('OTHER');
-        let code = `CgRt.spriteIsIntersectingSprite('${text_name}','${text_other}')`;
+    Blockly.JavaScript['sprite_intersect_edge_bounce'] = function (block: Blockly.Block) {
+        var text_name = block.getFieldValue('NAME');
+        var dropdown_edgetype = block.getFieldValue('edgetype');
+        var value_speed = Blockly.JavaScript.valueToCode(block, 'speed', Blockly.JavaScript.ORDER_COMMA);
+        let code = `\nCgRt.spriteBounceOnEdgeIntersect('${text_name}','${dropdown_edgetype}',${value_speed});`;
+        return code;
+    };
+
+    Blockly.JavaScript['sprite_intersect_sprite'] = function (block: Blockly.Block) {
+        var text_name = block.getFieldValue('NAME');
+        var text_other = block.getFieldValue('OTHER');
+        var code = `CgRt.spriteIsIntersectingSprite('${text_name}','${text_other}')`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
+
+    Blockly.JavaScript['sprite_intersect_sprite_bounce'] = function (block: Blockly.Block) {
+        var text_name = block.getFieldValue('NAME');
+        var value_speed = Blockly.JavaScript.valueToCode(block, 'speed', Blockly.JavaScript.ORDER_ATOMIC);
+        var text_other = block.getFieldValue('OTHER');
+        var value_other_speed = Blockly.JavaScript.valueToCode(block, 'other speed', Blockly.JavaScript.ORDER_ATOMIC);
+        let code = `\nCgRt.spriteBounceOnSpriteIntersect('${text_name}','${text_other}',${value_speed},${value_other_speed});`;
+        return code;
+    };
+
 }

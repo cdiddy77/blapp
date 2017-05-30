@@ -27,6 +27,7 @@ export interface CodegenHost {
 }
 
 export type EdgeKind = 'none' | 'left' | 'top' | 'right' | 'bottom';
+export type EdgeKinds = 'none' | 'left' | 'top' | 'right' | 'bottom'|'horizontal'|'vertical'|'any';
 
 export interface CodegenComponent {
     resetState(): void;
@@ -266,7 +267,10 @@ export namespace CodegenRuntime {
 
     var identifiedElements: jsutil.Map<any> = {};
     export function setIdElem(name: string, elem: any): void {
-        identifiedElements[name] = elem;
+        if (elem)
+            identifiedElements[name] = elem;
+        else if (identifiedElements[name])
+            delete identifiedElements[name];
     }
     export function getIdElem(name: string): any {
         if (name)
@@ -316,16 +320,16 @@ export namespace CodegenRuntime {
     //
     export function canvasGetWidth(name: string): number {
         let canvas: CanvasBlock = getIdElem(name);
-        if (canvas && canvas.width) {
-            return canvas.width;
+        if (canvas && canvas.laidoutWidth) {
+            return canvas.laidoutWidth;
         } else {
             return 0;
         }
     }
     export function canvasGetHeight(name: string): number {
         let canvas: CanvasBlock = getIdElem(name);
-        if (canvas && canvas.height) {
-            return canvas.height;
+        if (canvas && canvas.laidoutHeight) {
+            return canvas.laidoutHeight;
         } else {
             return 0;
         }
@@ -414,12 +418,18 @@ export namespace CodegenRuntime {
         if (sprite && sprite.move)
             sprite.move(val);
     }
-    export function spriteIsIntersectingEdge(name: string): string {
+    export function spriteIsIntersectingEdge(name: string, edgeType: EdgeKinds): string {
         let sprite: SpriteBlock = getIdElem(name);
         if (sprite && sprite.isIntersectingEdge)
-            return sprite.isIntersectingEdge();
+            return sprite.isIntersectingEdge(edgeType);
         else
             return 'none';
+    }
+    export function spriteBounceOnEdgeIntersect(name: string, edgeType: EdgeKinds, speed: number): void {
+        // COLLIDE : implement this
+        let sprite: SpriteBlock = getIdElem(name);
+        if (!sprite || !sprite.bounceOnEdgeIntersect) return;
+        sprite.bounceOnEdgeIntersect(edgeType, speed);
     }
     export function spriteIsIntersectingSprite(name: string, other: string): boolean {
         let sprite: SpriteBlock = getIdElem(name);
@@ -429,6 +439,14 @@ export namespace CodegenRuntime {
             return sprite.isIntersectingSprite(otherSprite);
         else
             return false;
+    }
+    export function spriteBounceOnSpriteIntersect(name: string, other: string, speed: number, otherSpeed: number) {
+        let sprite: SpriteBlock = getIdElem(name);
+        let otherSprite: SpriteBlock = getIdElem(other);
+        if (sprite && sprite.bounceOnSpriteIntersect
+            && otherSprite && otherSprite.bounceOnSpriteIntersect) {
+            return sprite.bounceOnSpriteIntersect(speed,otherSprite,otherSpeed);
+        }
     }
     //
     /////////////////////////////////////////////////////////////////////
