@@ -8,7 +8,11 @@ import {
     TextInput,
     TouchableHighlight,
     ScrollView,
-    Dimensions
+    Dimensions,
+    PanResponder,
+    PanResponderInstance,
+    GestureResponderEvent,
+    PanResponderGestureState,
 } from 'react-native';
 
 import { GroupBlock } from '../components/GroupBlock';
@@ -27,7 +31,7 @@ export interface CodegenHost {
 }
 
 export type EdgeKind = 'none' | 'left' | 'top' | 'right' | 'bottom';
-export type EdgeKinds = 'none' | 'left' | 'top' | 'right' | 'bottom'|'horizontal'|'vertical'|'any';
+export type EdgeKinds = 'none' | 'left' | 'top' | 'right' | 'bottom' | 'horizontal' | 'vertical' | 'any';
 
 export interface CodegenComponent {
     resetState(): void;
@@ -70,6 +74,8 @@ export namespace CodegenRuntime {
         clearAllIntervalHandlers();
         clearIdentifiedElements();
         clearIdentifiedState();
+        // DELETE : debug log
+        numGestureHandlersCreated = 0;
     }
 
     export function setTargetRenderProc(renderProc: () => any) {
@@ -445,8 +451,153 @@ export namespace CodegenRuntime {
         let otherSprite: SpriteBlock = getIdElem(other);
         if (sprite && sprite.bounceOnSpriteIntersect
             && otherSprite && otherSprite.bounceOnSpriteIntersect) {
-            return sprite.bounceOnSpriteIntersect(speed,otherSprite,otherSpeed);
+            return sprite.bounceOnSpriteIntersect(speed, otherSprite, otherSpeed);
         }
+    }
+    //
+    /////////////////////////////////////////////////////////////////////
+
+    // TOUCH handling routines //////////////////////////////////////////
+    //
+    var numGestureHandlersCreated = 0;
+    export function createGestureHandler(
+        touchStartCb: () => void,
+        touchMoveCb: () => void,
+        touchEndCb: () => void): PanResponderInstance {
+        // DELETE : debuglog
+        console.log('createGestureHandler', numGestureHandlersCreated);
+        numGestureHandlersCreated++;
+        let touchDown: jsutil.Point = null;
+        let result = PanResponder.create({
+            // Ask to be the responder:
+            onMoveShouldSetPanResponder: (e: GestureResponderEvent, gestureState: PanResponderGestureState): boolean => {
+                if (gestureState.numberActiveTouches > 0) {
+                    // console.log('onMoveShouldSetPanResponder', JSON.stringify(gestureState));
+                    return true;
+                } else {
+                    console.log('onMoveShouldSetPanResponder returning false');
+                    return false;
+                }
+            },
+            onStartShouldSetPanResponder: (e: GestureResponderEvent, gestureState: PanResponderGestureState): boolean => {
+                if (gestureState.numberActiveTouches > 0) {
+                    // console.log('onStartShouldSetPanResponder', JSON.stringify(gestureState));
+                    return true;
+                } else {
+                    console.log('onMoveShouldSetPanResponder returning false');
+                    return false;
+                }
+            },
+            onPanResponderGrant: (e: GestureResponderEvent, gestureState: PanResponderGestureState): void => {
+                // if (gestureState.numberActiveTouches == 0)
+                //     return;
+                console.log('onPanResponderGrant', gestureState, e.nativeEvent);
+                // // The guesture has started. Show visual feedback so the user knows
+                // // what is happening!
+                // // on web, they start sending us these even when nothing is happening
+                // // gestureState.d{x,y} will be set to zero now
+                // touchDown = new jsutil.Point(e.nativeEvent.locationX, e.nativeEvent.locationY);
+                // lastTouchDown = touchDown;
+                // lastTouchMove = null;
+                // touchStartCb();
+                // lastTouchDown = null;
+
+            },
+            onPanResponderMove: (e: GestureResponderEvent, gestureState: PanResponderGestureState): void => {
+                if (gestureState.numberActiveTouches == 0)
+                    return;
+                console.log('onPanResponderMove', gestureState.dx,gestureState.dy);
+                // The most recent move distance is gestureState.move{X,Y}
+                // The accumulated gesture distance since becoming responder is
+                // gestureState.d{x,y}
+                lastTouchMove = new jsutil.Point(touchDown.x + gestureState.dx, touchDown.y + gestureState.dy);
+                lastTouchDown = touchDown;
+                touchMoveCb();
+                lastTouchDown = null;
+                lastTouchMove = null;
+            },
+            onPanResponderRelease: (e: GestureResponderEvent, gestureState: PanResponderGestureState): void => {
+                // console.log('onPanResponderRelease', JSON.stringify(gestureState));
+                // The user has released all touches while this view is the
+                // responder. This typically means a gesture has succeeded
+                lastTouchDown = touchDown;
+                lastTouchMove = new jsutil.Point(touchDown.x + gestureState.dx, touchDown.y + gestureState.dy);
+                touchEndCb();
+                lastTouchDown = null;
+                lastTouchMove=null;
+                touchDown = null;
+
+            },
+            onPanResponderTerminate: (e: GestureResponderEvent, gestureState: PanResponderGestureState): void => {
+                // console.log('onPanResponderTerminate', JSON.stringify(gestureState));
+                // Another component has become the responder, so this gesture
+                // should be cancelled
+            },
+            onMoveShouldSetPanResponderCapture: (e: GestureResponderEvent, gestureState: PanResponderGestureState): boolean => {
+                console.log('onMoveShouldSetPanResponderCapture', JSON.stringify(gestureState));
+                return true;
+            },
+            onStartShouldSetPanResponderCapture: (e: GestureResponderEvent, gestureState: PanResponderGestureState): boolean => {
+                // console.log('onStartShouldSetPanResponderCapture', JSON.stringify(gestureState));
+                return true;
+            },
+            onPanResponderReject: (e: GestureResponderEvent, gestureState: PanResponderGestureState): void => {
+                // console.log('onPanResponderReject', JSON.stringify(gestureState));
+            },
+            onPanResponderStart: (e: GestureResponderEvent, gestureState: PanResponderGestureState): void => {
+                // console.log('onPanResponderStart', JSON.stringify(gestureState));
+                if (gestureState.numberActiveTouches == 0)
+                    return;
+                // console.log('onPanResponderGrant', gestureState, e.nativeEvent);
+                // The guesture has started. Show visual feedback so the user knows
+                // what is happening!
+                // on web, they start sending us these even when nothing is happening
+                // gestureState.d{x,y} will be set to zero now
+                console.log('onPanResponderStart-web', (<any>e.nativeEvent).offsetX, (<any>e.nativeEvent).offsetY);
+                console.log('onPanResponderStart-native', (<any>e.nativeEvent).locationX, (<any>e.nativeEvent).locationY);
+                touchDown = new jsutil.Point(
+                    e.nativeEvent.locationX || (<any>e.nativeEvent).offsetX,
+                    e.nativeEvent.locationY || (<any>e.nativeEvent).offsetY);
+                lastTouchDown = touchDown;
+                lastTouchMove = lastTouchDown;
+                touchStartCb();
+                lastTouchDown = null;
+                lastTouchMove=null;
+            },
+            onPanResponderEnd: (e: GestureResponderEvent, gestureState: PanResponderGestureState): void => {
+                // console.log('onPanResponderEnd', JSON.stringify(gestureState));
+            },
+            onPanResponderTerminationRequest: (e: GestureResponderEvent, gestureState: PanResponderGestureState): boolean => {
+                // console.log('onPanResponderTerminationRequest', JSON.stringify(gestureState));
+                return true;
+            },
+        });
+
+        return result;
+    }
+
+    var lastTouchDown: jsutil.Point;
+    var lastTouchMove: jsutil.Point;
+
+    export function getTouchDownX(): number {
+        if (lastTouchDown) return lastTouchDown.x;
+    }
+    export function getTouchDownY(): number {
+        if (lastTouchDown) return lastTouchDown.y;
+    }
+    export function getTouchMoveX(): number {
+        if (lastTouchMove) return lastTouchMove.x;
+    }
+    export function getTouchMoveY(): number {
+        if (lastTouchMove) return lastTouchMove.y;
+    }
+    export function getTouchDeltaX(): number {
+        if (lastTouchDown && lastTouchMove)
+            return lastTouchMove.x - lastTouchDown.x;
+    }
+    export function getTouchDeltaY(): number {
+        if (lastTouchDown && lastTouchMove)
+            return lastTouchMove.y - lastTouchDown.y;
     }
     //
     /////////////////////////////////////////////////////////////////////

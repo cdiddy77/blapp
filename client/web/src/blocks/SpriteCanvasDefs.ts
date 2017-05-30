@@ -470,6 +470,7 @@ export function initCodegen() {
             code += BlocklyConfig.conditionalBoolPropertySetting('isFlex', checkbox_isflex);
         code += BlocklyConfig.conditionalAddQuotesToFieldValuePropertySetting('visualPurpose', dropdown_visual_purpose);
         code += UIBlockConfig.generateOptPropCode(blockdesc.optionalProps['theme'], block);
+        code += UIBlockConfig.generateOptPropCode(blockdesc.optionalProps['gestureHandler'], block);
 
         // GESTURES : handle the handleGestures optional property
         

@@ -1,11 +1,28 @@
 import * as React from 'react';
-import { View, LayoutChangeEvent } from 'react-native';
+import { View, LayoutChangeEvent, PanResponderInstance } from 'react-native';
 import * as BlockThemes from '../util/BlockThemes';
 
 export class CanvasBlock extends React.Component<any, any>{
     constructor(props: any) {
         super(props);
+        this.resetState();
     }
+
+    // gestureHandler: PanResponderInstance;
+    // componentWillMount() {
+    //     this.gestureHandler = this.props.gestureHandler;
+    // }
+
+    // CodegenComponent implementation ///////////////////////////////////////////////
+    //
+    resetState(): void {
+        // this.gestureHandler = null;
+    }
+    componentName(): string {
+        return 'CanvasBlock';
+    }
+    //
+    //////////////////////////////////////////////////////////////////////////////////
 
     laidoutWidth: number;
     laidoutHeight: number;
@@ -14,6 +31,7 @@ export class CanvasBlock extends React.Component<any, any>{
             style,
             theme,
             visualPurpose,
+            gestureHandler,
             isFlex,
             children,
             ...other
@@ -51,6 +69,10 @@ export class CanvasBlock extends React.Component<any, any>{
             viewStyles.push(style);
         }
         // GESTURE : add panresponder whooey if the property is set
+        if (gestureHandler) {
+            Object.assign(other, gestureHandler.panHandlers);
+        }
+
         return (
             <View {...other} style={viewStyles}
                 onLayout={(e) => {

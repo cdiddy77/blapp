@@ -817,6 +817,8 @@ export function generateRefPropCode(block: Blockly.Block, nameOverride?: string)
         // goal: CgRt.addProp('ref',function(e){CgRt.setIdElem('name',e);});
         return BlocklyConfig.conditionalPropertySetting('ref',
             `function(e){CgRt.setIdElem('${elemId}',e);}`);
+    }else{
+        return '';
     }
 }
 
