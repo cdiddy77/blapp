@@ -35,6 +35,7 @@ export class AppModel extends ModelBase implements CodegenHost {
     private evalCode() {
         let CgRt = CodegenRuntime;
         CgRt.resetCodeState();
+        CgRt.updateUI();
         try {
             console.log('evaluating new code');
             console.log(this.code);

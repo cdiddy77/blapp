@@ -3,14 +3,15 @@
 import * as jsutil from '../../../shared/src/util/jsutil';
 import * as BlocklyConfig from './BlocklyConfig';
 import * as UIBlockConfig from './UIBlockConfig';
+import { AppModel } from '../models/AppModel';
 
-export function initUIMethodDefs() {
+export function initUIMethodDefs(appModel: AppModel) {
     // METHBLOCK : scrollToEnd
     Blockly.Blocks['scroll_scrolltoend_method'] = {
         init: function () {
             this.appendDummyInput()
                 .appendField("scroll to end")
-                .appendField(new Blockly.FieldTextInput(""), "element id");
+                .appendField(new Blockly.FieldDropdown(() => appModel.getScrollerListDropdownPopulator()), "element id")
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
             this.setColour(230);

@@ -34,8 +34,8 @@ export class SpriteBlock extends React.Component<any, any> implements CodegenCom
         this.spriteState = {
             rotate: '0deg',
             scale: 1,
-            translateX: 0,
-            translateY: 0,
+            translateX: this.props.initialX||0,
+            translateY: this.props.initialY||0,
         };
     }
     componentName(): string {
@@ -219,7 +219,6 @@ export class SpriteBlock extends React.Component<any, any> implements CodegenCom
     }
 
     bounceOnSpriteIntersect(speed: number, other: SpriteBlock, otherSpeed: number): void {
-        // COLLIDE : implement this
         let thisRect = this.boundingBox();
         let otherRect = other.boundingBox();
         let thisDir = jsutil.Vector.fromMagnitudeAndDirection(speed, this.getDirection());
@@ -268,6 +267,8 @@ export class SpriteBlock extends React.Component<any, any> implements CodegenCom
             // elementId,
             graphicType,
             canvasId,
+            initialX,
+            initialY,
             ...other
         } = this.props;
 

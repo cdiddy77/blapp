@@ -3,20 +3,25 @@
 import * as jsutil from '../../../shared/src/util/jsutil';
 import * as BlocklyConfig from './BlocklyConfig';
 import * as  UIBlockConfig from './UIBlockConfig';
+import { AppModel } from '../models/AppModel';
 
-export function initBlockDefs() {
+export function initBlockDefs(appModel: AppModel) {
     // sprite
     let defName = 'sprite_element';
     let viewBlockDef = UIBlockConfig.createUIBlockDef(UIBlockConfig.uiBlockDescriptors[defName]);
     viewBlockDef.init = function () {
         this.appendValueInput("URL")
-            .setCheck(null)
+            .setCheck("String")
             .appendField(new Blockly.FieldTextInput(""), "NAME")
             .appendField("Sprite")
             .appendField("width")
             .appendField(new Blockly.FieldNumber(100), "width")
             .appendField("height")
             .appendField(new Blockly.FieldNumber(100), "height")
+            .appendField("initial x")
+            .appendField(new Blockly.FieldNumber(0), "xpos")
+            .appendField("y")
+            .appendField(new Blockly.FieldNumber(0), "ypos")
             .appendField("URL");
         this.setInputsInline(false);
         this.setPreviousStatement(true, null);
@@ -63,7 +68,7 @@ export function initBlockDefs() {
         init: function () {
             this.appendDummyInput()
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("x position");
             this.setOutput(true, "Number");
             this.setColour(230);
@@ -76,7 +81,7 @@ export function initBlockDefs() {
         init: function () {
             this.appendDummyInput()
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("y position");
             this.setOutput(true, "Number");
             this.setColour(230);
@@ -89,7 +94,7 @@ export function initBlockDefs() {
         init: function () {
             this.appendDummyInput()
                 .appendField("canvas")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getCanvasListDropdownPopulator()), "NAME")
                 .appendField("width");
             this.setOutput(true, "Number");
             this.setColour(230);
@@ -102,7 +107,7 @@ export function initBlockDefs() {
         init: function () {
             this.appendDummyInput()
                 .appendField("canvas")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getCanvasListDropdownPopulator()), "NAME")
                 .appendField("height");
             this.setOutput(true, "Number");
             this.setColour(230);
@@ -115,7 +120,7 @@ export function initBlockDefs() {
         init: function () {
             this.appendDummyInput()
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("direction");
             this.setOutput(true, "Number");
             this.setColour(230);
@@ -128,7 +133,7 @@ export function initBlockDefs() {
         init: function () {
             this.appendDummyInput()
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("size %");
             this.setOutput(true, "Number");
             this.setColour(230);
@@ -142,7 +147,7 @@ export function initBlockDefs() {
             this.appendValueInput("value")
                 .setCheck("Number")
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("set x");
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
@@ -157,7 +162,7 @@ export function initBlockDefs() {
             this.appendValueInput("value")
                 .setCheck("Number")
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("set y");
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
@@ -172,7 +177,7 @@ export function initBlockDefs() {
             this.appendValueInput("xpos")
                 .setCheck("Number")
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("set x");
             this.appendValueInput("ypos")
                 .setCheck("Number")
@@ -191,7 +196,7 @@ export function initBlockDefs() {
             this.appendValueInput("value")
                 .setCheck("Number")
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("set direction");
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
@@ -206,7 +211,7 @@ export function initBlockDefs() {
             this.appendValueInput("value")
                 .setCheck("Number")
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("set size %");
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
@@ -221,7 +226,7 @@ export function initBlockDefs() {
             this.appendValueInput("value")
                 .setCheck("Number")
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("rotate counter-clockwise");
             this.appendDummyInput()
                 .appendField("degrees");
@@ -238,7 +243,7 @@ export function initBlockDefs() {
             this.appendValueInput("value")
                 .setCheck("Number")
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("rotate clockwise");
             this.appendDummyInput()
                 .appendField("degrees");
@@ -255,7 +260,7 @@ export function initBlockDefs() {
             this.appendValueInput("value")
                 .setCheck("Number")
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("change x by");
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
@@ -270,7 +275,7 @@ export function initBlockDefs() {
             this.appendValueInput("value")
                 .setCheck("Number")
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("change y by");
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
@@ -285,7 +290,7 @@ export function initBlockDefs() {
             this.appendValueInput("xval")
                 .setCheck("Number")
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("change x by");
             this.appendValueInput("yval")
                 .setCheck("Number")
@@ -303,7 +308,7 @@ export function initBlockDefs() {
             this.appendValueInput("value")
                 .setCheck("Number")
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("change size by");
             this.appendDummyInput()
                 .appendField("%");
@@ -320,7 +325,7 @@ export function initBlockDefs() {
             this.appendValueInput("value")
                 .setCheck("Number")
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("move");
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
@@ -334,7 +339,7 @@ export function initBlockDefs() {
         init: function () {
             this.appendDummyInput()
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("touches side")
                 .appendField(new Blockly.FieldDropdown([
                     ["any", "any"],
@@ -357,7 +362,7 @@ export function initBlockDefs() {
             this.appendValueInput("speed")
                 .setCheck(null)
                 .appendField("if sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("will touch side")
                 .appendField(new Blockly.FieldDropdown([
                     ["any", "any"],
@@ -383,9 +388,9 @@ export function initBlockDefs() {
         init: function () {
             this.appendDummyInput()
                 .appendField("sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("touches sprite")
-                .appendField(new Blockly.FieldTextInput(""), "OTHER");
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "OTHER")
             this.setOutput(true, "Boolean");
             this.setColour(230);
             this.setTooltip('');
@@ -398,12 +403,12 @@ export function initBlockDefs() {
             this.appendValueInput("speed")
                 .setCheck(null)
                 .appendField("if sprite")
-                .appendField(new Blockly.FieldTextInput(""), "NAME")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "NAME")
                 .appendField("at speed");
             this.appendValueInput("other speed")
                 .setCheck(null)
                 .appendField("will touch sprite")
-                .appendField(new Blockly.FieldTextInput(""), "OTHER")
+                .appendField(new Blockly.FieldDropdown(() => appModel.getSpriteListDropdownPopulator()), "OTHER")
                 .appendField("at speed");
             this.appendDummyInput()
                 .appendField("then bounce");
@@ -421,6 +426,8 @@ export function initCodegen() {
         let text_name = block.getFieldValue('NAME');
         let number_width = block.getFieldValue('width');
         let number_height = block.getFieldValue('height');
+        let number_xpos = block.getFieldValue('xpos');
+        let number_ypos = block.getFieldValue('ypos');
         let value_url = Blockly.JavaScript.valueToCode(block, 'URL', Blockly.JavaScript.ORDER_COMMA);
 
         let blockdesc = UIBlockConfig.uiBlockDescriptors[block.type];
@@ -435,6 +442,8 @@ export function initCodegen() {
         code += BlocklyConfig.conditionalPropertySetting('url', value_url);
         code += BlocklyConfig.conditionalPropertySetting('width', number_width);
         code += BlocklyConfig.conditionalPropertySetting('height', number_height);
+        code += BlocklyConfig.conditionalPropertySetting('initialX', number_xpos);
+        code += BlocklyConfig.conditionalPropertySetting('initialY', number_ypos);
         code += UIBlockConfig.generateOptPropCode(blockdesc.optionalProps['graphicType'], block);
         code += UIBlockConfig.generateOptPropCode(blockdesc.optionalProps['color'], block);
 
@@ -473,7 +482,7 @@ export function initCodegen() {
         code += UIBlockConfig.generateOptPropCode(blockdesc.optionalProps['gestureHandler'], block);
 
         // GESTURES : handle the handleGestures optional property
-        
+
         //styles
         let value_style = Blockly.JavaScript.valueToCode(block, UIBlockConfig.getOptPropInputName('style'), Blockly.JavaScript.ORDER_ATOMIC);
         if (value_style && value_style !== '') {
