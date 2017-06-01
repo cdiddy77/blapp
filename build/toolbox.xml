@@ -1,5 +1,5 @@
 <xml 
- xmlns="http://www.w3.org/1999/xhtml" id="toolbox" style="display: none;">
+  xmlns="http://www.w3.org/1999/xhtml" id="toolbox" style="display: none;">
   <category name="UI" colour="#935ba5">
     <block type="user_interface"/>
     <!-- // FRIENDLY: friendly controls -->
@@ -24,13 +24,7 @@
         </shadow>
       </value>
     </block>
-    <block type='friendly_image_element'>
-      <value name="URL">
-        <shadow type="text">
-          <field name="TEXT">favicon.ico</field>
-        </shadow>
-      </value>
-    </block>
+    <block type='friendly_image_element'/>
     <block type='friendly_textinput_element'/>
     <block type='friendly_divider_element'/>
     <block type='screen_width'/>
@@ -56,26 +50,125 @@
     <category name="Sprites">
       <block type='sprite_element'/>
       <block type='canvas_element'/>
+      <block type='sprite_move'>
+        <value name="value">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+      </block>
+      <block type='sprite_intersect_edge'/>
+      <block type='sprite_intersect_edge_bounce'>
+        <value name="speed">
+          <shadow type="math_number">
+            <field name="NUM">5</field>
+          </shadow>
+        </value>
+      </block>
+      <block type='sprite_intersect_sprite'/>
+      <block type='sprite_intersect_sprite_bounce'>
+        <value name="speed">
+          <shadow type="math_number">
+            <field name="NUM">5</field>
+          </shadow>
+        </value>
+        <value name="other speed">
+          <shadow type="math_number">
+            <field name="NUM">5</field>
+          </shadow>
+        </value>
+      </block>
       <block type='sprite_get_x'/>
       <block type='sprite_get_y'/>
       <block type='sprite_get_direction'/>
       <block type='sprite_get_scale'/>
-      <block type='sprite_set_x'/>
-      <block type='sprite_set_y'/>
-      <block type='sprite_set_position'/>
-      <block type='sprite_set_direction'/>
-      <block type='sprite_set_scale'/>
-      <block type='sprite_rotate_left'/>
-      <block type='sprite_rotate_right'/>
-      <block type='sprite_change_x'/>
-      <block type='sprite_change_y'/>
-      <block type='sprite_change_position'/>
-      <block type='sprite_change_scale'/>
-      <block type='sprite_move'/>
-      <block type='sprite_intersect_edge'/>
-      <block type='sprite_intersect_edge_bounce'/>
-      <block type='sprite_intersect_sprite'/>
-      <block type='sprite_intersect_sprite_bounce'/>
+      <block type='sprite_set_x'>
+        <value name="value">
+          <shadow type="math_number">
+            <field name="NUM">0</field>
+          </shadow>
+        </value>
+      </block>
+      <block type='sprite_set_y'>
+        <value name="value">
+          <shadow type="math_number">
+            <field name="NUM">0</field>
+          </shadow>
+        </value>
+      </block>
+      <block type='sprite_set_position'>
+        <value name="xpos">
+          <shadow type="math_number">
+            <field name="NUM">0</field>
+          </shadow>
+        </value>
+        <value name="ypos">
+          <shadow type="math_number">
+            <field name="NUM">0</field>
+          </shadow>
+        </value>
+      </block>
+      <block type='sprite_set_direction'>
+        <value name="value">
+          <shadow type="math_number">
+            <field name="NUM">0</field>
+          </shadow>
+        </value>
+      </block>
+      <block type='sprite_set_scale'>
+        <value name="value">
+          <shadow type="math_number">
+            <field name="NUM">100</field>
+          </shadow>
+        </value>
+      </block>
+      <block type='sprite_rotate_left'>
+        <value name="value">
+          <shadow type="math_number">
+            <field name="NUM">15</field>
+          </shadow>
+        </value>
+      </block>
+      <block type='sprite_rotate_right'>
+        <value name="value">
+          <shadow type="math_number">
+            <field name="NUM">15</field>
+          </shadow>
+        </value>
+      </block>
+      <block type='sprite_change_x'>
+        <value name="value">
+          <shadow type="math_number">
+            <field name="NUM">0</field>
+          </shadow>
+        </value>
+      </block>
+      <block type='sprite_change_y'>
+        <value name="value">
+          <shadow type="math_number">
+            <field name="NUM">0</field>
+          </shadow>
+        </value>
+      </block>
+      <block type='sprite_change_position'>
+        <value name="xval">
+          <shadow type="math_number">
+            <field name="NUM">0</field>
+          </shadow>
+        </value>
+        <value name="yval">
+          <shadow type="math_number">
+            <field name="NUM">0</field>
+          </shadow>
+        </value>
+      </block>
+      <block type='sprite_change_scale'>
+        <value name="value">
+          <shadow type="math_number">
+            <field name="NUM">20</field>
+          </shadow>
+        </value>
+      </block>
       <block type='canvas_get_width'/>
       <block type='canvas_get_height'/>
     </category>
@@ -83,6 +176,8 @@
       <block type="force_ui_update"/>
       <block type="scroll_scrolltoend_method"/>
       <block type="console_log"/>
+      <block type="gesture_handler"/>
+      <block type="touch_data"/>
     </category>
     <category name="Primitive">
       <block type="view_element"/>
