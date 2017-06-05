@@ -3,3 +3,6 @@ temp/
 # .vscode/
 npm-debug.log
 debug.log
+
+built/
+projects/

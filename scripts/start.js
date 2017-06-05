@@ -24,7 +24,7 @@ var fs = require('fs');
 var config = require('../config/webpack.config.dev');
 var paths = require('../config/paths');
 // this is so that we can have our special blapp sync engine running in the dev server
-var blappSync = require('../server/src/blappSync');
+var blappSync = require('../servage/src/blappSync');
 
 var useYarn = fs.existsSync(paths.yarnLockFile);
 var cli = useYarn ? 'yarn' : 'npm';
