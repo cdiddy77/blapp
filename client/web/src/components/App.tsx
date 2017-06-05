@@ -96,7 +96,8 @@ class App extends React.Component<AppProps, AppState> {
           <div className="container">
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.clearWorkspace()}>Clear all</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.saveWorkspaceToFile()}>Save</button>
-            <button type='button' className='btn btn-primary' onClick={() => this.props.model.loadWorkspaceFromFile()}>Load</button>
+            <button type='button' className='btn btn-primary' onClick={() => this.props.model.loadWorkspaceFromFile(true)}>Clear and Load</button>
+            <button type='button' className='btn btn-primary' onClick={() => this.props.model.loadWorkspaceFromFile(false)}>Add-load</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.undo()}>Undo</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.redo()}>Redo</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.resetApplication()}>
