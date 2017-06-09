@@ -1,6 +1,10 @@
 {
   "main.css": "static/css/main.4ba9ff02.css",
   "main.css.map": "static/css/main.4ba9ff02.css.map",
-  "main.js": "static/js/main.50c71f41.js",
-  "main.js.map": "static/js/main.50c71f41.js.map"
+  "main.js": "static/js/main.aece30e6.js",
+  "main.js.map": "static/js/main.aece30e6.js.map",
+  "sim.css": "static/css/sim.4ba9ff02.css",
+  "sim.css.map": "static/css/sim.4ba9ff02.css.map",
+  "sim.js": "static/js/sim.92bbf3a5.js",
+  "sim.js.map": "static/js/sim.92bbf3a5.js.map"
 }
