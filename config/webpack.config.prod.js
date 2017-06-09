@@ -59,7 +59,7 @@ module.exports = {
     ],
     sim: [
       require.resolve('./polyfills'),
-      paths.appIndexTs
+      paths.simIndexTs
     ]
   },
   output: {
@@ -223,7 +223,19 @@ module.exports = {
       inject: true,
       template: paths.appSim,
       chunks: ['sim'],
-      filename: 'pxt/local/simulator.html',
+      filename: 'pxt/simulator.html',
+      minify: {
+        removeComments: true,
+        collapseWhitespace: true,
+        removeRedundantAttributes: true,
+        useShortDoctype: true,
+        removeEmptyAttributes: true,
+        removeStyleLinkTypeAttributes: true,
+        keepClosingSlash: true,
+        minifyJS: true,
+        minifyCSS: true,
+        minifyURLs: true
+      }
     }),
     // Makes some environment variables available to the JS code, for example:
     // if (process.env.NODE_ENV === 'production') { ... }. See `./env.js`.
