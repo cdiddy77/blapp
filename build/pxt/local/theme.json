@@ -1,0 +1,50 @@
+{
+  "logoUrl": "http://sample.pxt.io/",
+  "homeUrl": "http://sample.pxt.io/",
+  "embedUrl": "http://sample.pxt.io/",
+  "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
+  "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
+  "docMenu": [
+    {
+      "name": "About",
+      "path": "/about"
+    },
+    {
+      "name": "Docs",
+      "path": "/docs"
+    }
+  ],
+  "coloredToolbox": true,
+  "monacoToolbox": true,
+  "invertedMenu": true,
+  "blocklyOptions": {
+    "grid": {
+      "spacing": 45,
+      "length": 7,
+      "colour": "rgba(189, 195, 199, 0.30)",
+      "snap": true
+    }
+  },
+  "simAnimationEnter": "rotate in",
+  "simAnimationExit": "rotate out",
+  "id": "blapp",
+  "title": "Blapp PXT Target",
+  "name": "Blapp PXT",
+  "htmlDocIncludes": {},
+  "locales": {
+    "pl": {
+      "name": "Przykład PXT",
+      "title": "Przykładowe Doświadczenie PXT",
+      "docMenu": [
+        {
+          "name": "O nas",
+          "path": "/about"
+        },
+        {
+          "name": "Dokumentacja",
+          "path": "/docs"
+        }
+      ]
+    }
+  }
+}

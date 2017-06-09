@@ -23,7 +23,7 @@ namespace pxsim {
         }
         
         initAsync(msg: pxsim.SimulatorRunMessage): Promise<void> {
-            console.log('setting simulator')
+            console.log('messing up  simulator')
             
             document.body.innerHTML = ''; // clear children
             document.body.appendChild(this.element);

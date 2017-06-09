@@ -68,6 +68,7 @@ module.exports = {
   appBuild: resolveApp('build'),
   appPublic: resolveApp('public'),
   appHtml: resolveApp('public/index.html'),
+  appSim:resolveApp('public/pxt/local/simulator.html'),
   appIndexTs: resolveApp('client/web/src/index.tsx'),
   appPackageJson: resolveApp('package.json'),
   appSrc: resolveApp('client/web/src'),

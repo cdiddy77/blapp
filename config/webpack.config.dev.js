@@ -194,6 +194,11 @@ module.exports = {
     new HtmlWebpackPlugin({
       inject: true,
       template: paths.appHtml,
+    }), 
+    new HtmlWebpackPlugin({
+      inject: true,
+      template: paths.appSim,
+      filename: 'pxt/local/simulator.html'
     }),
     // Makes some environment variables available to the JS code, for example:
     // if (process.env.NODE_ENV === 'development') { ... }. See `./env.js`.
