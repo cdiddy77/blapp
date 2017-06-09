@@ -1,6 +1,6 @@
 /// <reference path="../../../../node_modules/pxt-core/built/pxtsim.d.ts"/>
 
-import { Board } from './sim';
+import { Board } from './Board';
 
 function board(): Board {
     return pxsim.runtime.board as Board;

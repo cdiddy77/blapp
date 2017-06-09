@@ -3,20 +3,26 @@ import * as svcTypes from '../../../shared/src/ServiceTypes';
 import * as io from 'socket.io-client';
 import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
 
+export interface ServiceConnectionHost {
+    onChange(cb: (prop: string) => void): void;
+    getCode(): string;
+    getLastEvalError(): Error;
+    setPairingCode(code: string): void;
+}
 
 var pairingCode: string = null;
 var socket: SocketIOClient.Socket = io({
     port: '8080'
 });
 
-export function init(appModel: AppModel) {
+export function init(host: ServiceConnectionHost) {
     CodegenRuntime.setShareVarSetProc((name, value) => {
         if (!socket || !pairingCode) {
             return;
         }
         socket.emit('setShareVar', pairingCode, { name: name, value: value });
     });
-    appModel.on('change', (prop) => {
+    host.onChange((prop) => {
         if (pairingCode == null) {
             console.log('app changed, but we have no session id, ignoring');
             return;
@@ -25,11 +31,11 @@ export function init(appModel: AppModel) {
             socket.emit(
                 'simctrlmsg',
                 pairingCode,
-                svcTypes.createCodeChangeControlMessage(appModel.data.code));
+                svcTypes.createCodeChangeControlMessage(host.getCode()));
             console.log('sent code_change');
         } else if (prop === 'lastEvalError') {
             socket.emit('simctrlmsg', pairingCode,
-                svcTypes.createEvalStatusChangeControlMessage(appModel.data.lastEvalError));
+                svcTypes.createEvalStatusChangeControlMessage(host.getLastEvalError()));
             console.log('sent evalstatus_change');
         }
     });
@@ -53,13 +59,13 @@ export function init(appModel: AppModel) {
     });
     socket.on('createSessionResponse', (data: svcTypes.CreateSessionResponseMessage) => {
         console.log('createSessionResponse', data);
-        setPairingCode(data.pairingCode, appModel);
+        setPairingCode(data.pairingCode, host);
     });
     socket.on('joinSessionResponse', (data: svcTypes.JoinSessionResponseMessage) => {
         if (data.pairingCode == 'noexist') {
             createSession();
         } else {
-            setPairingCode(data.pairingCode, appModel);
+            setPairingCode(data.pairingCode, host);
         }
         console.log('joinSessionResponse', data);
     });
@@ -91,10 +97,10 @@ function leaveSession() {
     socket.emit('leaveSessionRequest', pairingCode);
 }
 
-function setPairingCode(pc: string, appModel: AppModel) {
+function setPairingCode(pc: string, host: ServiceConnectionHost) {
     pairingCode = pc;
     window.localStorage.setItem('pairingCode', pairingCode);
-    appModel.setProperty('pairingCode', pairingCode);
+    host.setPairingCode(pairingCode);
 }
 
 export function createNewSession() {

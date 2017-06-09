@@ -70,7 +70,7 @@ module.exports = {
   appHtml: resolveApp('public/index.html'),
   appSim:resolveApp('public/pxt/simulator.html'),
   appIndexTs: resolveApp('client/web/src/index.tsx'),
-  simIndexTs: resolveApp('client/web/src/pxt/sim.ts'),
+  simIndexTs: resolveApp('client/web/src/pxt/index.tsx'),
   appPackageJson: resolveApp('package.json'),
   appSrc: resolveApp('client/web/src'),
   yarnLockFile: resolveApp('yarn.lock'),

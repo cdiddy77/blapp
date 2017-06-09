@@ -21,22 +21,22 @@ export class Board extends pxsim.BaseBoard {
 
     constructor() {
         super();
-        this.element = <SVGElement><any>document.getElementById('svgcanvas');
-        this.spriteElement = <SVGCircleElement><any>document.getElementById('svgsprite');
+        // this.element = <SVGElement><any>document.getElementById('svgcanvas');
+        // this.spriteElement = <SVGCircleElement><any>document.getElementById('svgsprite');
         this.sprite = new Sprite();
     }
 
     initAsync(msg: pxsim.SimulatorRunMessage): Promise<void> {
         console.log('messing up simulator');
 
-        document.body.innerHTML = ''; // clear children
-        document.body.appendChild(this.element);
+        // document.body.innerHTML = ''; // clear children
+        // document.body.appendChild(this.element);
 
         return Promise.resolve();
     }
 
     updateView() {
-        this.spriteElement.cx.baseVal.value = this.sprite.x;
-        this.spriteElement.cy.baseVal.value = this.sprite.y;
+        // this.spriteElement.cx.baseVal.value = this.sprite.x;
+        // this.spriteElement.cy.baseVal.value = this.sprite.y;
     }
 }

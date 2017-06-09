@@ -1,0 +1,74 @@
+html {
+  position: relative;
+  min-height: 100%;
+  margin: 0px;
+}
+
+#root{
+    height:100%;
+}
+
+#codearea {
+  margin: 10px;
+}
+
+.codeWrapper{
+  height: 100%;
+  overflow: scroll;
+}
+
+.previewWrapper {
+  height: 100%;
+  display: flex;
+}
+
+.TabbedArea {
+  margin: 5px auto;
+  width: 90%;
+  font-family: sans-serif;
+  color: #555;
+  font-size: 14px;
+  line-height: 24px;
+  height: 90%;
+}
+
+.Tab {
+  margin: 0px;
+  padding: 0px;
+}
+
+.Tab li {
+  /*float: left;
+  width: 20%;*/
+  display: inline-block;
+}
+
+.Tab a {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  color: #888;
+  padding: 10px 10px;
+  background: #f7f7f7;
+}
+
+.Tab a:hover {
+  background: #ddd;
+}
+
+.Tab a.active {
+  background: #ddd;
+  border-bottom: 2px solid #888;
+}
+
+.TabPane {
+  padding: 5px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  background: #ddd;
+  height: 100%;
+}
+
+.TabbedContentSection {
+  height: 100%;
+}
