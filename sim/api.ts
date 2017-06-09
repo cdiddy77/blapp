@@ -37,6 +37,8 @@ namespace pxsim.control {
      */
     //% help=functions/forever weight=55 blockGap=8
     //% blockId=device_forever block="forever" icon="\uf01e" 
+    //% handlerStmt=1 blockHidden=true
+
     export function forever(body: RefAction): void {
         thread.forever(body)
     }
@@ -52,14 +54,14 @@ namespace pxsim.control {
     }
 }
 
-function logMsg(m:string) { console.log(m) }
+function logMsg(m: string) { console.log(m) }
 
 namespace pxsim.console {
     /**
      * Print out message
      */
     //% 
-    export function log(msg:string) {
+    export function log(msg: string) {
         logMsg("CONSOLE: " + msg)
         // why doesn't that work?
         board().writeSerial(msg + "\n")
@@ -77,21 +79,21 @@ namespace pxsim {
          */
         //%
         public x = 100;
-         /**
-         * The Y-coordiante
-         */
+        /**
+        * The Y-coordiante
+        */
         //%
         public y = 100;
         public angle = 90;
-        
+
         /** 
          * Make new sprite
          */
         //%
         constructor() {
         }
-        
-        private foobar() {}
+
+        private foobar() { }
 
         /**
          * Move the thing forward

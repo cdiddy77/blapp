@@ -1038,7 +1038,7 @@ var ts;
                     this.write(this.t.unconditional_branch(".themain"));
                 this.write(".balign 4");
                 this.write(this.proc.label() + "_Lit:");
-                this.write(".short 0xffff, " + pxt.REF_TAG_ACTION + "   ; action literal");
+                this.write(".short 0xffff, 0x0000   ; action literal");
                 this.write("@stackmark litfunc");
                 if (isMain)
                     this.write(".themain:");
@@ -1432,6 +1432,9 @@ var ts;
             });
             if (bin.res.breakpoints)
                 jssource += "\nsetupDebugger(" + bin.res.breakpoints.length + ")\n";
+            jssource += "\npxsim.setupStringLiterals(" +
+                JSON.stringify(pxtc.U.mapMap(bin.strings, function (k, v) { return 1; }), null, 1) +
+                ")\n";
             pxtc.U.iterMap(bin.hexlits, function (k, v) {
                 jssource += "var " + v + " = pxsim.BufferMethods.createBufferFromHex(\"" + k + "\")\n";
             });
@@ -2509,8 +2512,7 @@ var ts;
                         };
                     }
                     var value = pxtc.U.htmlEscape(callInfo.attrs.blockId || callInfo.qName);
-                    var parent = getParent(n)[0];
-                    var parentCallInfo = parent && parent.callInfo;
+                    var parentCallInfo = n.parent && n.parent.callInfo;
                     if (callInfo.attrs.blockIdentity && !(parentCallInfo && parentCallInfo.qName === callInfo.attrs.blockIdentity)) {
                         if (callInfo.attrs.enumval && parentCallInfo && parentCallInfo.attrs.useEnumVal) {
                             value = callInfo.attrs.enumval;
@@ -2885,7 +2887,6 @@ var ts;
                         });
                     }
                     info.args.forEach(function (e, i) {
-                        e = unwrapNode(e);
                         if (i === 0 && info.attrs.defaultInstance) {
                             if (e.getText() === info.attrs.defaultInstance) {
                                 return;
@@ -3216,11 +3217,7 @@ var ts;
                     if (initializer.declarations.length != 1) {
                         return pxtc.Util.lf("for loop with multiple variables not supported");
                     }
-                    var assignment = initializer.declarations[0];
-                    if (assignment.initializer.kind !== SK.NumericLiteral || assignment.initializer.text !== "0") {
-                        return pxtc.Util.lf("for loop initializers must be initialized to 0");
-                    }
-                    var indexVar = assignment.name.text;
+                    var indexVar = initializer.declarations[0].name.text;
                     if (!incrementorIsValid(indexVar)) {
                         return pxtc.Util.lf("for loop incrementors may only increment the variable declared in the initializer");
                     }
@@ -3329,15 +3326,7 @@ var ts;
                         info.attrs.block = builtin.block;
                         info.attrs.blockId = builtin.blockId;
                     }
-                    var argNames = [];
-                    info.attrs.block.replace(/%(\w+)/g, function (f, n) {
-                        argNames.push(n);
-                        return "";
-                    });
                     if (info.attrs.imageLiteral) {
-                        if (info.args.length - argNames.length > 1) {
-                            return pxtc.Util.lf("Function call has more arguments than are supported by its block");
-                        }
                         var arg = n.arguments[0];
                         if (arg.kind != SK.StringLiteral && arg.kind != SK.NoSubstitutionTemplateLiteral) {
                             return pxtc.Util.lf("Only string literals supported for image literals");
@@ -3349,6 +3338,11 @@ var ts;
                         }
                         return undefined;
                     }
+                    var argNames = [];
+                    info.attrs.block.replace(/%(\w+)/g, function (f, n) {
+                        argNames.push(n);
+                        return "";
+                    });
                     var argumentDifference = info.args.length - argNames.length;
                     if (argumentDifference > 0 && !(info.attrs.defaultInstance && argumentDifference === 1) && !checkForDestructuringMutation()) {
                         var hasCallback = hasArrowFunction(info);
@@ -3361,7 +3355,6 @@ var ts;
                         var fail_1 = false;
                         var instance_1 = api.kind == pxtc.SymbolKind.Method || api.kind == pxtc.SymbolKind.Property;
                         info.args.forEach(function (e, i) {
-                            e = unwrapNode(e);
                             if (instance_1 && i === 0) {
                                 return;
                             }
@@ -3514,35 +3507,8 @@ var ts;
                 function checkPropertyAccessExpression(n) {
                     var callInfo = n.callInfo;
                     if (callInfo) {
-                        if (callInfo.attrs.blockIdentity || callInfo.attrs.blockId === "lists_length") {
+                        if (callInfo.attrs.blockIdentity || callInfo.decl.kind === SK.EnumMember || callInfo.attrs.blockId === "lists_length") {
                             return undefined;
-                        }
-                        else if (callInfo.decl.kind === SK.EnumMember) {
-                            var _a = getParent(n), parent_1 = _a[0], child_1 = _a[1];
-                            var fail_2 = true;
-                            if (parent_1) {
-                                var parentInfo = parent_1.callInfo;
-                                if (parentInfo && parentInfo.args) {
-                                    var api_1 = blocksInfo.apis.byQName[parentInfo.qName];
-                                    var instance_2 = api_1.kind == pxtc.SymbolKind.Method || api_1.kind == pxtc.SymbolKind.Property;
-                                    if (api_1) {
-                                        parentInfo.args.forEach(function (arg, i) {
-                                            if (arg === child_1) {
-                                                var paramInfo = api_1.parameters[instance_2 ? i - 1 : i];
-                                                if (paramInfo.isEnum) {
-                                                    fail_2 = false;
-                                                }
-                                            }
-                                        });
-                                    }
-                                }
-                            }
-                            if (fail_2) {
-                                return pxtc.Util.lf("Enum value without a corresponding block");
-                            }
-                            else {
-                                return undefined;
-                            }
                         }
                         else if (callInfo.attrs.fixedInstance && n.parent && n.parent.parent &&
                             n.parent.kind === SK.PropertyAccessExpression && n.parent.parent.kind === SK.CallExpression) {
@@ -3554,23 +3520,6 @@ var ts;
                     }
                     return pxtc.Util.lf("No call info found");
                 }
-            }
-            function getParent(node) {
-                if (!node.parent) {
-                    return [undefined, node];
-                }
-                else if (node.parent.kind === SK.ParenthesizedExpression) {
-                    return getParent(node.parent);
-                }
-                else {
-                    return [node.parent, node];
-                }
-            }
-            function unwrapNode(node) {
-                while (node.kind === SK.ParenthesizedExpression) {
-                    node = node.expression;
-                }
-                return node;
             }
             function isEmptyString(a) {
                 return a === "\"\"" || a === "''" || a === "``";
@@ -5450,8 +5399,8 @@ var ts;
                         case pxtc.SK.ExtendsKeyword:
                             var tp = typeOf(h.types[0]);
                             if (isClassType(tp)) {
-                                var parent_2 = tp.symbol.valueDeclaration;
-                                return inheritsFrom(parent_2, tgt);
+                                var parent_1 = tp.symbol.valueDeclaration;
+                                return inheritsFrom(parent_1, tgt);
                             }
                     }
                 }
@@ -8269,9 +8218,9 @@ var ts;
                 var parentAccess;
                 var parentType;
                 if (target.kind === pxtc.SK.BindingElement) {
-                    var parent_3 = bindingElementAccessExpression(target);
-                    parentAccess = parent_3[0];
-                    parentType = parent_3[1];
+                    var parent_2 = bindingElementAccessExpression(target);
+                    parentAccess = parent_2[0];
+                    parentType = parent_2[1];
                 }
                 else {
                     parentType = typeOf(target);
@@ -8575,12 +8524,11 @@ var ts;
         pxtc.getTsCompilerOptions = getTsCompilerOptions;
         function nodeLocationInfo(node) {
             var file = ts.getSourceFileOfNode(node);
-            var nodeStart = node.getStart ? node.getStart() : node.pos;
-            var _a = ts.getLineAndCharacterOfPosition(file, nodeStart), line = _a.line, character = _a.character;
+            var _a = ts.getLineAndCharacterOfPosition(file, node.pos), line = _a.line, character = _a.character;
             var _b = ts.getLineAndCharacterOfPosition(file, node.end), endLine = _b.line, endChar = _b.character;
             var r = {
-                start: nodeStart,
-                length: node.end - nodeStart,
+                start: node.pos,
+                length: node.end - node.pos,
                 line: line,
                 column: character,
                 endLine: endLine,

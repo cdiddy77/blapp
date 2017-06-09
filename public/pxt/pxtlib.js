@@ -1636,7 +1636,7 @@ var pxt;
             var str = this.readFile(pxt.CONFIG_NAME);
             if (str == null) {
                 if (!isInstall)
-                    pxt.U.userError("Package not installed: " + this.id + ", did you forget to run `pxt install`?");
+                    pxt.U.userError("Package not installed: " + this.id);
             }
             else {
                 initPromise = initPromise.then(function () { return _this.parseConfig(str); });
@@ -5155,16 +5155,8 @@ var pxt;
             return res;
         }
         HF2.decodeU32LE = decodeU32LE;
-        var logEnabled = false;
-        function enableLog() {
-            logEnabled = true;
-        }
-        HF2.enableLog = enableLog;
         function log(msg) {
-            if (logEnabled)
-                pxt.log("HF2: " + msg);
-            else
-                pxt.debug("HF2: " + msg);
+            pxt.debug("HF2: " + msg);
         }
         var Wrapper = (function () {
             function Wrapper(io) {
@@ -5531,7 +5523,6 @@ var pxt;
     pxt.REF_TAG_BUFFER = 2;
     pxt.REF_TAG_IMAGE = 3;
     pxt.REF_TAG_NUMBER = 32;
-    pxt.REF_TAG_ACTION = 33;
 })(pxt || (pxt = {}));
 var pxt;
 (function (pxt) {
@@ -6233,7 +6224,7 @@ var pxt;
                         break;
                 }
                 var end = getCurrentLine();
-                if (n.id) {
+                if (n.id && start != end) {
                     if (sourceMapById[n.id]) {
                         var node = sourceMapById[n.id];
                         node.start = Math.min(node.start, start);

@@ -14,17 +14,6 @@ var pxt;
 (function (pxt) {
     var blocks;
     (function (blocks) {
-        blocks.reservedWords = ["abstract", "any", "as", "break",
-            "case", "catch", "class", "continue", "const", "constructor", "debugger",
-            "declare", "default", "delete", "do", "else", "enum", "export", "extends",
-            "false", "finally", "for", "from", "function", "get", "if", "implements",
-            "import", "in", "instanceof", "interface", "is", "let", "module", "namespace",
-            "new", "null", "package", "private", "protected", "public",
-            "require", "global", "return", "set", "static", "super", "switch",
-            "symbol", "this", "throw", "true", "try", "type", "typeof", "var", "void",
-            "while", "with", "yield", "async", "await", "of",
-            // PXT Specific
-            "Math"];
         function initWorker() {
             if (!iface) {
                 iface = pxt.worker.makeWebWorker(pxt.webConfig.workerjs);
@@ -483,13 +472,13 @@ var pxt;
         // each property ref, the right value for its [parent] property.
         ///////////////////////////////////////////////////////////////////////////////
         function extractNumber(b) {
-            var v = b.getFieldValue(b.type === "math_number_minmax" ? "SLIDER" : "NUM");
+            var v = b.getFieldValue("NUM");
             var parsed = parseFloat(v);
             checkNumber(parsed);
             return parsed;
         }
         function checkNumber(n) {
-            if (n === Infinity || isNaN(n)) {
+            if (n === Infinity || n === NaN) {
                 pxt.U.userError(lf("Number entered is either too large or too small"));
             }
         }
@@ -899,7 +888,7 @@ var pxt;
             var n = name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_$]/g, function (a) {
                 return ts.pxtc.isIdentifierPart(a.charCodeAt(0), ts.pxtc.ScriptTarget.ES5) ? a : "";
             });
-            if (!n || !ts.pxtc.isIdentifierStart(n.charCodeAt(0), ts.pxtc.ScriptTarget.ES5) || blocks.reservedWords.indexOf(n) !== -1) {
+            if (!n || !ts.pxtc.isIdentifierStart(n.charCodeAt(0), ts.pxtc.ScriptTarget.ES5)) {
                 n = "_" + n;
             }
             if (e.renames.takenNames[n]) {
@@ -1126,14 +1115,14 @@ var pxt;
             var l = r[r.length - 1];
             if (l)
                 l.id = b.id;
-            if (comments.length) {
-                addCommentNodes(comments, r);
-            }
             r.forEach(function (l) {
-                if (l.type === blocks.NT.Block || l.type === blocks.NT.Prefix && pxt.Util.startsWith(l.op, "//")) {
+                if (l.type === blocks.NT.Block) {
                     l.id = b.id;
                 }
             });
+            if (comments.length) {
+                addCommentNodes(comments, r);
+            }
             return r;
         }
         function compileStatements(e, b) {
@@ -1194,22 +1183,13 @@ var pxt;
             // The to-be-returned environment.
             var e = emptyEnv(w);
             // append functions in stdcalltable
-            if (blockInfo) {
-                // Enums are not enclosed in namespaces, so add them to the taken names
-                // to avoid collision
-                Object.keys(blockInfo.apis.byQName).forEach(function (name) {
-                    var info = blockInfo.apis.byQName[name];
-                    if (info.kind === pxtc.SymbolKind.Enum) {
-                        e.renames.takenNames[info.qName] = true;
-                    }
-                });
+            if (blockInfo)
                 blockInfo.blocks
                     .forEach(function (fn) {
                     if (e.stdCallTable[fn.attributes.blockId]) {
                         pxt.reportError("blocks", "function already defined", { "details": fn.attributes.blockId });
                         return;
                     }
-                    e.renames.takenNames[fn.namespace] = true;
                     var fieldMap = pxt.blocks.parameterNames(fn);
                     var instance = fn.kind == pxtc.SymbolKind.Method || fn.kind == pxtc.SymbolKind.Property;
                     var args = (fn.parameters || []).map(function (p) {
@@ -1236,7 +1216,6 @@ var pxt;
                         isIdentity: fn.attributes.shim == "TD_ID"
                     };
                 });
-            }
             if (skipVariables)
                 return e;
             var variableIsScoped = function (b, name) {
@@ -2653,8 +2632,9 @@ var pxt;
             }
             // hook up/down if return value is void
             var hasHandlers = hasArrowFunction(fn);
-            block.setPreviousStatement(!hasHandlers && fn.retType == "void");
-            block.setNextStatement(!hasHandlers && fn.retType == "void");
+            var isStatement = fn.attributes.handlerStmt;
+            block.setPreviousStatement((!hasHandlers || isStatement) && fn.retType == "void");
+            block.setNextStatement((!hasHandlers || isStatement) && fn.retType == "void");
             block.setTooltip(fn.attributes.jsDoc);
         }
         function hasArrowFunction(fn) {

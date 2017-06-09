@@ -1,13 +1,3 @@
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /// <reference path="../libs/core/enums.d.ts"/>
 var pxsim;
 (function (pxsim) {
@@ -31,7 +21,7 @@ var pxsim;
         //% weight=85
         //% blockId=sampleTurn block="turn %direction|by %angle degrees"
         function turnAsync(direction, angle) {
-            var b = pxsim.board();
+            let b = pxsim.board();
             if (direction == 0 /* Left */)
                 b.sprite.angle -= angle;
             else
@@ -50,6 +40,7 @@ var pxsim;
          */
         //% help=functions/forever weight=55 blockGap=8
         //% blockId=device_forever block="forever" icon="\uf01e" 
+        //% handlerStmt=1 blockHidden=true
         function forever(body) {
             pxsim.thread.forever(body);
         }
@@ -87,12 +78,12 @@ function logMsg(m) { console.log(m); }
      * A ghost on the screen.
      */
     //%
-    var Sprite = (function () {
+    class Sprite {
         /**
          * Make new sprite
          */
         //%
-        function Sprite() {
+        constructor() {
             /**
              * The X-coordiante
              */
@@ -105,53 +96,49 @@ function logMsg(m) { console.log(m); }
             this.y = 100;
             this.angle = 90;
         }
-        Sprite.prototype.foobar = function () { };
+        foobar() { }
         /**
          * Move the thing forward
          */
         //%
-        Sprite.prototype.forwardAsync = function (steps) {
-            var deg = this.angle / 180 * Math.PI;
+        forwardAsync(steps) {
+            let deg = this.angle / 180 * Math.PI;
             this.x += Math.cos(deg) * steps * 10;
             this.y += Math.sin(deg) * steps * 10;
             pxsim.board().updateView();
             return Promise.delay(400);
-        };
-        return Sprite;
-    }());
+        }
+    }
     pxsim.Sprite = Sprite;
 })(pxsim || (pxsim = {}));
 /// <reference path="../node_modules/pxt-core/typings/globals/bluebird/index.d.ts"/>
 /// <reference path="../node_modules/pxt-core/built/pxtsim.d.ts"/>
 var pxsim;
 (function (pxsim) {
-    pxsim.initCurrentRuntime = function () {
+    pxsim.initCurrentRuntime = () => {
         pxsim.runtime.board = new Board();
     };
     function board() {
         return pxsim.runtime.board;
     }
     pxsim.board = board;
-    var Board = (function (_super) {
-        __extends(Board, _super);
-        function Board() {
-            var _this = _super.call(this) || this;
-            _this.element = document.getElementById('svgcanvas');
-            _this.spriteElement = _this.element.getElementById('svgsprite');
-            _this.sprite = new pxsim.Sprite();
-            return _this;
+    class Board extends pxsim.BaseBoard {
+        constructor() {
+            super();
+            this.element = document.getElementById('svgcanvas');
+            this.spriteElement = this.element.getElementById('svgsprite');
+            this.sprite = new pxsim.Sprite();
         }
-        Board.prototype.initAsync = function (msg) {
+        initAsync(msg) {
             pxsim.console.log('messing up  simulator');
             document.body.innerHTML = ''; // clear children
             document.body.appendChild(this.element);
             return Promise.resolve();
-        };
-        Board.prototype.updateView = function () {
+        }
+        updateView() {
             this.spriteElement.cx.baseVal.value = this.sprite.x;
             this.spriteElement.cy.baseVal.value = this.sprite.y;
-        };
-        return Board;
-    }(pxsim.BaseBoard));
+        }
+    }
     pxsim.Board = Board;
 })(pxsim || (pxsim = {}));

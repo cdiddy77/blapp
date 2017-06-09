@@ -950,11 +950,6 @@ var pxt;
                         var docsUrl = pxt.webConfig.docsUrl || '/--docs';
                         var url = mp[1] == "doc" ? "" + mp[2] : docsUrl + "?md=" + mp[2];
                         window.open(url, "_blank");
-                        // notify parent iframe that we have completed the popout
-                        if (window.parent)
-                            window.parent.postMessage({
-                                type: "popoutcomplete"
-                            }, "*");
                     }
                     break;
                 case "localtoken":

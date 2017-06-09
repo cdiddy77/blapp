@@ -26,7 +26,8 @@ declare namespace control {
      * @param body TODO
      */
     //% help=functions/forever weight=55 blockGap=8
-    //% blockId=device_forever block="forever" icon="\uf01e"
+    //% blockId=device_forever block="forever" icon="\uf01e" 
+    //% handlerStmt=1 blockHidden=true
     //% shim=control::forever
     function forever(body: () => void): void;
 

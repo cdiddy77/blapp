@@ -2400,6 +2400,7 @@ var pxsim;
     pxsim.check = check;
     var refObjId = 1;
     var liveRefObjs = {};
+    var stringLiterals;
     var stringRefCounts = {};
     var refCounting = true;
     var floatingPoint = false;
@@ -2607,9 +2608,51 @@ var pxsim;
                 o.destroy();
             }
         }
+        else if (typeof v == "string") {
+            if (stringLiterals && !stringLiterals.hasOwnProperty(v)) {
+                stringRefDelta(v, -1);
+            }
+        }
+        else if (!v) {
+        }
+        else if (typeof v == "function") {
+        }
+        else if (typeof v == "number" || v === true) {
+        }
+        else {
+            throw new Error("bad decr: " + typeof v);
+        }
     }
     pxsim.decr = decr;
+    function setupStringLiterals(strings) {
+        // reset
+        liveRefObjs = {};
+        stringRefCounts = {};
+        // and set up strings
+        strings[""] = 1;
+        strings["true"] = 1;
+        strings["false"] = 1;
+        strings["null"] = 1;
+        strings["undefined"] = 1;
+        // comment out next line to disable string ref counting
+        // stringLiterals = strings
+    }
+    pxsim.setupStringLiterals = setupStringLiterals;
+    function stringRefDelta(s, n) {
+        if (!stringRefCounts.hasOwnProperty(s))
+            stringRefCounts[s] = 0;
+        var r = (stringRefCounts[s] += n);
+        if (r == 0)
+            delete stringRefCounts[s];
+        else
+            check(r > 0);
+        return r;
+    }
     function initString(v) {
+        if (!v || !stringLiterals)
+            return v;
+        if (typeof v == "string" && !stringLiterals.hasOwnProperty(v))
+            stringRefDelta(v, 1);
         return v;
     }
     pxsim.initString = initString;
@@ -2620,6 +2663,10 @@ var pxsim;
             var o = v;
             check(o.refcnt > 0);
             o.refcnt++;
+        }
+        else if (stringLiterals && typeof v == "string" && !stringLiterals.hasOwnProperty(v)) {
+            var k = stringRefDelta(v, 1);
+            check(k > 1);
         }
         return v;
     }
