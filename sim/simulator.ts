@@ -11,29 +11,16 @@ namespace pxsim {
     }
 
     export class Board extends pxsim.BaseBoard {
-        public element : SVGSVGElement;
-        public spriteElement: SVGCircleElement;
-        public sprite : Sprite;
-        
         constructor() {
             super();
-            this.element = <SVGSVGElement><any>document.getElementById('svgcanvas');
-            this.spriteElement = <SVGCircleElement>this.element.getElementById('svgsprite');
-            this.sprite = new Sprite()
         }
         
         initAsync(msg: pxsim.SimulatorRunMessage): Promise<void> {
             console.log('messing up  simulator')
-            
-            document.body.innerHTML = ''; // clear children
-            document.body.appendChild(this.element);
-
             return Promise.resolve();
         }       
         
         updateView() {
-            this.spriteElement.cx.baseVal.value = this.sprite.x;
-            this.spriteElement.cy.baseVal.value = this.sprite.y;
         }
     }
 }

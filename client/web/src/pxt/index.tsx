@@ -4,9 +4,12 @@ import { AppModel } from './AppModel';
 import App from './App';
 import * as svcConn from '../util/ServiceConnection';
 import './index.css';
+import * as board from './Board';
 
 const appModel: AppModel = new AppModel();
 svcConn.init(appModel);
+board.registerBoard();
+
 // add a comment
 ReactDOM.render(
     <App model={appModel} />,
