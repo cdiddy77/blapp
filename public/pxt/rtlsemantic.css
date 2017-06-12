@@ -50598,6 +50598,7 @@ Field editors
     display: inline-block;
     width: 10rem;
     margin-left: 0.5rem;
+    padding-bottom: 81.96% !important;
   }
   div.simframe:not(:first-child) {
     display: none !important;

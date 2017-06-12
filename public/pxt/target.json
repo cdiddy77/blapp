@@ -502,9 +502,9 @@
       ]
     },
     "files": {
-      "README.md": " ",
       "main.blocks": "<xml xmlns=\"http://www.w3.org/1999/xhtml\">\n</xml>",
-      "main.ts": " "
+      "main.ts": " ",
+      "README.md": " "
     }
   },
   "tsprj": {
@@ -521,8 +521,8 @@
       ]
     },
     "files": {
-      "README.md": " ",
-      "main.ts": " "
+      "main.ts": " ",
+      "README.md": " "
     }
   },
   "bundledpkgs": {
