@@ -13,6 +13,12 @@ interface AppState {
 
 
 export default class App extends React.Component<AppProps, AppState>{
+    componentDidMount() {
+        this.props.model.on('change', prop => {
+            this.forceUpdate();
+        });
+    }
+
     render() {
         let modelData = this.props.model.data;
         return (

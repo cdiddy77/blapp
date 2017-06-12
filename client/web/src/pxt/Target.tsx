@@ -10,13 +10,15 @@ interface TargetProps {
 interface TargetState {
     // renderProc: () => any;
     evalErrMsg: Error;
+    duringRender: boolean;
 }
 export class Target extends React.Component<TargetProps, TargetState>{
     constructor(props: TargetProps) {
         super(props);
         this.state = {
             // renderProc: null,
-            evalErrMsg: null
+            evalErrMsg: null,
+            duringRender: false
         };
         this.onModelChange = this.onModelChange.bind(this);
         //this.setRenderProc = this.setRenderProc.bind(this);
@@ -39,13 +41,15 @@ export class Target extends React.Component<TargetProps, TargetState>{
             if (this.state.evalErrMsg !== this.props.model.data.lastEvalError) {
                 this.setState({ evalErrMsg: this.props.model.data.lastEvalError });
             }
+        } else if (prop == 'code') {
+            // this.forceUpdate();
         }
     }
 
-    renderErrorMessage(err: Error) {
+    renderErrorMessage(err: Error, duringRender: boolean) {
         return (
             <View>
-                <Text>{err.name} : {err.message}</Text>
+                <Text>{duringRender ? 'RENDER:' : 'PRERENDER:'}{err.name} : {err.message}</Text>
             </View>
         );
     }
@@ -53,9 +57,8 @@ export class Target extends React.Component<TargetProps, TargetState>{
     render() {
         let result: any;
         if (this.state.evalErrMsg != null) {
-            return this.renderErrorMessage(this.state.evalErrMsg);
-        }
-        else if (CodegenRuntime.getTargetRenderProc() != null) {
+            return this.renderErrorMessage(this.state.evalErrMsg, this.state.duringRender);
+        } else if (CodegenRuntime.getTargetRenderProc() != null) {
             try {
                 result = CodegenRuntime.getTargetRenderProc()();
                 return result;
@@ -63,10 +66,10 @@ export class Target extends React.Component<TargetProps, TargetState>{
                 // this will trigger a re-render, so 
                 // we wait until we are done rendering.
                 setTimeout(() => {
-                    this.setState({ evalErrMsg: e });
+                    this.setState({ evalErrMsg: e, duringRender: true });
                     this.props.model.setProperty('lastEvalError', e);
                 });
-                return this.renderErrorMessage(e);
+                return this.renderErrorMessage(e, true);
             }
         }
         const someText = 'No UI';

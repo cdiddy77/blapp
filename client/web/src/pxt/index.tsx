@@ -8,7 +8,7 @@ import * as board from './Board';
 
 const appModel: AppModel = new AppModel();
 svcConn.init(appModel);
-board.registerBoard();
+board.registerBoard(appModel);
 
 // add a comment
 ReactDOM.render(

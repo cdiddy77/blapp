@@ -42,4 +42,31 @@ export class AppModel extends ModelWithEvents<AppModelData>
     }
     //
     ///////////////////////////////////////////////////////
+
+ protected onPropertySet(prop: keyof AppModelData) {
+        // if (prop == 'code') {
+        //     this.evalCode();
+        // }
+    }
+
+    private evalCode() {
+        let CgRt = CodegenRuntime;
+        CgRt.resetCodeState();
+        // force a re-render, which will result in the old
+        // VDOM to be discarded. This is important
+        CgRt.updateUI();
+        try {
+            eval(this.data.code);
+            this.setProperty('lastEvalError', null);
+            // if (this._performResetOnLoad) {
+            //     let resetProc = CodegenRuntime.getResetApplicationProc();
+            //     if (resetProc)
+            //         resetProc();
+
+            //     this._performResetOnLoad = false;
+            // }
+        } catch (e) {
+            this.setProperty('lastEvalError', e);
+        }
+    }
 }

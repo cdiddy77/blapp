@@ -16,6 +16,7 @@ declare namespace ui {
     //% weight=90
     //% blockId=group_element
     //% block="Group id %name|dir %direction|flex %flex|class %className"
+    //% handlerStmt=true
     //% shim=ui::groupElement
     function groupElement(name: string, direction: UIGroupDirection, flex: boolean, className: UIGroupClass, children: () => void): void;
 
