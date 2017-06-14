@@ -23,6 +23,7 @@ export interface ShareVarSetMessage {
 export interface ShareVarUpdatedMessage {
     name: string;
     value: any;
+    serverTime?:number;
 }
 
 export function createCodeChangeControlMessage(code: string): ControlMessage {

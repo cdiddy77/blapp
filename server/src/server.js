@@ -1,9 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var fs = require("fs");
-var http = require("http");
-var url = require("url");
-var blappSync = require("./blappSync");
+import * as fs from 'fs';
+import * as http from 'http';
+import * as url from 'url';
+import * as blappSync from './blappSync';
 var rootDir = "build/";
 var server = http.createServer(function (req, res) {
     var urlObj = url.parse(req.url, true, false);

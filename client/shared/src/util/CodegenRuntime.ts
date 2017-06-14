@@ -112,7 +112,7 @@ export namespace CodegenRuntime {
                 v.call(this);
             });
         }
-        updateUI();
+        //updateUI();
     }
 
     export function registerShareVarUpdateWildcardHandler(cb: ShareVarUpdatedCallback) {
@@ -302,18 +302,18 @@ export namespace CodegenRuntime {
     }
 
     var identifiedState: jsutil.Map<any> = {};
-    export function setIdState(name: string, elem: any): void {
-        identifiedState[name] = elem;
+    export function setIdState(name: string, datum: any): void {
+        identifiedState[name] = datum;
     }
     export function getIdState(name: string): any {
         if (name)
             return identifiedState[name];
     }
-    export function updateIdState(name: string, elem: any): void {
+    export function updateIdState(name: string, datum: any): void {
         if (identifiedState[name]) {
-            identifiedState[name] = Object.assign(identifiedState[name], elem);
+            identifiedState[name] = Object.assign(identifiedState[name], datum);
         } else {
-            identifiedState[name] = elem;
+            identifiedState[name] = datum;
         }
     }
 
