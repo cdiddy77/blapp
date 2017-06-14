@@ -3,10 +3,15 @@ var pxsim;
 (function (pxsim) {
     var ui;
     (function (ui) {
+        class StylePropertySet {
+            constructor() {
+            }
+        }
+        ui.StylePropertySet = StylePropertySet;
         /**
-         * The User Interface goes inside this
-         * @param theme the general look of various UI elements, eg: UITheme.Calm
-         */
+           * The User Interface goes inside this
+           * @param theme the general look of various UI elements, eg: UITheme.Calm
+           */
         //% weight=90
         //% blockId=user_interface
         //% block="UI theme %theme"
@@ -23,6 +28,86 @@ var pxsim;
         function groupElement(name, direction, flex, className, children) {
         }
         ui.groupElement = groupElement;
+        /**
+         * An element for grouping other elements in a scrollable region
+         */
+        //% weight=90
+        //% blockId=scroller_element
+        //% block="Scroller id %name|flex %flex|class %className|horizontal? %horz"
+        //% handlerStmt=true
+        function scrollerElement(name, flex, className, horz, children) {
+        }
+        ui.scrollerElement = scrollerElement;
+        /**
+         * A block for making a button
+         */
+        //% weight=90
+        //% blockId=button_element
+        //% block="Button id %name|flex %flex|class %className"
+        //% handlerStmt=true
+        function buttonElement(name, flex, className, children, whenPressed) {
+        }
+        ui.buttonElement = buttonElement;
+        /**
+         * A block for making a text element
+         */
+        //% weight=90
+        //% blockId=text_element
+        //% block="Text flex %flex|class %className|%value"
+        //% handlerStmt=true
+        function textElement(flex, className, value) {
+        }
+        ui.textElement = textElement;
+        class WhenTextChangesArgumentClass {
+        }
+        ui.WhenTextChangesArgumentClass = WhenTextChangesArgumentClass;
+        // /**
+        //  * A block for making a text input element
+        //  */
+        // //% weight=90
+        // //% blockId=textinput_element
+        // //% block="Text Input id %name|flex %flex|class %className|initial %initialValue"
+        // //% mutate=objectdestructuring
+        // //% mutateText="value"
+        // //% mutateDefaults="value;value,something"
+        // //% handlerStmt=true
+        // export function textInputElement(
+        //     name: string,
+        //     flex: boolean,
+        //     className: UITextInputClass,
+        //     initialValue: string,
+        //     whenTextChanges: (a: WhenTextChangesArgumentClass) => void): void {
+        // }
+        class ArgumentClass {
+        }
+        ui.ArgumentClass = ArgumentClass;
+        //% weight=90
+        //% blockId=addsomeeventhandler
+        //% block="Some Event Handler"
+        //% mutate=objectdestructuring
+        //% mutateText="My Arguments"
+        //% mutateDefaults="argumentA;argumentA,argumentB"
+        function SomeEventHandler(foo) {
+        }
+        ui.SomeEventHandler = SomeEventHandler;
+        /**
+         * A block for making a image element
+         */
+        //% weight=90
+        //% blockId=image_element
+        //% block="Image flex %flex|width %width|height %height|URL %url"
+        function imageElement(flex, width, height, url) {
+        }
+        ui.imageElement = imageElement;
+        /**
+         * A block for making a divider element
+         */
+        //% weight=90
+        //% blockId=divider_element
+        //% block="Divider class %className"
+        function dividerElement(className) {
+        }
+        ui.dividerElement = dividerElement;
     })(ui = pxsim.ui || (pxsim.ui = {}));
 })(pxsim || (pxsim = {}));
 // examples of stuff you can do ///////////////////////////////////

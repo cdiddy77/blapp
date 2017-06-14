@@ -4418,6 +4418,13 @@ var pxsim;
                 });
             });
         };
+        Runtime.prototype.runFiberSync = function (a, resolve, arg0, arg1, arg2) {
+            pxsim.incr(a);
+            pxsim.runtime = this;
+            this.setupTop(resolve);
+            pxsim.pxtcore.runAction3(a, arg0, arg1, arg2);
+            pxsim.decr(a);
+        };
         Runtime.postMessage = function (data) {
             if (!data)
                 return;
