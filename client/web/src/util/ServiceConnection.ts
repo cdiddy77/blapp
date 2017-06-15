@@ -14,7 +14,7 @@ export function init(appModel: AppModel) {
         if (!socket || !pairingCode) {
             return;
         }
-        socket.emit('setShareVar', pairingCode, { name: name, value: value });
+        socket.emit('setShareVar', pairingCode, { name: name, value: value, clientTime: new Date().getTime() });
     });
     appModel.on('change', (prop) => {
         if (pairingCode == null) {
@@ -73,7 +73,8 @@ export function init(appModel: AppModel) {
         console.log('simctrlmsg');
     });
     socket.on('shareVarUpdated', (data: svcTypes.ShareVarUpdatedMessage) => {
-        CodegenRuntime.onVarUpdated(data.name, data.value);
+        CodegenRuntime.handleUpdateSharevarDiags(data.clientTime,data.serverTime);
+        CodegenRuntime.onVarUpdated(data.name,data.value);
     });
 }
 

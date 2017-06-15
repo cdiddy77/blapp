@@ -279,6 +279,17 @@ export function initBlockDefinitions(): void {
             this.setHelpUrl('');
         }
     };
+    Blockly.Blocks['get_id_state'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("get named info")
+                .appendField(new Blockly.FieldTextInput(""), "NAME");
+            this.setOutput(true, null);
+            this.setColour(230);
+            this.setTooltip('');
+            this.setHelpUrl('');
+        }
+    };
 }
 export function initStyleBlockDefinitions(): void {
 
@@ -1060,24 +1071,30 @@ export function initCodeGenerators(): void {
         let code = 'CgRt.';
         switch (dropdown_datum) {
             case "touchdown_x":
-            code += 'getTouchDownX()';
+                code += 'getTouchDownX()';
                 break;
             case "touchdown_y":
-            code += 'getTouchDownY()';
+                code += 'getTouchDownY()';
                 break;
             case "touchmove_x":
-            code += 'getTouchMoveX()';
+                code += 'getTouchMoveX()';
                 break;
             case "touchmove_y":
-            code += 'getTouchMoveY()';
+                code += 'getTouchMoveY()';
                 break;
             case "touchdelta_x":
-            code += 'getTouchDeltaX()';
+                code += 'getTouchDeltaX()';
                 break;
             case "touchdelta_y":
-            code += 'getTouchDeltaX()';
+                code += 'getTouchDeltaX()';
                 break;
         }
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+
+    Blockly.JavaScript['get_id_state'] = function (block: Blockly.Block) {
+        let text_name = block.getFieldValue('NAME');
+        let code = `CgRt.getIdState('${text_name}')`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
 }

@@ -75,7 +75,7 @@ export function init(server: any) {
             }
             session.sharedVars[data.name] = data.value;
             ios.to(sid).emit('shareVarUpdated',
-                Object.assign({ serverTime: new Date().getTime() }, data));
+                { serverTime: new Date().getTime(), ...data });
         });
     });
 }

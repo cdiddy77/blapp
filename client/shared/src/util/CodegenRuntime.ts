@@ -64,6 +64,35 @@ export namespace CodegenRuntime {
     var shareVarUpdateWildCardHandlers: ShareVarUpdatedCallback[] = [];
     var shareVarUpdateHandlers: jsutil.Map<ShareVarUpdatedCallback[]> = {};
 
+    /////////
+    // sharevar latency stuff
+    var shv_recordShareVarLatency: boolean = true;
+    var shv_lastUpdated: number = 0;
+    const shv_updateFrequency: number = 1000; // ms
+    var shv_cliTimeCount: number = 0;
+    var shv_cliTimeSum: number = 0;
+    var shv_srvTimeCount: number = 0;
+    var shv_srvTimeSum: number = 0;
+
+    export function handleUpdateSharevarDiags(clientTime: number, serverTime: number) {
+        if (!shv_recordShareVarLatency) return;
+
+        let curTime = new Date().getTime();
+        if (curTime - shv_lastUpdated >= shv_updateFrequency) {
+            setIdState('shv_mps', (shv_cliTimeCount / (curTime - shv_lastUpdated)) * 1000);
+            setIdState('shv_avg_cli_late', shv_cliTimeSum / shv_cliTimeCount);
+            setIdState('shv_avg_srv_late', shv_srvTimeSum / shv_srvTimeCount);
+            shv_cliTimeCount = shv_cliTimeSum = shv_srvTimeCount = shv_srvTimeSum = 0;
+            shv_lastUpdated = curTime;
+        }
+        shv_cliTimeCount++;
+        shv_srvTimeCount++;
+        shv_cliTimeSum += curTime - clientTime;
+        shv_srvTimeSum += curTime - serverTime;
+    }
+    //
+    /////////////////////////
+
     export function setCodegenHost(host: CodegenHost): void {
         cgHost = host;
     }
@@ -302,6 +331,7 @@ export namespace CodegenRuntime {
     }
 
     var identifiedState: jsutil.Map<any> = {};
+
     export function setIdState(name: string, datum: any): void {
         identifiedState[name] = datum;
     }
