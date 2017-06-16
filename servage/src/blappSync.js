@@ -1,4 +1,12 @@
 "use strict";
+var __assign = (this && this.__assign) || Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+            t[p] = s[p];
+    }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var io = require("socket.io");
 var uuid = require("uuid");
@@ -59,14 +67,14 @@ function init(server) {
             }
         });
         socket.on('setShareVar', function (sid, data) {
-            console.log('setShareVar', sid, data.name);
+            // console.log('setShareVar', sid, data.name, data.value);
             var session = sessionMap[sid];
             if (!session) {
                 console.error('unknown session', sid);
                 return;
             }
             session.sharedVars[data.name] = data.value;
-            ios.to(sid).emit('shareVarUpdated', data);
+            ios.to(sid).emit('shareVarUpdated', __assign({ serverTime: new Date().getTime() }, data));
         });
     });
 }

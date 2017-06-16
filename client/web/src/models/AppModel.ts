@@ -508,7 +508,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
             document.body.removeChild(element);
         });
     }
-    loadWorkspaceFromFile() {
+    loadWorkspaceFromFile(clearPrevious: boolean) {
         this.doInputFilePrompt('Load File', 'file location').then(files => {
             if (!files || files.length == 0) {
                 return;
@@ -521,7 +521,9 @@ export class AppModel extends ModelWithEvents<AppModelData>
                     this.setUIStatusMessage('could not find blocks in this file');
                     return;
                 }
-                this._workspace.clear();
+                if (clearPrevious) {
+                    this._workspace.clear();
+                }
                 Blockly.Xml.domToWorkspace(xml, this._workspace);
                 this._performResetOnLoad = true;
 

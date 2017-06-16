@@ -67,17 +67,19 @@ export function init(server: any) {
             }
         });
         socket.on('setShareVar', (sid: string, data: svcTypes.ShareVarSetMessage) => {
-            console.log('setShareVar', sid, data.name);
+            // console.log('setShareVar', sid, data.name, data.value);
             let session = sessionMap[sid];
             if (!session) {
                 console.error('unknown session', sid);
                 return;
             }
             session.sharedVars[data.name] = data.value;
-            ios.to(sid).emit('shareVarUpdated', data); 
+            ios.to(sid).emit('shareVarUpdated',
+                { serverTime: new Date().getTime(), ...data });
         });
     });
 }
+
 function createMinimalId(id: string): string {
     let length: number = 4;
     let smap: any = sessionMap;

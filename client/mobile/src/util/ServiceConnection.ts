@@ -21,7 +21,7 @@ CodegenRuntime.setShareVarSetProc((name, value) => {
     if (!socket || !pairingCode) {
         return;
     }
-    socket.emit('setShareVar', pairingCode, { name: name, value: value });
+    socket.emit('setShareVar', pairingCode, { name: name, value: value, clientTime: new Date().getTime() });
 });
 
 export function resetConnection(appModel: AppModel) {
@@ -60,6 +60,7 @@ export function resetConnection(appModel: AppModel) {
             }
         });
         socket.on('shareVarUpdated', (data: svcTypes.ShareVarUpdatedMessage) => {
+            CodegenRuntime.handleUpdateSharevarDiags(data.clientTime, data.serverTime);
             CodegenRuntime.onVarUpdated(data.name, data.value);
         });
         socket.on('disconnect', () => {
