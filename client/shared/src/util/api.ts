@@ -95,6 +95,7 @@ export namespace pxsimui {
 
         }
     }
+
     function genRefProp(name: string) {
         if (name && name != '') {
             CodegenRuntime.addProp('ref', (e: any) => CodegenRuntime.setIdElem(name, e));

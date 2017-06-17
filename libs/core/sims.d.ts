@@ -1,81 +1,102 @@
 // Auto-generated from simulator. Do not edit.
-declare namespace ui {
+declare namespace UI {
+    //   export class StylePropertySet {
+    //     constructor() {
+    //     }
+    // }
     /**
      * The User Interface goes inside this
      * @param theme the general look of various UI elements, eg: UITheme.Calm
      */
-    //% weight=90
+    //% weight=100
     //% blockId=user_interface
     //% block="UI theme %theme"
-    //% shim=ui::userInterface
+    //% shim=UI::userInterface
     function userInterface(theme: UITheme, body: () => void): void;
 
-    /**
-     * An element for grouping other elements
-     */
-    //% weight=90
-    //% blockId=group_element
-    //% block="Group id %name|dir %direction|flex %flex|class %className"
-    //% handlerStmt=true
-    //% shim=ui::groupElement
-    function groupElement(name: string, direction: UIGroupDirection, flex: boolean, className: UIGroupClass, children: () => void): void;
-
+    // /**
+    //  * An element for grouping other elements
+    //  */
+    // //% weight=90
+    // //% blockId=styledef
+    // //% block="Style Group"
+    // //% handlerStmt=true
+    // export function styleDef(
+    //     children: () => void): StylePropertySet {
+    //     return null;
+    // }
+    // /**
+    //  * An element for grouping other elements
+    //  */
+    // //% weight=90
+    // //% blockId=group_element
+    // //% block="Group id %name|dir %direction|flex %flex|class %className|style %style=StylePropertySet"
+    // //% handlerStmt=true
+    // export function groupElement(
+    //     name: string,
+    //     direction: UIGroupDirection,
+    //     flex: boolean,
+    //     className: UIGroupClass,
+    //     style: StylePropertySet,
+    //     children: () => void): void {
+    // }
     /**
      * An element for grouping other elements in a scrollable region
      */
-    //% weight=90
+    //% weight=30
     //% blockId=scroller_element
-    //% block="Scroller id %name|flex %flex|class %className|horizontal? %horz"
+    //% block="Scroller id %name|flex %flex|class %className|horizontal? %horz|style %style"
     //% handlerStmt=true
-    //% shim=ui::scrollerElement
-    function scrollerElement(name: string, flex: boolean, className: UIGroupClass, horz: boolean, children: () => void): void;
+    //% shim=UI::scrollerElement
+    function scrollerElement(name: string, flex: boolean, className: UIGroupClass, horz: boolean, style: any, children: () => void): void;
 
     /**
      * A block for making a button
      */
-    //% weight=90
+    //% weight=70
     //% blockId=button_element
-    //% block="Button id %name|flex %flex|class %className"
+    //% block="Button id %name|flex %flex|class %className|style %style"
     //% handlerStmt=true
-    //% shim=ui::buttonElement
-    function buttonElement(name: string, flex: boolean, className: UIButtonClass, children: () => void, whenPressed: () => void): void;
+    //% shim=UI::buttonElement
+    function buttonElement(name: string, flex: boolean, className: UIButtonClass, style: any, children: () => void, whenPressed: () => void): void;
 
     /**
      * A block for making a text element
      */
-    //% weight=90
+    //% weight=80
     //% blockId=text_element
-    //% block="Text flex %flex|class %className|%value"
+    //% block="Text flex %flex|class %className|style %style|%value"
     //% handlerStmt=true
-    //% shim=ui::textElement
-    function textElement(flex: boolean, className: UITextClass, value: string): void;
+    //% shim=UI::textElement
+    function textElement(flex: boolean, className: UITextClass, style: any, value: string): void;
 
-    //% weight=90
-    //% blockId=addsomeeventhandler
-    //% block="Some Event Handler"
-    //% mutate=objectdestructuring
-    //% mutateText="My Arguments"
-    //% mutateDefaults="argumentA;argumentA,argumentB"
-    //% shim=ui::SomeEventHandler
-    function SomeEventHandler(foo: (a: ArgumentClass) => void): void;
+    /**
+     * A block for making a text input element
+     */
+    //% weight=50
+    //% blockId=textinput_element
+    //% block="Text Input id %name|flex %flex|class %className|style %style|initial %initialValue"
+    //% handlerStmt=true
+    //% shim=UI::textInputElement
+    function textInputElement(name: string, flex: boolean, className: UITextInputClass, style: any, initialValue: string, whenTextChanges: () => void): void;
 
     /**
      * A block for making a image element
      */
-    //% weight=90
+    //% weight=60
     //% blockId=image_element
-    //% block="Image flex %flex|width %width|height %height|URL %url"
-    //% shim=ui::imageElement
-    function imageElement(flex: boolean, width: number, height: number, url: string): void;
+    //% block="Image flex %flex|width %width|height %height|style %style|URL %url"
+    //% shim=UI::imageElement
+    function imageElement(flex: boolean, width: number, height: number, style: any, url: string): void;
 
     /**
      * A block for making a divider element
      */
-    //% weight=90
+    //% weight=40
     //% blockId=divider_element
-    //% block="Divider class %className"
-    //% shim=ui::dividerElement
-    function dividerElement(className: UIDividerClass): void;
+    //% block="Divider class %className|style %style"
+    //% shim=UI::dividerElement
+    function dividerElement(className: UIDividerClass, style: any): void;
 
 }
 
