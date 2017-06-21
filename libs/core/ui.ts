@@ -1,56 +1,39 @@
+
 /**
  * Basic functionalities.
  */
 //% color=#00BCD4 weight=100
 namespace UI {
-   //   export class StylePropertySet {
-    //     constructor() {
-
-    //     }
-    // }
-
     /**
-       * The User Interface goes inside this
-       * @param theme the general look of various UI elements, eg: UITheme.Calm
-       */
+     * The User Interface goes inside this
+     * @param theme the general look of various UI elements, eg: UITheme.Calm
+    **/
     //% weight=100
     //% blockId=user_interface
     //% block="UI theme %theme"
-    export function userInterface(theme: UITheme, body: () => void): void {
-
+    export function userInterface(theme: UITheme, body: Action) {
+        userInterfaceImpl(theme, body);
+    }
+    /**
+      * An element for grouping other elements
+      */
+    //% weight=90
+    //% blockId=group_element
+    //% block="Group id %name|dir %direction|flex %flex|class %className|style %style=StylePropertySet"
+    //% handlerStmt=true
+    export function groupElement(
+        name: string,
+        direction: UIGroupDirection,
+        flex: boolean,
+        className: UIGroupClass,
+        style: StylePropertySet,
+        children: Action): void {
+        groupElementImpl(name, direction, flex, className, style, children);
     }
 
-    // /**
-    //  * An element for grouping other elements
-    //  */
-    // //% weight=90
-    // //% blockId=styledef
-    // //% block="Style Group"
-    // //% handlerStmt=true
-    // export function styleDef(
-    //     children: () => void): StylePropertySet {
-    //     return null;
-    // }
-
-    // /**
-    //  * An element for grouping other elements
-    //  */
-    // //% weight=90
-    // //% blockId=group_element
-    // //% block="Group id %name|dir %direction|flex %flex|class %className|style %style=StylePropertySet"
-    // //% handlerStmt=true
-    // export function groupElement(
-    //     name: string,
-    //     direction: UIGroupDirection,
-    //     flex: boolean,
-    //     className: UIGroupClass,
-    //     style: StylePropertySet,
-    //     children: () => void): void {
-
-    // }
     /**
-     * An element for grouping other elements in a scrollable region
-     */
+      * An element for grouping other elements in a scrollable region
+      */
     //% weight=30
     //% blockId=scroller_element
     //% block="Scroller id %name|flex %flex|class %className|horizontal? %horz|style %style"
@@ -60,9 +43,9 @@ namespace UI {
         flex: boolean,
         className: UIGroupClass,
         horz: boolean,
-        style: any,
-        children: () => void): void {
-
+        style: StylePropertySet,
+        children: Action): void {
+        scrollerElementImpl(name, flex, className, horz, style, children);
     }
 
     /**
@@ -76,10 +59,9 @@ namespace UI {
         name: string,
         flex: boolean,
         className: UIButtonClass,
-        style: any,
-        children: () => void,
-        whenPressed: () => void): void {
-
+        style: StylePropertySet,
+        children: Action): void {
+        buttonElementImpl(name, flex, className, style, children, null);
     }
 
     /**
@@ -92,9 +74,9 @@ namespace UI {
     export function textElement(
         flex: boolean,
         className: UITextClass,
-        style: any,
+        style: StylePropertySet,
         value: string): void {
-
+        textElementImpl(flex, className, style, value);
     }
 
     /**
@@ -102,16 +84,16 @@ namespace UI {
      */
     //% weight=50
     //% blockId=textinput_element
-    //% block="Text Input id %name|flex %flex|class %className|style %style|initial %initialValue"
+    //% block="Text Input id %name|flex %flex|class %className|style %style|initial %initialValue| when text changes"
     //% handlerStmt=true
     export function textInputElement(
         name: string,
         flex: boolean,
         className: UITextInputClass,
-        style: any,
+        style: StylePropertySet,
         initialValue: string,
-        whenTextChanges: () => void): void {
-
+        whenTextChanges: Action): void {
+        textInputElementImpl(name, flex, className, style, initialValue, whenTextChanges);
     }
 
     /**
@@ -124,9 +106,9 @@ namespace UI {
         flex: boolean,
         width: number,
         height: number,
-        style: any,
+        style: StylePropertySet,
         url: string): void {
-
+        imageElementImpl(flex, width, height, style, url);
     }
 
     /**
@@ -137,8 +119,7 @@ namespace UI {
     //% block="Divider class %className|style %style"
     export function dividerElement(
         className: UIDividerClass,
-        style: any): void {
-
+        style: StylePropertySet): void {
+        dividerElementImpl(className, style);
     }
-
 }

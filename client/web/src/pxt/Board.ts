@@ -1,12 +1,12 @@
 /// <reference path="../../../../node_modules/pxt-core/built/pxtsim.d.ts"/>
-import * as api from '../../../shared/src/util/api';
+import * as uiApi from '../../../shared/src/util/uiApi';
 import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
 import { AppModel } from './AppModel';
 
 // brutal hack
 var hackPxsim: any = pxsim;
 
-hackPxsim.ui = api.pxsimui;
+hackPxsim.UI = uiApi.pxsimui;
 
 // end of brutal hack
 

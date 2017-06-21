@@ -1,13 +1,13 @@
 {
     "name": "core",
-    "description": "A target sample for PXT",
+    "description": "PXT blapp",
     "files": [
         "README.md",
         "pxt-core.d.ts",
         "pxt-helpers.ts",
-        "enums.d.ts",
+        "types.d.ts",
         "sims.d.ts",
-        "ns.ts"
+        "ui.ts"
     ],
     "testFiles": [
         "test.ts"

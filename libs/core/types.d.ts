@@ -1,3 +1,7 @@
+declare interface StylePropertySet {
+    name: string;
+}
+
 declare const enum Direction {
     //% block=left
     Left,

@@ -106,6 +106,9 @@ var ProjectView = (function (_super) {
                         else
                             _this.autoRunSimulator();
                     }
+                    else if (output) {
+                        console.warn('not running simulator:', output.content);
+                    }
                 }
             });
         }, 1000, false);

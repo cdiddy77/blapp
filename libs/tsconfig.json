@@ -7,7 +7,7 @@
         "rootDir": ".",
         "newLine": "LF",
         "sourceMap": true,
-           "types":[]
+        "types": []
     },
     "include": [
         "**/*.ts"
