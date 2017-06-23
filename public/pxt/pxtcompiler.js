@@ -1038,7 +1038,7 @@ var ts;
                     this.write(this.t.unconditional_branch(".themain"));
                 this.write(".balign 4");
                 this.write(this.proc.label() + "_Lit:");
-                this.write(".short 0xffff, 0x0000   ; action literal");
+                this.write(".short 0xffff, " + pxt.REF_TAG_ACTION + "   ; action literal");
                 this.write("@stackmark litfunc");
                 if (isMain)
                     this.write(".themain:");
@@ -1432,9 +1432,6 @@ var ts;
             });
             if (bin.res.breakpoints)
                 jssource += "\nsetupDebugger(" + bin.res.breakpoints.length + ")\n";
-            jssource += "\npxsim.setupStringLiterals(" +
-                JSON.stringify(pxtc.U.mapMap(bin.strings, function (k, v) { return 1; }), null, 1) +
-                ")\n";
             pxtc.U.iterMap(bin.hexlits, function (k, v) {
                 jssource += "var " + v + " = pxsim.BufferMethods.createBufferFromHex(\"" + k + "\")\n";
             });
@@ -1869,7 +1866,7 @@ var ts;
                     }
                     r += "\n.boxed:\n    push {lr}\n    bl numops::" + op + "\n    pop {pc}\n";
                 }
-                r += "\n@scope _numops_toInt\n_numops_toInt:\n    asrs r0, r0, #1\n    bcc .over\n    blx lr\n.over:\n    push {lr}\n    bl pxt::toInt\n    pop {pc}\n\n_numops_fromInt:\n    lsls r2, r0, #1\n    asrs r1, r2, #1\n    cmp r0, r1\n    bne .over2\n    adds r0, r2, #1\n    blx lr\n.over2:\n    push {lr}\n    bl pxt::fromInt\n    pop {pc}\n";
+                r += "\n@scope _numops_toInt\n_numops_toInt:\n    asrs r0, r0, #1\n    bcc .over\n    blx lr\n.over:\n    push {lr}\n    lsls r0, r0, #1\n    bl pxt::toInt\n    pop {pc}\n\n_numops_fromInt:\n    lsls r2, r0, #1\n    asrs r1, r2, #1\n    cmp r0, r1\n    bne .over2\n    adds r0, r2, #1\n    blx lr\n.over2:\n    push {lr}\n    bl pxt::fromInt\n    pop {pc}\n";
                 return r;
             };
             ThumbSnippets.prototype.emit_int = function (v, reg) {
@@ -1999,7 +1996,6 @@ var ts;
              */
             var multiLineCommentRegex = /^\s*(?:(?:(?:\/\*\*?)|(?:\*))(?!\/))?\s*(.*?)(?:\*?\*\/)?$/;
             var builtinBlocks = {
-                "Math.random": { blockId: "device_random", block: "pick random 0 to %limit" },
                 "Math.abs": { blockId: "math_op3", block: "absolute of %x" },
                 "Math.min": { blockId: "math_op2", block: "of %x|and %y" },
                 "Math.max": { blockId: "math_op2", block: "of %x|and %y" }
@@ -2143,6 +2139,12 @@ var ts;
                 var output = "";
                 var varUsages = {};
                 var autoDeclarations = [];
+                var declaredFunctions = {};
+                ts.forEachChild(file, function (topLevelNode) {
+                    if (topLevelNode.kind === SK.FunctionDeclaration && !checkStatement(topLevelNode, blocksInfo, false, true)) {
+                        declaredFunctions[getVariableName(topLevelNode.name)] = true;
+                    }
+                });
                 var n = codeBlock(stmts, undefined, true);
                 emitStatementNode(n);
                 result.outfiles[file.fileName.replace(/(\.blocks)?\.\w*$/i, '') + '.blocks'] = "<xml xmlns=\"http://www.w3.org/1999/xhtml\">\n" + output + "</xml>";
@@ -2512,7 +2514,8 @@ var ts;
                         };
                     }
                     var value = pxtc.U.htmlEscape(callInfo.attrs.blockId || callInfo.qName);
-                    var parentCallInfo = n.parent && n.parent.callInfo;
+                    var parent = getParent(n)[0];
+                    var parentCallInfo = parent && parent.callInfo;
                     if (callInfo.attrs.blockIdentity && !(parentCallInfo && parentCallInfo.qName === callInfo.attrs.blockIdentity)) {
                         if (callInfo.attrs.enumval && parentCallInfo && parentCallInfo.attrs.useEnumVal) {
                             value = callInfo.attrs.enumval;
@@ -2553,11 +2556,12 @@ var ts;
                         inputs: [getValue("LIST", n.expression), getValue("INDEX", n.argumentExpression)]
                     };
                 }
-                function getStatementBlock(n, next, parent, asExpression) {
+                function getStatementBlock(n, next, parent, asExpression, topLevel) {
                     if (asExpression === void 0) { asExpression = false; }
+                    if (topLevel === void 0) { topLevel = false; }
                     var node = n;
                     var stmt;
-                    if (checkStatement(node, blocksInfo, asExpression)) {
+                    if (checkStatement(node, blocksInfo, asExpression, topLevel)) {
                         stmt = getTypeScriptStatementBlock(node);
                     }
                     else {
@@ -2565,7 +2569,7 @@ var ts;
                             case SK.Block:
                                 return codeBlock(node.statements, next);
                             case SK.ExpressionStatement:
-                                return getStatementBlock(node.expression, next, parent || node, asExpression);
+                                return getStatementBlock(node.expression, next, parent || node, asExpression, topLevel);
                             case SK.VariableStatement:
                                 return codeBlock(node.declarationList.declarations, next, false, parent || node);
                             case SK.ArrowFunction:
@@ -2600,6 +2604,9 @@ var ts;
                             case SK.ForOfStatement:
                                 stmt = getForOfStatement(node);
                                 break;
+                            case SK.FunctionDeclaration:
+                                stmt = getFunctionDeclaration(node);
+                                break;
                             case SK.CallExpression:
                                 stmt = getCallStatement(node);
                                 break;
@@ -2631,7 +2638,7 @@ var ts;
                     return stmt;
                     function getNext() {
                         if (next && next.length) {
-                            return getStatementBlock(next.shift(), next);
+                            return getStatementBlock(next.shift(), next, undefined, false, topLevel);
                         }
                         return undefined;
                     }
@@ -2847,17 +2854,32 @@ var ts;
                     }
                     return getVariableSetOrChangeBlock(node.operand, isPlusPlus ? 1 : -1, true);
                 }
+                function getFunctionDeclaration(n) {
+                    var name = getVariableName(n.name);
+                    var statements = getStatementBlock(n.body);
+                    return {
+                        kind: "statement",
+                        type: "procedures_defnoreturn",
+                        fields: [getField("NAME", name)],
+                        handlers: [{ name: "STACK", statement: statements }]
+                    };
+                }
                 function getCallStatement(node) {
                     var info = node.callInfo;
-                    if (!info) {
-                        error(node);
-                        return;
-                    }
                     if (!info.attrs.blockId || !info.attrs.block) {
                         var builtin = builtinBlocks[info.qName];
                         if (!builtin) {
-                            error(node);
-                            return;
+                            var name_2 = getVariableName(node.expression);
+                            if (declaredFunctions[name_2]) {
+                                return {
+                                    kind: "statement",
+                                    type: "procedures_callnoreturn",
+                                    mutation: { "name": name_2 }
+                                };
+                            }
+                            else {
+                                return getTypeScriptStatementBlock(node);
+                            }
                         }
                         info.attrs.block = builtin.block;
                         info.attrs.blockId = builtin.blockId;
@@ -2867,14 +2889,7 @@ var ts;
                     }
                     if (ts.isFunctionLike(info.decl)) {
                     }
-                    var argNames = [];
-                    info.attrs.block.replace(/%(\w+)(?:=(\w+))?/g, function (f, n, v) {
-                        argNames.push([n, v]);
-                        return "";
-                    });
-                    if (info.attrs.defaultInstance) {
-                        argNames.unshift(["__instance__", undefined]);
-                    }
+                    var paramInfo = getParameterInfo(info, blocksInfo);
                     var r = {
                         kind: "statement",
                         type: info.attrs.blockId
@@ -2887,6 +2902,7 @@ var ts;
                         });
                     }
                     info.args.forEach(function (e, i) {
+                        e = unwrapNode(e);
                         if (i === 0 && info.attrs.defaultInstance) {
                             if (e.getText() === info.attrs.defaultInstance) {
                                 return;
@@ -2910,7 +2926,7 @@ var ts;
                             case SK.PropertyAccessExpression:
                                 var callInfo = e.callInfo;
                                 var shadow = callInfo && !!callInfo.attrs.blockIdentity;
-                                var aName = pxtc.U.htmlEscape(argNames[i][0]);
+                                var aName = pxtc.U.htmlEscape(paramInfo[i].name);
                                 if (shadow && callInfo.attrs.blockIdentity !== info.qName) {
                                     (r.inputs || (r.inputs = [])).push(getValue(aName, e));
                                 }
@@ -2930,7 +2946,7 @@ var ts;
                                 break;
                             default:
                                 var v = void 0;
-                                var vName = pxtc.U.htmlEscape(argNames[i][0]);
+                                var vName = pxtc.U.htmlEscape(paramInfo[i].name);
                                 var defaultV = true;
                                 if (info.qName == "Math.random") {
                                     v = {
@@ -2940,43 +2956,23 @@ var ts;
                                     };
                                     defaultV = false;
                                 }
-                                else if (((e.kind == SK.TrueKeyword || e.kind == SK.FalseKeyword)
-                                    || (e.kind == SK.StringLiteral || e.kind == SK.FirstTemplateToken || e.kind == SK.NoSubstitutionTemplateLiteral)
-                                    || e.kind == SK.NumericLiteral
-                                    || (e.kind == SK.PrefixUnaryExpression
-                                        && (e.operator == SK.PlusToken
-                                            || e.operator == SK.MinusToken)
-                                        && (e.operand.kind == SK.NumericLiteral)))) {
-                                    // Literal
-                                    var shadowName = argNames[i][0];
-                                    var shadowType = argNames[i][1];
-                                    if (shadowName && shadowType) {
-                                        var shadowBlock = blocksInfo.blocksById[shadowType];
-                                        if (shadowBlock) {
-                                            var fieldName_1 = '';
-                                            blocksInfo.blocksById[shadowType].attributes.block.replace(/%(\w+)/g, function (f, n) {
-                                                fieldName_1 = n;
-                                                return "";
-                                            });
-                                            if (shadowBlock.attributes && shadowBlock.attributes.paramFieldEditor && shadowBlock.attributes.paramFieldEditor[fieldName_1]) {
-                                                var fieldBlock = getFieldBlock(shadowType, fieldName_1, e.getText(), true);
-                                                if (info.attrs.paramShadowOptions && info.attrs.paramShadowOptions[shadowName]) {
-                                                    fieldBlock.mutation = { "customfield": pxtc.Util.htmlEscape(JSON.stringify(info.attrs.paramShadowOptions[shadowName])) };
-                                                }
-                                                v = {
-                                                    kind: "value",
-                                                    name: vName,
-                                                    value: fieldBlock
-                                                };
-                                                defaultV = false;
-                                            }
+                                else if (isLiteralNode(e)) {
+                                    var param = paramInfo[i];
+                                    if (param.decompileLiterals) {
+                                        var fieldBlock = getFieldBlock(param.type, param.fieldName, e.getText(), true);
+                                        if (param.paramShadowOptions) {
+                                            fieldBlock.mutation = { "customfield": pxtc.Util.htmlEscape(JSON.stringify(param.paramShadowOptions)) };
                                         }
+                                        v = {
+                                            kind: "value",
+                                            name: vName,
+                                            value: fieldBlock
+                                        };
+                                        defaultV = false;
                                     }
-                                    else if (info.attrs && info.attrs.paramFieldEditor && info.attrs.paramFieldEditorOptions) {
-                                        if (info.attrs.paramFieldEditorOptions[vName] && info.attrs.paramFieldEditorOptions[vName]['onParentBlock']) {
-                                            (r.fields || (r.fields = [])).push(getField(vName, e.getText()));
-                                            return;
-                                        }
+                                    else if (param.paramFieldEditorOptions && param.paramFieldEditorOptions['onParentBlock']) {
+                                        (r.fields || (r.fields = [])).push(getField(vName, e.getText()));
+                                        return;
                                     }
                                 }
                                 if (defaultV) {
@@ -3048,17 +3044,19 @@ var ts;
                     var blockStatements = next || [];
                     // Go over the statements in reverse so that we can insert the nodes into the existing list if there is one
                     statements.reverse().forEach(function (statement) {
-                        if (statement.kind == SK.ExpressionStatement && isEventExpression(statement) && !checkStatement(statement, blocksInfo)) {
+                        if ((statement.kind === SK.FunctionDeclaration ||
+                            (statement.kind == SK.ExpressionStatement && isEventExpression(statement))) &&
+                            !checkStatement(statement, blocksInfo, false, topLevel)) {
                             eventStatements.unshift(statement);
                         }
                         else {
                             blockStatements.unshift(statement);
                         }
                     });
-                    eventStatements.map(function (n) { return getStatementBlock(n); }).forEach(emitStatementNode);
+                    eventStatements.map(function (n) { return getStatementBlock(n, undefined, undefined, false, topLevel); }).forEach(emitStatementNode);
                     if (blockStatements.length) {
                         // wrap statement in "on start" if top level
-                        var stmt = getStatementBlock(blockStatements.shift(), blockStatements, parent);
+                        var stmt = getStatementBlock(blockStatements.shift(), blockStatements, parent, false, topLevel);
                         var emitOnStart = topLevel && !options.snippetMode;
                         if (emitOnStart) {
                             // Preserve any variable edeclarations that were never used
@@ -3086,26 +3084,6 @@ var ts;
                         return stmt;
                     }
                     return undefined;
-                }
-                function isLiteralNode(node) {
-                    if (!node) {
-                        return false;
-                    }
-                    switch (node.kind) {
-                        case SK.ParenthesizedExpression:
-                            return isLiteralNode(node.expression);
-                        case SK.NumericLiteral:
-                        case SK.StringLiteral:
-                        case SK.NoSubstitutionTemplateLiteral:
-                        case SK.TrueKeyword:
-                        case SK.FalseKeyword:
-                            return true;
-                        case SK.PrefixUnaryExpression:
-                            var expression = node;
-                            return (expression.operator === SK.PlusToken || expression.operator === SK.MinusToken) && isLiteralNode(expression.operand);
-                        default:
-                            return false;
-                    }
                 }
                 /**
                  * Takes a series of comment ranges and converts them into string suitable for a
@@ -3175,19 +3153,20 @@ var ts;
                 }
             }
             decompiler.decompileToBlocks = decompileToBlocks;
-            function checkStatement(node, blocksInfo, asExpression) {
+            function checkStatement(node, blocksInfo, asExpression, topLevel) {
                 if (asExpression === void 0) { asExpression = false; }
+                if (topLevel === void 0) { topLevel = false; }
                 switch (node.kind) {
                     case SK.WhileStatement:
                     case SK.IfStatement:
                     case SK.Block:
                         return undefined;
                     case SK.ExpressionStatement:
-                        return checkStatement(node.expression, blocksInfo, asExpression);
+                        return checkStatement(node.expression, blocksInfo, asExpression, topLevel);
                     case SK.VariableStatement:
                         return checkVariableStatement(node, blocksInfo);
                     case SK.CallExpression:
-                        return checkCall(node, blocksInfo, asExpression);
+                        return checkCall(node, blocksInfo, asExpression, topLevel);
                     case SK.VariableDeclaration:
                         return checkVariableDeclaration(node, blocksInfo);
                     case SK.PostfixUnaryExpression:
@@ -3201,6 +3180,8 @@ var ts;
                         return checkForStatement(node);
                     case SK.ForOfStatement:
                         return checkForOfStatement(node);
+                    case SK.FunctionDeclaration:
+                        return checkFunctionDeclaration(node, topLevel);
                 }
                 return pxtc.Util.lf("Unsupported statement in block: {0}", SK[node.kind]);
                 function checkForStatement(n) {
@@ -3217,7 +3198,11 @@ var ts;
                     if (initializer.declarations.length != 1) {
                         return pxtc.Util.lf("for loop with multiple variables not supported");
                     }
-                    var indexVar = initializer.declarations[0].name.text;
+                    var assignment = initializer.declarations[0];
+                    if (assignment.initializer.kind !== SK.NumericLiteral || assignment.initializer.text !== "0") {
+                        return pxtc.Util.lf("for loop initializers must be initialized to 0");
+                    }
+                    var indexVar = assignment.name.text;
                     if (!incrementorIsValid(indexVar)) {
                         return pxtc.Util.lf("for loop incrementors may only increment the variable declared in the initializer");
                     }
@@ -3309,8 +3294,9 @@ var ts;
                     }
                     return undefined;
                 }
-                function checkCall(n, blocksInfo, asExpression) {
+                function checkCall(n, blocksInfo, asExpression, topLevel) {
                     if (asExpression === void 0) { asExpression = false; }
+                    if (topLevel === void 0) { topLevel = false; }
                     var info = n.callInfo;
                     if (!info) {
                         return pxtc.Util.lf("Function call not supported in the blocks");
@@ -3318,15 +3304,27 @@ var ts;
                     if (!asExpression && info.isExpression) {
                         return pxtc.Util.lf("No output expressions as statements");
                     }
+                    var hasCallback = hasArrowFunction(info);
+                    if (hasCallback && !topLevel) {
+                        return pxtc.Util.lf("Events must be top level");
+                    }
                     if (!info.attrs.blockId || !info.attrs.block) {
                         var builtin = builtinBlocks[info.qName];
                         if (!builtin) {
+                            if (n.arguments.length === 0 && n.expression.kind === SK.Identifier) {
+                                return undefined; // Could be user defined function
+                            }
                             return pxtc.Util.lf("Function call not supported in the blocks");
                         }
                         info.attrs.block = builtin.block;
                         info.attrs.blockId = builtin.blockId;
                     }
+                    var params = getParameterInfo(info, blocksInfo);
+                    var argumentDifference = info.args.length - params.length;
                     if (info.attrs.imageLiteral) {
+                        if (argumentDifference > 1) {
+                            return pxtc.Util.lf("Function call has more arguments than are supported by its block");
+                        }
                         var arg = n.arguments[0];
                         if (arg.kind != SK.StringLiteral && arg.kind != SK.NoSubstitutionTemplateLiteral) {
                             return pxtc.Util.lf("Only string literals supported for image literals");
@@ -3338,23 +3336,17 @@ var ts;
                         }
                         return undefined;
                     }
-                    var argNames = [];
-                    info.attrs.block.replace(/%(\w+)/g, function (f, n) {
-                        argNames.push(n);
-                        return "";
-                    });
-                    var argumentDifference = info.args.length - argNames.length;
-                    if (argumentDifference > 0 && !(info.attrs.defaultInstance && argumentDifference === 1) && !checkForDestructuringMutation()) {
-                        var hasCallback = hasArrowFunction(info);
+                    if (argumentDifference > 0 && !checkForDestructuringMutation()) {
                         if (argumentDifference > 1 || !hasCallback) {
                             return pxtc.Util.lf("Function call has more arguments than are supported by its block");
                         }
                     }
                     var api = blocksInfo.apis.byQName[info.qName];
                     if (api && api.parameters && api.parameters.length) {
-                        var fail_1 = false;
+                        var fail_1;
                         var instance_1 = api.kind == pxtc.SymbolKind.Method || api.kind == pxtc.SymbolKind.Property;
                         info.args.forEach(function (e, i) {
+                            e = unwrapNode(e);
                             if (instance_1 && i === 0) {
                                 return;
                             }
@@ -3366,12 +3358,18 @@ var ts;
                                         return;
                                     }
                                 }
-                                fail_1 = true;
+                                fail_1 = pxtc.Util.lf("Enum arguments may only be literal property access expressions");
                                 return;
+                            }
+                            else if (isLiteralNode(e)) {
+                                var inf = params[i];
+                                if (inf.paramFieldEditor && (!inf.paramFieldEditorOptions || !inf.paramFieldEditorOptions["decompileLiterals"])) {
+                                    fail_1 = pxtc.Util.lf("Field editor does not support literal arguments");
+                                }
                             }
                         });
                         if (fail_1) {
-                            return pxtc.Util.lf("Enum arguments may only be literal property access expressions");
+                            return fail_1;
                         }
                     }
                     if (api) {
@@ -3413,6 +3411,24 @@ var ts;
                         return false;
                     }
                 }
+                function checkFunctionDeclaration(n, topLevel) {
+                    if (!topLevel) {
+                        return pxtc.Util.lf("Function declarations must be top level");
+                    }
+                    if (n.parameters.length > 0) {
+                        return pxtc.Util.lf("Functions with parameters not supported in blocks");
+                    }
+                    var fail = false;
+                    ts.forEachReturnStatement(n.body, function (stmt) {
+                        if (stmt.expression) {
+                            fail = true;
+                        }
+                    });
+                    if (fail) {
+                        return pxtc.Util.lf("Function with return value not supported in blocks");
+                    }
+                    return undefined;
+                }
             }
             function isAutoDeclaration(decl) {
                 if (decl.initializer) {
@@ -3447,13 +3463,13 @@ var ts;
                     var renames_1 = {};
                     var properties = elements.map(function (e) {
                         if (checkName(e.propertyName) && checkName(e.name)) {
-                            var name_2 = e.name.text;
+                            var name_3 = e.name.text;
                             if (e.propertyName) {
                                 var propName = e.propertyName.text;
-                                renames_1[propName] = name_2;
+                                renames_1[propName] = name_3;
                                 return propName;
                             }
-                            return name_2;
+                            return name_3;
                         }
                         else {
                             return "";
@@ -3507,8 +3523,35 @@ var ts;
                 function checkPropertyAccessExpression(n) {
                     var callInfo = n.callInfo;
                     if (callInfo) {
-                        if (callInfo.attrs.blockIdentity || callInfo.decl.kind === SK.EnumMember || callInfo.attrs.blockId === "lists_length") {
+                        if (callInfo.attrs.blockIdentity || callInfo.attrs.blockId === "lists_length") {
                             return undefined;
+                        }
+                        else if (callInfo.decl.kind === SK.EnumMember) {
+                            var _a = getParent(n), parent_1 = _a[0], child_1 = _a[1];
+                            var fail_2 = true;
+                            if (parent_1) {
+                                var parentInfo = parent_1.callInfo;
+                                if (parentInfo && parentInfo.args) {
+                                    var api_1 = blocksInfo.apis.byQName[parentInfo.qName];
+                                    var instance_2 = api_1.kind == pxtc.SymbolKind.Method || api_1.kind == pxtc.SymbolKind.Property;
+                                    if (api_1) {
+                                        parentInfo.args.forEach(function (arg, i) {
+                                            if (arg === child_1) {
+                                                var paramInfo = api_1.parameters[instance_2 ? i - 1 : i];
+                                                if (paramInfo.isEnum) {
+                                                    fail_2 = false;
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                            if (fail_2) {
+                                return pxtc.Util.lf("Enum value without a corresponding block");
+                            }
+                            else {
+                                return undefined;
+                            }
                         }
                         else if (callInfo.attrs.fixedInstance && n.parent && n.parent.parent &&
                             n.parent.kind === SK.PropertyAccessExpression && n.parent.parent.kind === SK.CallExpression) {
@@ -3521,6 +3564,23 @@ var ts;
                     return pxtc.Util.lf("No call info found");
                 }
             }
+            function getParent(node) {
+                if (!node.parent) {
+                    return [undefined, node];
+                }
+                else if (node.parent.kind === SK.ParenthesizedExpression) {
+                    return getParent(node.parent);
+                }
+                else {
+                    return [node.parent, node];
+                }
+            }
+            function unwrapNode(node) {
+                while (node.kind === SK.ParenthesizedExpression) {
+                    node = node.expression;
+                }
+                return node;
+            }
             function isEmptyString(a) {
                 return a === "\"\"" || a === "''" || a === "``";
             }
@@ -3530,6 +3590,65 @@ var ts;
             function hasArrowFunction(info) {
                 var parameters = info.decl.parameters;
                 return info.args.some(function (arg, index) { return arg && arg.kind === SK.ArrowFunction; });
+            }
+            function isLiteralNode(node) {
+                if (!node) {
+                    return false;
+                }
+                switch (node.kind) {
+                    case SK.ParenthesizedExpression:
+                        return isLiteralNode(node.expression);
+                    case SK.NumericLiteral:
+                    case SK.StringLiteral:
+                    case SK.NoSubstitutionTemplateLiteral:
+                    case SK.TrueKeyword:
+                    case SK.FalseKeyword:
+                        return true;
+                    case SK.PrefixUnaryExpression:
+                        var expression = node;
+                        return (expression.operator === SK.PlusToken || expression.operator === SK.MinusToken) && isLiteralNode(expression.operand);
+                    default:
+                        return false;
+                }
+            }
+            function getParameterInfo(info, blocksInfo) {
+                var argNames = [];
+                info.attrs.block.replace(/%(\w+)(?:=(\w+))?/g, function (f, n, v) {
+                    argNames.push([n, v]);
+                    return "";
+                });
+                if (info.attrs.defaultInstance) {
+                    argNames.unshift(["__instance__", undefined]);
+                }
+                return argNames.map(function (_a) {
+                    var name = _a[0], type = _a[1];
+                    var res = { name: name, type: type };
+                    if (name && type) {
+                        var shadowBlock = blocksInfo.blocksById[type];
+                        if (shadowBlock) {
+                            var fieldName_1 = '';
+                            shadowBlock.attributes.block.replace(/%(\w+)/g, function (f, n) {
+                                fieldName_1 = n;
+                                return "";
+                            });
+                            res.fieldName = fieldName_1;
+                            var shadowA = shadowBlock.attributes;
+                            if (shadowA && shadowA.paramFieldEditor && shadowA.paramFieldEditor[fieldName_1]) {
+                                if (info.attrs.paramShadowOptions && info.attrs.paramShadowOptions[name]) {
+                                    res.paramShadowOptions = info.attrs.paramShadowOptions[name];
+                                }
+                                res.decompileLiterals = !!(shadowA.paramFieldEditorOptions && shadowA.paramFieldEditorOptions[fieldName_1] && shadowA.paramFieldEditorOptions[fieldName_1]["decompileLiterals"]);
+                            }
+                        }
+                    }
+                    if (info.attrs.paramFieldEditorOptions) {
+                        res.paramFieldEditorOptions = info.attrs.paramFieldEditorOptions[name];
+                    }
+                    if (info.attrs.paramFieldEditor) {
+                        res.paramFieldEditor = info.attrs.paramFieldEditor[name];
+                    }
+                    return res;
+                });
             }
         })(decompiler = pxtc.decompiler || (pxtc.decompiler = {}));
     })(pxtc = ts.pxtc || (ts.pxtc = {}));
@@ -4347,14 +4466,14 @@ var ts;
                                 return e.data + "(" + e.args.map(str).join(", ") + ")";
                             case EK.ProcCall:
                                 var procid = e.data;
-                                var name_3 = "";
+                                var name_4 = "";
                                 if (procid.ifaceIndex != null)
-                                    name_3 = "IFACE@" + procid.ifaceIndex;
+                                    name_4 = "IFACE@" + procid.ifaceIndex;
                                 else if (procid.virtualIndex != null)
-                                    name_3 = "VTABLE@" + procid.virtualIndex;
+                                    name_4 = "VTABLE@" + procid.virtualIndex;
                                 else
-                                    name_3 = pxtc.getDeclName(procid.proc.action);
-                                return name_3 + "(" + e.args.map(str).join(", ") + ")";
+                                    name_4 = pxtc.getDeclName(procid.proc.action);
+                                return name_4 + "(" + e.args.map(str).join(", ") + ")";
                             case EK.Sequence:
                                 return "(" + e.args.map(str).join("; ") + ")";
                             case EK.Store:
@@ -5399,8 +5518,8 @@ var ts;
                         case pxtc.SK.ExtendsKeyword:
                             var tp = typeOf(h.types[0]);
                             if (isClassType(tp)) {
-                                var parent_1 = tp.symbol.valueDeclaration;
-                                return inheritsFrom(parent_1, tgt);
+                                var parent_2 = tp.symbol.valueDeclaration;
+                                return inheritsFrom(parent_2, tgt);
                             }
                     }
                 }
@@ -6435,7 +6554,9 @@ var ts;
                     }
                     if (/^[+-]?\d+$/.test(ev))
                         return emitLit(parseInt(ev));
-                    pxtc.U.userError("enumval=shimanme not supported at the moment");
+                    if (/^0x[A-Fa-f\d]{2,8}$/.test(ev))
+                        return emitLit(parseInt(ev, 16));
+                    pxtc.U.userError("enumval only support number literals");
                     // TODO needs dealing with int conversions
                     return pxtc.ir.rtcall(ev, []);
                 }
@@ -6819,15 +6940,15 @@ var ts;
                         return emitPlain();
                     }
                     else if (decl.kind == pxtc.SK.MethodSignature) {
-                        var name_4 = getName(decl);
-                        return mkProcCallCore(null, null, args.map(function (x) { return emitExpr(x); }), getIfaceMemberId(name_4));
+                        var name_5 = getName(decl);
+                        return mkProcCallCore(null, null, args.map(function (x) { return emitExpr(x); }), getIfaceMemberId(name_5));
                     }
                     else if (decl.kind == pxtc.SK.PropertySignature || decl.kind == pxtc.SK.PropertyAssignment) {
                         if (node == funcExpr) {
                             // in this special base case, we have property access recv.foo
                             // where recv is a map obejct
-                            var name_5 = getName(decl);
-                            var res_2 = mkProcCallCore(null, null, args.map(function (x) { return emitExpr(x); }), getIfaceMemberId(name_5));
+                            var name_6 = getName(decl);
+                            var res_2 = mkProcCallCore(null, null, args.map(function (x) { return emitExpr(x); }), getIfaceMemberId(name_6));
                             if (decl.kind == pxtc.SK.PropertySignature || decl.kind == pxtc.SK.PropertyAssignment) {
                                 var pid = res_2.data;
                                 pid.mapIdx = pid.ifaceIndex;
@@ -6835,7 +6956,7 @@ var ts;
                                 if (args.length == 2) {
                                     if (isRefCountedExpr(args[1]))
                                         refSuff = "Ref";
-                                    pid.ifaceIndex = getIfaceMemberId("set/" + name_5);
+                                    pid.ifaceIndex = getIfaceMemberId("set/" + name_6);
                                     pid.mapMethod = "pxtrt::mapSet" + refSuff;
                                 }
                                 else {
@@ -8218,9 +8339,9 @@ var ts;
                 var parentAccess;
                 var parentType;
                 if (target.kind === pxtc.SK.BindingElement) {
-                    var parent_2 = bindingElementAccessExpression(target);
-                    parentAccess = parent_2[0];
-                    parentType = parent_2[1];
+                    var parent_3 = bindingElementAccessExpression(target);
+                    parentAccess = parent_3[0];
+                    parentType = parent_3[1];
                 }
                 else {
                     parentType = typeOf(target);
@@ -8524,11 +8645,12 @@ var ts;
         pxtc.getTsCompilerOptions = getTsCompilerOptions;
         function nodeLocationInfo(node) {
             var file = ts.getSourceFileOfNode(node);
-            var _a = ts.getLineAndCharacterOfPosition(file, node.pos), line = _a.line, character = _a.character;
+            var nodeStart = node.getStart ? node.getStart() : node.pos;
+            var _a = ts.getLineAndCharacterOfPosition(file, nodeStart), line = _a.line, character = _a.character;
             var _b = ts.getLineAndCharacterOfPosition(file, node.end), endLine = _b.line, endChar = _b.character;
             var r = {
-                start: node.pos,
-                length: node.end - node.pos,
+                start: nodeStart,
+                length: node.end - nodeStart,
                 line: line,
                 column: character,
                 endLine: endLine,
@@ -8625,6 +8747,13 @@ var ts;
             if (!opts.sourceFiles)
                 opts.sourceFiles = Object.keys(opts.fileSystem);
             var tsFiles = opts.sourceFiles.filter(function (f) { return pxtc.U.endsWith(f, ".ts"); });
+            // ensure that main.ts is last of TS files
+            var tsFilesNoMain = tsFiles.filter(function (f) { return f != "main.ts"; });
+            if (tsFiles.length > tsFilesNoMain.length) {
+                tsFiles = tsFilesNoMain;
+                tsFiles.push("main.ts");
+            }
+            // TODO: ensure that main.ts is last???
             var program = ts.createProgram(tsFiles, options, host);
             // First get and report any syntactic errors.
             res.diagnostics = patchUpDiagnostics(program.getSyntacticDiagnostics());
@@ -10145,7 +10274,7 @@ var ts;
             // VTable for interface method is just linear. If we ever have lots of interface
             // methods and lots of classes this could become a problem. We could use a table
             // of (iface-member-id, function-addr) pairs and binary search.
-            // See https://pxt.microbit.org/15593-01779-41046-40599 for Thumb binary search.
+            // See https://makecode.microbit.org/15593-01779-41046-40599 for Thumb binary search.
             s += "\n        .balign 4\n" + info.id + "_IfaceVT:\n";
             for (var _b = 0, _c = info.itable; _b < _c.length; _b++) {
                 var m = _c[_b];
@@ -10414,8 +10543,8 @@ var ts;
         function renderDefaultVal(apis, p, imgLit, cursorMarker) {
             if (p.initializer)
                 return p.initializer;
-            if (p.defaults)
-                return p.defaults[0];
+            if (p.default)
+                return p.default;
             if (p.type == "number")
                 return "0";
             if (p.type == "boolean")
@@ -10596,7 +10725,7 @@ var ts;
                             description: desc,
                             type: typeOf(p.type, p),
                             initializer: p.initializer ? p.initializer.getText() : attributes_1.paramDefl[n],
-                            defaults: m && m[1].trim() ? m[1].split(/,\s*/).map(function (e) { return e.trim(); }) : undefined,
+                            default: attributes_1.paramDefl[n],
                             properties: props,
                             options: options,
                             isEnum: isEnum
@@ -10629,6 +10758,8 @@ var ts;
                 var ns = ts.pxtc.blocksCategory(si);
                 if (ns)
                     locStrings[("{id:category}" + ns)] = ns;
+                if (si.attributes.subcategory)
+                    locStrings[("{id:category}" + si.attributes.subcategory)] = si.attributes.subcategory;
                 if (si.attributes.jsDoc)
                     jsdocStrings[si.qName] = si.attributes.jsDoc;
                 if (si.attributes.block)

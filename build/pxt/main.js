@@ -34,6 +34,8 @@ var scriptsearch = require("./scriptsearch");
 var projects = require("./projects");
 var sounds = require("./sounds");
 var make = require("./make");
+var baseToolbox = require("./toolbox");
+var monacoToolbox = require("./monacoSnippets");
 var monaco = require("./monaco");
 var pxtjson = require("./pxtjson");
 var blocks = require("./blocks");
@@ -105,6 +107,9 @@ var ProjectView = (function (_super) {
                             _this.autoRunBlocksSimulator();
                         else
                             _this.autoRunSimulator();
+                    }
+                    else if (output) {
+                        console.warn('not running simulator:', output.content);
                     }
                 }
             });
@@ -498,6 +503,9 @@ var ProjectView = (function (_super) {
     };
     ProjectView.prototype.handleMessage = function (msg) {
         switch (msg.type) {
+            case "popoutcomplete":
+                this.setState({ sideDocsCollapsed: true, sideDocsLoadUrl: '' });
+                break;
             case "tutorial":
                 var t = msg;
                 switch (t.subtype) {
@@ -1445,7 +1453,8 @@ var ProjectView = (function (_super) {
         var hideMenuBar = targetTheme.hideMenuBar, hideEditorToolbar = targetTheme.hideEditorToolbar;
         var isHeadless = simOpts.headless;
         var cookieKey = "cookieconsent";
-        var cookieConsented = targetTheme.hideCookieNotice || electron.isElectron || pxt.winrt.isWinRT() || !!pxt.storage.getLocal(cookieKey);
+        var cookieConsented = targetTheme.hideCookieNotice || electron.isElectron || pxt.winrt.isWinRT() || !!pxt.storage.getLocal(cookieKey)
+            || sandbox;
         var simActive = this.state.embedSimView;
         var blockActive = this.isBlocksActive();
         var javascriptActive = this.isJavaScriptActive();
@@ -1797,11 +1806,12 @@ function initExtensionsAsync() {
     return pxt.BrowserUtils.loadScriptAsync(pxt.webConfig.commitCdnUrl + "editor.js")
         .then(function () { return pxt.editor.initExtensionsAsync(opts); })
         .then(function (res) {
-        if (res.hexFileImporters)
+        if (res.hexFileImporters) {
             res.hexFileImporters.forEach(function (fi) {
                 pxt.debug("\tadded hex importer " + fi.id);
                 theEditor.hexFileImporters.push(fi);
             });
+        }
         if (res.deployCoreAsync) {
             pxt.debug("\tadded custom deploy core async");
             pxt.commands.deployCoreAsync = res.deployCoreAsync;
@@ -1809,10 +1819,19 @@ function initExtensionsAsync() {
         if (res.beforeCompile) {
             theEditor.beforeCompile = res.beforeCompile;
         }
-        if (res.fieldEditors)
+        if (res.fieldEditors) {
             res.fieldEditors.forEach(function (fi) {
                 pxt.blocks.registerFieldEditor(fi.selector, fi.editor, fi.validator);
             });
+        }
+        if (res.toolboxOptions) {
+            if (res.toolboxOptions.blocklyXml) {
+                baseToolbox.overrideBaseToolbox(res.toolboxOptions.blocklyXml);
+            }
+            if (res.toolboxOptions.monacoToolbox) {
+                monacoToolbox.overrideToolbox(res.toolboxOptions.monacoToolbox);
+            }
+        }
     });
 }
 $(document).ready(function () {
@@ -1938,7 +1957,7 @@ $(document).ready(function () {
             else if (window.parent && window != window.parent)
                 window.parent.postMessage(ev.data, "*");
         }
-        if (m.type == "tutorial") {
+        if (m.type == "tutorial" || m.type == "popoutcomplete") {
             if (theEditor && theEditor.editor)
                 theEditor.handleMessage(m);
         }
@@ -1955,7 +1974,7 @@ $(document).ready(function () {
     }, false);
 });
 
-},{"./appcache":2,"./blocks":4,"./cmds":7,"./compiler":9,"./container":10,"./core":11,"./data":12,"./draganddrop":14,"./editortoolbar":15,"./electron":16,"./filelist":17,"./hidbridge":20,"./lang":22,"./logview":23,"./make":24,"./monaco":26,"./package":28,"./projects":29,"./pxtjson":30,"./screenshot":31,"./scriptsearch":32,"./share":33,"./simulator":34,"./sounds":35,"./sui":37,"./tdlegacy":38,"./tutorial":40,"./workspace":41,"marked":111,"react":267,"react-dom":138}],2:[function(require,module,exports){
+},{"./appcache":2,"./blocks":4,"./cmds":7,"./compiler":9,"./container":10,"./core":11,"./data":12,"./draganddrop":14,"./editortoolbar":15,"./electron":16,"./filelist":17,"./hidbridge":20,"./lang":22,"./logview":23,"./make":24,"./monaco":26,"./monacoSnippets":27,"./package":28,"./projects":29,"./pxtjson":30,"./screenshot":31,"./scriptsearch":32,"./share":33,"./simulator":34,"./sounds":35,"./sui":37,"./tdlegacy":38,"./toolbox":39,"./tutorial":40,"./workspace":41,"marked":111,"react":267,"react-dom":138}],2:[function(require,module,exports){
 "use strict";
 var core = require("./core");
 function init(hash) {
@@ -1970,7 +1989,7 @@ function init(hash) {
             else {
                 location.reload();
             }
-        }, 3000);
+        }, 5000);
     }, false);
 }
 exports.init = init;
@@ -2033,7 +2052,7 @@ var pkg = require("./package");
 var core = require("./core");
 var srceditor = require("./srceditor");
 var compiler = require("./compiler");
-var toolbox_1 = require("./toolbox");
+var baseToolbox = require("./toolbox");
 var CategoryMode = pxt.blocks.CategoryMode;
 var Util = pxt.Util;
 var lf = Util.lf;
@@ -2189,6 +2208,10 @@ var Editor = (function (_super) {
         else {
             // Otherwise translate the blocks so that they are positioned on the top left
             this.editor.getTopBlocks(false).forEach(function (b) { return b.moveBy(-minX, -minY); });
+            this.editor.scrollX = 10;
+            this.editor.scrollY = 10;
+            // Forces scroll to take effect
+            this.editor.resizeContents();
         }
     };
     Editor.prototype.initPrompts = function () {
@@ -2598,7 +2621,7 @@ var Editor = (function (_super) {
     Editor.prototype.getDefaultToolbox = function (showCategories) {
         if (showCategories === void 0) { showCategories = this.showToolboxCategories; }
         return showCategories !== CategoryMode.None ?
-            toolbox_1.default.documentElement
+            baseToolbox.getBaseToolboxDom().documentElement
             : new DOMParser().parseFromString("<xml id=\"blocklyToolboxDefinition\" style=\"display: none\"></xml>", "text/xml").documentElement;
     };
     Editor.prototype.filterToolbox = function (filters, showCategories) {
@@ -3018,56 +3041,68 @@ function resetAsync() {
 }
 function importLegacyScriptsAsync() {
     var key = 'legacyScriptsImported';
-    var domain = pxt.appTarget.appTheme.legacyDomain;
-    if (!domain || !pxt.webConfig.targetUrl || !!pxt.storage.getLocal(key))
+    var legacyDomain = pxt.appTarget.appTheme.legacyDomain;
+    if (!legacyDomain || !pxt.webConfig.targetUrl || !!pxt.storage.getLocal(key))
         return Promise.resolve();
-    var targetDomain = pxt.webConfig.targetUrl.replace(/^https:\/\//, '');
-    if (domain == targetDomain)
+    var targetDomain = pxt.webConfig.targetUrl.replace(/^https:\/\//i, '');
+    if (legacyDomain == targetDomain)
         return Promise.resolve(); // nothing to do
+    if (window.applicationCache.status == window.applicationCache.DOWNLOADING
+        || window.applicationCache.status == window.applicationCache.UPDATEREADY) {
+        pxt.debug('import skipped, app cached updating');
+        return Promise.resolve();
+    }
     pxt.debug('injecting import iframe');
     var frame = document.createElement("iframe");
-    function clean() {
+    function clean(clear) {
         if (frame) {
             pxt.debug('cleaning import iframe');
             window.removeEventListener('message', receiveMessage, false);
-            frame.contentWindow.postMessage({
-                type: "transfer",
-                action: "clear"
-            }, "https://" + domain);
+            if (clear) {
+                pxt.debug("sending clear command");
+                frame.contentWindow.postMessage({
+                    type: "transfer",
+                    action: "clear"
+                }, "https://" + legacyDomain);
+            }
             var temp_1 = frame;
             setTimeout(function () { return document.documentElement.removeChild(temp_1); }, 2000);
             frame = undefined;
         }
     }
-    function pushProject(dbdata) {
+    function pushProjectAsync(dbdata) {
         if (!dbdata.header.length) {
             pxt.log('done importing scripts');
             pxt.storage.setLocal(key, '1');
-            clean();
-            return;
+            clean(true);
+            return Promise.resolve();
         }
         var hd = dbdata.header.pop();
         var td = dbdata.text.pop();
+        var text = td.files;
         delete hd._id;
         delete hd._rev;
         delete hd.id;
-        pxt.debug("importing " + hd.name);
-        installAsync(hd, td)
-            .done(function () { return pushProject(dbdata); });
+        pxt.log("importing " + hd.name);
+        return installAsync(hd, text)
+            .then(function () { return pushProjectAsync(dbdata); });
     }
     function receiveMessage(ev) {
         if (ev.data && ev.data.type == 'transfer' && ev.data.action == 'export' && ev.data.data) {
             var dbdata = ev.data.data;
             pxt.debug("received " + dbdata.header.length + " projects");
-            pushProject(dbdata);
+            pushProjectAsync(dbdata).done();
         }
     }
     window.addEventListener('message', receiveMessage, false);
     frame.setAttribute("style", "position:absolute; width:1px; height:1px; right:0em; bottom:0em;");
-    var url = "https://" + domain + "/api/transfer/" + targetDomain + "?storageid=" + pxt.storage.storageId();
+    var url = "https://" + legacyDomain + "/api/transfer/" + targetDomain + "?storageid=" + pxt.storage.storageId();
     pxt.debug('transfer from ' + url);
     frame.src = url;
-    frame.onerror = clean;
+    frame.onerror = function (e) {
+        pxt.reportException(e);
+        clean(false);
+    };
     document.documentElement.appendChild(frame);
     return Promise.resolve();
 }
@@ -3199,12 +3234,18 @@ function initCommandsAsync() {
     if (/webusb=1/i.test(window.location.href) && pxt.appTarget.compile.useUF2) {
         pxt.commands.deployCoreAsync = webusbDeployCoreAsync;
     }
+    else if (pxt.winrt.isWinRT()) {
+        if (pxt.appTarget.serial && pxt.appTarget.serial.useHF2) {
+            hidbridge.mkPacketIOAsync = pxt.winrt.mkPacketIOAsync;
+            pxt.commands.deployCoreAsync = hidDeployCoreAsync;
+        }
+        else {
+            pxt.commands.deployCoreAsync = pxt.winrt.driveDeployCoreAsync;
+        }
+        pxt.commands.browserDownloadAsync = pxt.winrt.browserDownloadAsync;
+    }
     else if (hidbridge.shouldUse() && !forceHexDownload) {
         pxt.commands.deployCoreAsync = hidDeployCoreAsync;
-    }
-    else if (pxt.winrt.isWinRT()) {
-        pxt.commands.deployCoreAsync = pxt.winrt.deployCoreAsync;
-        pxt.commands.browserDownloadAsync = pxt.winrt.browserDownloadAsync;
     }
     else if (Cloud.isLocalHost() && Cloud.localToken && !forceHexDownload) {
         pxt.commands.deployCoreAsync = localhostDeployCoreAsync;
@@ -3706,7 +3747,7 @@ function handleNetworkError(e, ignoredCodes) {
 }
 exports.handleNetworkError = handleNetworkError;
 function dialogAsync(options) {
-    var buttons = options.buttons ? options.buttons.filter(function (b) { return !!b; }) : undefined;
+    var buttons = options.buttons ? options.buttons.filter(function (b) { return !!b; }) : [];
     var logos = (options.logos || [])
         .filter(function (logo) { return !!logo; })
         .map(function (logo) { return ("<img class=\"ui logo\" src=\"" + Util.toDataUri(logo) + "\" />"); })
@@ -3985,6 +4026,13 @@ mountVirtualApi("gh-pkgcfg", {
     },
     expirationTime: function (p) { return 60 * 1000; },
     isOffline: function () { return !Cloud.isOnline(); },
+});
+mountVirtualApi("target-config", {
+    getAsync: function (query) {
+        return pxt.targetConfigAsync().catch(core.handleNetworkError);
+    },
+    expirationTime: function (p) { return 60 * 1000; },
+    isOffline: function () { return !Cloud.isOnline(); }
 });
 var cachedData = {};
 function subscribe(component, path) {
@@ -5083,7 +5131,7 @@ function mkBridgeAsync() {
     return b.initAsync()
         .then(function () { return b; });
 }
-exports.mkBridgeAsync = mkBridgeAsync;
+exports.mkPacketIOAsync = mkBridgeAsync;
 var BridgeIO = (function () {
     function BridgeIO() {
         this.onData = function (v) { };
@@ -5150,7 +5198,7 @@ var BridgeIO = (function () {
     return BridgeIO;
 }());
 function hf2Async() {
-    return mkBridgeAsync()
+    return exports.mkPacketIOAsync()
         .then(function (h) {
         var w = new pxt.HF2.Wrapper(h);
         return w.reconnectAsync(true)
@@ -5242,6 +5290,7 @@ var __extends = (this && this.__extends) || function (d, b) {
 var React = require("react");
 var sui = require("./sui");
 var codecard = require("./codecard");
+var data = require("./data");
 var lf = pxt.Util.lf;
 var allLanguages = {
     "af": { englishName: "Afrikaans", localizedName: "Afrikaans" },
@@ -5302,25 +5351,14 @@ var LanguagePicker = (function (_super) {
     function LanguagePicker(props) {
         _super.call(this, props);
         this.state = {
-            visible: false,
-            supportedLanguages: null
+            visible: false
         };
     }
-    LanguagePicker.prototype.fetchSupportedLanguagesAsync = function () {
-        var _this = this;
-        if (this.state.supportedLanguages || !pxt.appTarget.appTheme.selectLanguage) {
-            return Promise.resolve();
-        }
-        return pxt.targetConfigAsync()
-            .then(function (targetCfg) {
-            if (targetCfg && targetCfg.languages) {
-                _this.setState({ visible: _this.state.visible, supportedLanguages: targetCfg.languages });
-            }
-        })
-            .catch(function (e) {
-            pxt.log("Error fetching supported languages: " + e.message || e);
-            pxt.tickEvent("menu.lang.langfetcherror");
-        });
+    LanguagePicker.prototype.fetchLanguages = function () {
+        if (!pxt.appTarget.appTheme.selectLanguage)
+            return undefined;
+        var targetConfig = this.getData("target-config:");
+        return targetConfig ? targetConfig.languages : undefined;
     };
     LanguagePicker.prototype.changeLanguage = function (langId) {
         if (!allLanguages[langId]) {
@@ -5337,27 +5375,29 @@ var LanguagePicker = (function (_super) {
         }
     };
     LanguagePicker.prototype.hide = function () {
-        this.setState({ visible: false, supportedLanguages: this.state.supportedLanguages });
+        this.setState({ visible: false });
     };
     LanguagePicker.prototype.show = function () {
-        this.setState({ visible: true, supportedLanguages: this.state.supportedLanguages });
+        this.setState({ visible: true });
     };
-    LanguagePicker.prototype.render = function () {
+    LanguagePicker.prototype.renderCore = function () {
         var _this = this;
-        this.fetchSupportedLanguagesAsync();
+        if (!this.state.visible)
+            return React.createElement("div", null);
         var targetTheme = pxt.appTarget.appTheme;
-        var fetchedLangs = this.state.supportedLanguages;
+        var fetchedLangs = this.fetchLanguages();
         var languagesToShow = fetchedLangs && fetchedLangs.length ? fetchedLangs : defaultLanguages;
         var modalSize = languagesToShow.length > 4 ? "large" : "small";
-        return (React.createElement(sui.Modal, {open: this.state.visible, header: lf("Select Language"), size: modalSize, onClose: function () { return _this.setState({ visible: false, supportedLanguages: _this.state.supportedLanguages }); }, dimmer: true, closeIcon: true, closeOnDimmerClick: true, closeOnDocumentClick: true}, React.createElement("div", {className: "group"}, React.createElement("div", {className: "ui cards centered"}, languagesToShow.map(function (langId) {
+        return (React.createElement(sui.Modal, {open: this.state.visible, header: lf("Select Language"), size: modalSize, onClose: function () { return _this.hide(); }, dimmer: true, closeIcon: true, closeOnDimmerClick: true, closeOnDocumentClick: true}, !fetchedLangs ?
+            React.createElement("div", {className: "ui message info"}, lf("loading...")) : undefined, fetchedLangs ? React.createElement("div", {className: "group"}, React.createElement("div", {className: "ui cards centered"}, languagesToShow.map(function (langId) {
             return React.createElement(codecard.CodeCardView, {className: "card-selected", key: langId, name: allLanguages[langId].localizedName, description: allLanguages[langId].englishName, onClick: function () { return _this.changeLanguage(langId); }});
-        }))), React.createElement("p", null, React.createElement("br", null), React.createElement("br", null), React.createElement("a", {href: "https://crowdin.com/project/" + targetTheme.crowdinProject, target: "_blank"}, lf("Help us translate")))));
+        }))) : undefined, React.createElement("p", null, React.createElement("br", null), React.createElement("br", null), React.createElement("a", {href: "https://crowdin.com/project/" + targetTheme.crowdinProject, target: "_blank"}, lf("Help us translate")))));
     };
     return LanguagePicker;
-}(React.Component));
+}(data.Component));
 exports.LanguagePicker = LanguagePicker;
 
-},{"./codecard":8,"./sui":37,"react":267}],23:[function(require,module,exports){
+},{"./codecard":8,"./data":12,"./sui":37,"react":267}],23:[function(require,module,exports){
 /// <reference path="../../built/pxtsim.d.ts" />
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
@@ -6155,10 +6195,16 @@ var Editor = (function (_super) {
                     el = monacoEditor.createCategoryElement(ns, md.color, md.icon, true, blocks_1, undefined, categoryName);
                 }
                 else {
-                    var blocks_2 = snippets.getBuiltinCategory(ns).blocks;
+                    var cat = snippets.getBuiltinCategory(ns);
+                    var blocks_2 = cat.blocks;
+                    var name_1 = cat.name;
+                    if (!blocks_2 || !blocks_2.length) {
+                        return;
+                    }
+                    blocks_2.forEach(function (b) { b.noNamespace = true; });
                     if (monacoEditor.nsMap[ns.toLowerCase()])
                         blocks_2 = blocks_2.concat(monacoEditor.nsMap[ns.toLowerCase()].filter(function (block) { return !(block.attributes.blockHidden || block.attributes.deprecated); }));
-                    el = monacoEditor.createCategoryElement("", md.color, md.icon, false, blocks_2, null, ns);
+                    el = monacoEditor.createCategoryElement(ns, md.color, md.icon, false, blocks_2, null, name_1);
                 }
                 group.appendChild(el);
             });
@@ -6188,6 +6234,8 @@ var Editor = (function (_super) {
             namespaces.push(snippets.variables.nameid);
         if (config.mathBlocks)
             namespaces.push(snippets.maths.nameid);
+        if (config.functionBlocks)
+            namespaces.push(snippets.functions.nameid);
         if (config.textBlocks)
             namespaces.push(snippets.text.nameid);
         if (config.listsBlocks)
@@ -6293,7 +6341,7 @@ var Editor = (function (_super) {
                     monacoBlock.style.borderColor = "" + color;
                     var snippet = fn.snippet;
                     var comment = fn.attributes.jsDoc;
-                    var snippetPrefix = ns;
+                    var snippetPrefix = fn.noNamespace ? "" : ns;
                     var element = fn;
                     if (element.attributes.block) {
                         if (element.attributes.defaultInstance) {
@@ -6628,11 +6676,12 @@ var Editor = (function (_super) {
         if (!brk || !this.currFile || this.currFile.name != brk.fileName || !this.editor)
             return;
         var position = this.editor.getModel().getPositionAt(brk.start);
-        if (!position)
+        var end = this.editor.getModel().getPositionAt(brk.start + brk.length);
+        if (!position || !end)
             return;
         this.highlightDecorations = this.editor.deltaDecorations(this.highlightDecorations, [
             {
-                range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column + brk.length),
+                range: new monaco.Range(position.lineNumber, position.column, end.lineNumber, end.column),
                 options: { inlineClassName: 'highlight-statement' }
             },
         ]);
@@ -7015,6 +7064,33 @@ exports.arrays = {
         paramDefl: {}
     }
 };
+exports.functions = {
+    name: lf("{id:category}Functions"),
+    nameid: 'functions',
+    blocks: [
+        {
+            name: "function doSomething",
+            snippet: "function doSomething() {\n\n}",
+            attributes: {
+                jsDoc: lf("Define a function")
+            }
+        },
+        {
+            name: "doSomething",
+            snippet: "doSomething()",
+            attributes: {
+                jsDoc: lf("Call a function")
+            }
+        },
+    ],
+    attributes: {
+        advanced: true,
+        callingConvention: ts.pxtc.ir.CallingConvention.Plain,
+        color: pxt.blocks.blockColors["functions"].toString(),
+        icon: "function",
+        paramDefl: {}
+    }
+};
 function getBuiltinCategory(ns) {
     switch (ns) {
         case exports.loops.nameid: return exports.loops;
@@ -7023,6 +7099,7 @@ function getBuiltinCategory(ns) {
         case exports.maths.nameid: return exports.maths;
         case exports.text.nameid: return exports.text;
         case exports.arrays.nameid: return exports.arrays;
+        case exports.functions.nameid: return exports.functions;
     }
     return undefined;
 }
@@ -7035,11 +7112,55 @@ function isBuiltin(ns) {
         case exports.maths.nameid:
         case exports.text.nameid:
         case exports.arrays.nameid:
+        case exports.functions.nameid:
             return true;
     }
     return false;
 }
 exports.isBuiltin = isBuiltin;
+function overrideCategory(ns, def) {
+    var cat = getBuiltinCategory(ns);
+    if (def && cat) {
+        if (def.name) {
+            cat.name = def.name;
+        }
+        if (def.weight !== undefined) {
+            cat.attributes.weight = def.weight;
+        }
+        if (def.blocks) {
+            var currentWeight_1 = 100;
+            cat.blocks = def.blocks.map(function (b, i) {
+                if (b.weight) {
+                    currentWeight_1 = b.weight;
+                }
+                else {
+                    currentWeight_1--;
+                }
+                return {
+                    name: b.name,
+                    snippet: b.snippet,
+                    snippetOnly: b.snippetOnly,
+                    attributes: {
+                        weight: currentWeight_1,
+                        advanced: b.advanced,
+                        jsDoc: b.jsDoc,
+                    },
+                    noNamespace: true
+                };
+            });
+        }
+    }
+}
+exports.overrideCategory = overrideCategory;
+function overrideToolbox(def) {
+    overrideCategory(exports.loops.nameid, def.loops);
+    overrideCategory(exports.logic.nameid, def.logic);
+    overrideCategory(exports.variables.nameid, def.variables);
+    overrideCategory(exports.maths.nameid, def.maths);
+    overrideCategory(exports.text.nameid, def.text);
+    overrideCategory(exports.arrays.nameid, def.arrays);
+}
+exports.overrideToolbox = overrideToolbox;
 
 },{}],28:[function(require,module,exports){
 "use strict";
@@ -7900,8 +8021,15 @@ var ScriptSearch = (function (_super) {
         if (!cloud.packages)
             return [];
         var searchFor = cloud.githubPackages ? this.state.searchFor : undefined;
-        var res = searchFor || cloud.preferredPackages
-            ? this.getData("gh-search:" + (searchFor || cloud.preferredPackages.join('|')))
+        var preferredPackages = undefined;
+        if (!searchFor) {
+            var packageConfig = this.getData("target-config:");
+            preferredPackages = packageConfig && packageConfig.packages
+                ? packageConfig.packages.preferredRepos
+                : undefined;
+        }
+        var res = searchFor || preferredPackages
+            ? this.getData("gh-search:" + (searchFor || preferredPackages.join('|')))
             : null;
         if (res)
             this.prevGhData = res;
@@ -7921,6 +8049,8 @@ var ScriptSearch = (function (_super) {
     };
     ScriptSearch.prototype.renderCore = function () {
         var _this = this;
+        if (!this.state.visible)
+            return React.createElement("div", null);
         var targetTheme = pxt.appTarget.appTheme;
         var bundles = this.fetchBundled();
         var ghdata = this.fetchGhData();
@@ -9138,8 +9268,19 @@ exports.td2tsAsync = td2tsAsync;
 
 },{"./compiler":9,"./package":28}],39:[function(require,module,exports){
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = new DOMParser().parseFromString("<xml id=\"blocklyToolboxDefinition\" style=\"display: none\">\n        <category name=\"Loops\" nameid=\"loops\" colour=\"#107c10\" category=\"50\" iconclass=\"blocklyTreeIconloops\">\n            <block type=\"controls_repeat_ext\">\n                <value name=\"TIMES\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">4</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"device_while\">\n                <value name=\"COND\">\n                    <shadow type=\"logic_boolean\"></shadow>\n                </value>\n            </block>\n            <block type=\"controls_simple_for\">\n                <value name=\"TO\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">4</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"controls_for_of\">\n                <value name=\"LIST\">\n                    <shadow type=\"variables_get\">\n                        <field name=\"VAR\">list</field>\n                    </shadow>\n                </value>\n            </block>\n        </category>\n        <category name=\"Logic\" nameid=\"logic\" colour=\"#006970\" category=\"49\" iconclass=\"blocklyTreeIconlogic\">\n            <block type=\"controls_if\" gap=\"8\">\n                <value name=\"IF0\">\n                    <shadow type=\"logic_boolean\">\n                        <field name=\"BOOL\">TRUE</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"controls_if\" gap=\"8\">\n                <mutation else=\"1\"></mutation>\n                <value name=\"IF0\">\n                    <shadow type=\"logic_boolean\">\n                        <field name=\"BOOL\">TRUE</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"logic_compare\" gap=\"8\">\n                <value name=\"A\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"B\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"logic_compare\">\n                <field name=\"OP\">LT</field>\n                <value name=\"A\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"B\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"logic_operation\" gap=\"8\"></block>\n            <block type=\"logic_operation\" gap=\"8\">\n                <field name=\"OP\">OR</field>\n            </block>\n            <block type=\"logic_negate\"></block>\n            <block type=\"logic_boolean\" gap=\"8\"></block>\n            <block type=\"logic_boolean\">\n                <field name=\"BOOL\">FALSE</field>\n            </block>\n        </category>\n        <category name=\"Variables\" nameid=\"variables\" colour=\"#A80000\" custom=\"VARIABLE\" category=\"48\" iconclass=\"blocklyTreeIconvariables\">\n        </category>\n        <category name=\"Math\" nameid=\"math\" colour=\"#712672\" category=\"47\" iconclass=\"blocklyTreeIconmath\" expandedclass=\"blocklyTreeIconmath\">\n            <block type=\"math_arithmetic\" gap=\"8\">\n                <value name=\"A\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"B\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"math_arithmetic\" gap=\"8\">\n                <value name=\"A\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"B\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <field name=\"OP\">MINUS</field>\n            </block>\n            <block type=\"math_arithmetic\" gap=\"8\">\n                <value name=\"A\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"B\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <field name=\"OP\">MULTIPLY</field>\n            </block>\n            <block type=\"math_arithmetic\" gap=\"8\">\n                <value name=\"A\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"B\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <field name=\"OP\">DIVIDE</field>\n            </block>\n            <block type=\"math_number\" gap=\"8\">\n                <field name=\"NUM\">0</field>\n            </block>\n            <block type=\"device_random\" gap=\"8\">\n                <value name=\"limit\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">4</field>\n                    </shadow>\n                </value>\n            </block>\n            <category colour=\"#712672\" name=\"More\" nameid=\"more\" iconclass=\"blocklyTreeIconmore\" expandedclass=\"blocklyTreeIconmore\">\n                <block type=\"math_modulo\">\n                    <value name=\"DIVIDEND\">\n                        <shadow type=\"math_number\">\n                            <field name=\"NUM\">0</field>\n                        </shadow>\n                    </value>\n                    <value name=\"DIVISOR\">\n                        <shadow type=\"math_number\">\n                            <field name=\"NUM\">1</field>\n                        </shadow>\n                    </value>\n                </block>\n                <block type=\"math_op2\" gap=\"8\">\n                    <value name=\"x\">\n                        <shadow type=\"math_number\">\n                            <field name=\"NUM\">0</field>\n                        </shadow>\n                    </value>\n                    <value name=\"y\">\n                        <shadow type=\"math_number\">\n                            <field name=\"NUM\">0</field>\n                        </shadow>\n                    </value>\n                </block>\n                <block type=\"math_op2\" gap=\"8\">\n                    <value name=\"x\">\n                        <shadow type=\"math_number\">\n                            <field name=\"NUM\">0</field>\n                        </shadow>\n                    </value>\n                    <value name=\"y\">\n                        <shadow type=\"math_number\">\n                            <field name=\"NUM\">0</field>\n                        </shadow>\n                    </value>\n                    <field name=\"op\">max</field>\n                </block>\n                <block type=\"math_op3\">\n                    <value name=\"x\">\n                        <shadow type=\"math_number\">\n                            <field name=\"NUM\">0</field>\n                        </shadow>\n                    </value>\n                </block>\n            </category>\n        </category>\n        <category colour=\"#66672C\" name=\"Arrays\" nameid=\"arrays\" category=\"45\" iconclass=\"blocklyTreeIconarrays\" expandedclass=\"blocklyTreeIconarrays\" advanced=\"true\">\n            <block type=\"lists_create_with\">\n                <mutation items=\"1\"></mutation>\n                <value name=\"ADD0\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"lists_create_with\">\n                <mutation items=\"2\"></mutation>\n                <value name=\"ADD0\">\n                    <shadow type=\"text\">\n                        <field name=\"TEXT\"></field>\n                    </shadow>\n                </value>\n                <value name=\"ADD1\">\n                    <shadow type=\"text\">\n                        <field name=\"TEXT\"></field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"lists_length\"></block>\n            <block type=\"lists_index_get\">\n                <value name=\"LIST\">\n                    <block type=\"variables_get\">\n                        <field name=\"VAR\">list</field>\n                    </block>\n                </value>\n                <value name=\"INDEX\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"lists_index_set\">\n                <value name=\"LIST\">\n                    <block type=\"variables_get\">\n                        <field name=\"VAR\">list</field>\n                    </block>\n                </value>\n                <value name=\"INDEX\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n            </block>\n        </category>\n        <category colour=\"#996600\" name=\"Text\" nameid=\"text\" category=\"46\" iconclass=\"blocklyTreeIcontext\" expandedclass=\"blocklyTreeIcontext\" advanced=\"true\">\n            <block type=\"text\"></block>\n            <block type=\"text_length\">\n                <value name=\"VALUE\">\n                    <shadow type=\"text\">\n                        <field name=\"TEXT\">abc</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"text_join\">\n                <mutation items=\"2\"></mutation>\n                <value name=\"ADD0\">\n                    <shadow type=\"text\">\n                        <field name=\"TEXT\"></field>\n                    </shadow>\n                </value>\n                <value name=\"ADD1\">\n                    <shadow type=\"text\">\n                        <field name=\"TEXT\"></field>\n                    </shadow>\n                </value>\n            </block>\n        </category>\n    </xml>", "text/xml");
+var defaultToolboxString = "<xml id=\"blocklyToolboxDefinition\" style=\"display: none\">\n    <category name=\"Loops\" nameid=\"loops\" colour=\"#107c10\" category=\"50\" iconclass=\"blocklyTreeIconloops\" expandedclass=\"blocklyTreeIconloops\">\n        <block type=\"controls_repeat_ext\">\n            <value name=\"TIMES\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">4</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"device_while\">\n            <value name=\"COND\">\n                <shadow type=\"logic_boolean\"></shadow>\n            </value>\n        </block>\n        <block type=\"controls_simple_for\">\n            <value name=\"TO\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">4</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"controls_for_of\">\n            <value name=\"LIST\">\n                <shadow type=\"variables_get\">\n                    <field name=\"VAR\">list</field>\n                </shadow>\n            </value>\n        </block>\n    </category>\n    <category name=\"Logic\" nameid=\"logic\" colour=\"#006970\" category=\"49\" iconclass=\"blocklyTreeIconlogic\" expandedclass=\"blocklyTreeIconlogic\">\n        <block type=\"controls_if\" gap=\"8\">\n            <value name=\"IF0\">\n                <shadow type=\"logic_boolean\">\n                    <field name=\"BOOL\">TRUE</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"controls_if\" gap=\"8\">\n            <mutation else=\"1\"></mutation>\n            <value name=\"IF0\">\n                <shadow type=\"logic_boolean\">\n                    <field name=\"BOOL\">TRUE</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"logic_compare\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"logic_compare\">\n            <field name=\"OP\">LT</field>\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"logic_operation\" gap=\"8\"></block>\n        <block type=\"logic_operation\" gap=\"8\">\n            <field name=\"OP\">OR</field>\n        </block>\n        <block type=\"logic_negate\"></block>\n        <block type=\"logic_boolean\" gap=\"8\"></block>\n        <block type=\"logic_boolean\">\n            <field name=\"BOOL\">FALSE</field>\n        </block>\n    </category>\n    <category name=\"Variables\" nameid=\"variables\" colour=\"#A80000\" custom=\"VARIABLE\" category=\"48\" iconclass=\"blocklyTreeIconvariables\" expandedclass=\"blocklyTreeIconvariables\">\n    </category>\n    <category name=\"Math\" nameid=\"math\" colour=\"#712672\" category=\"47\" iconclass=\"blocklyTreeIconmath\" expandedclass=\"blocklyTreeIconmath\">\n        <block type=\"math_arithmetic\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"math_arithmetic\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <field name=\"OP\">MINUS</field>\n        </block>\n        <block type=\"math_arithmetic\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <field name=\"OP\">MULTIPLY</field>\n        </block>\n        <block type=\"math_arithmetic\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <field name=\"OP\">DIVIDE</field>\n        </block>\n        <block type=\"math_number\" gap=\"8\">\n            <field name=\"NUM\">0</field>\n        </block>\n        <category colour=\"#712672\" name=\"More\" nameid=\"more\" iconclass=\"blocklyTreeIconmore\" expandedclass=\"blocklyTreeIconmore\">\n            <block type=\"math_modulo\">\n                <value name=\"DIVIDEND\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"DIVISOR\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">1</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"math_op2\" gap=\"8\">\n                <value name=\"x\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"y\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"math_op2\" gap=\"8\">\n                <value name=\"x\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"y\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <field name=\"op\">max</field>\n            </block>\n            <block type=\"math_op3\">\n                <value name=\"x\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n            </block>\n        </category>\n    </category>\n        <category name=\"Functions\" nameid=\"functions\" colour=\"#005a9e\" custom=\"PROCEDURE\" category=\"46\" iconclass=\"blocklyTreeIconfunctions\" expandedclass=\"blocklyTreeIconfunctions\" advanced=\"true\">\n        </category>\n    <category colour=\"#66672C\" name=\"Arrays\" nameid=\"arrays\" category=\"45\" iconclass=\"blocklyTreeIconarrays\" expandedclass=\"blocklyTreeIconarrays\" advanced=\"true\">\n        <block type=\"lists_create_with\">\n            <mutation items=\"1\"></mutation>\n            <value name=\"ADD0\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"lists_create_with\">\n            <mutation items=\"2\"></mutation>\n            <value name=\"ADD0\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\"></field>\n                </shadow>\n            </value>\n            <value name=\"ADD1\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\"></field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"lists_length\"></block>\n        <block type=\"lists_index_get\">\n            <value name=\"LIST\">\n                <block type=\"variables_get\">\n                    <field name=\"VAR\">list</field>\n                </block>\n            </value>\n            <value name=\"INDEX\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"lists_index_set\">\n            <value name=\"LIST\">\n                <block type=\"variables_get\">\n                    <field name=\"VAR\">list</field>\n                </block>\n            </value>\n            <value name=\"INDEX\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n    </category>\n    <category colour=\"#996600\" name=\"Text\" nameid=\"text\" category=\"46\" iconclass=\"blocklyTreeIcontext\" expandedclass=\"blocklyTreeIcontext\" advanced=\"true\">\n        <block type=\"text\"></block>\n        <block type=\"text_length\">\n            <value name=\"VALUE\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\">abc</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"text_join\">\n            <mutation items=\"2\"></mutation>\n            <value name=\"ADD0\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\"></field>\n                </shadow>\n            </value>\n            <value name=\"ADD1\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\"></field>\n                </shadow>\n            </value>\n        </block>\n    </category>\n</xml>";
+var cachedToolboxDom;
+function getBaseToolboxDom() {
+    if (!cachedToolboxDom) {
+        overrideBaseToolbox(defaultToolboxString);
+    }
+    return cachedToolboxDom;
+}
+exports.getBaseToolboxDom = getBaseToolboxDom;
+function overrideBaseToolbox(xml) {
+    cachedToolboxDom = new DOMParser().parseFromString(xml, 'text/xml');
+}
+exports.overrideBaseToolbox = overrideBaseToolbox;
 
 },{}],40:[function(require,module,exports){
 /// <reference path="../../typings/globals/react/index.d.ts" />

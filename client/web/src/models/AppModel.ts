@@ -37,11 +37,17 @@ export class AppModel extends ModelWithEvents<AppModelData>
         CodegenRuntime.setCodegenHost(this);
     }
 
-    // CodegenHost implementation /////////////////////////
+  // CodegenHost interface ///////////////////////////////////////////////////
     //
-
+    runFiberAsync(a: any, arg0?: any, arg1?: any, arg2?: any): Promise<any> {
+        jsutil.notYetImplemented('runFiberAsync');
+        return null;
+    }
+    runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void {
+        jsutil.notYetImplemented('runFiberSync');
+    }
     //
-    ///////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
 
     // ServiceConnectionHost implementation ///////////////
     //

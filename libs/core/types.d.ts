@@ -2,6 +2,11 @@ declare interface StylePropertySet {
     name: string;
 }
 
+//% autoCreate=Data.newShareVar
+declare interface SharedVariable {
+    name: string;
+}
+
 declare const enum Direction {
     //% block=left
     Left,

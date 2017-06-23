@@ -2400,7 +2400,6 @@ var pxsim;
     pxsim.check = check;
     var refObjId = 1;
     var liveRefObjs = {};
-    var stringLiterals;
     var stringRefCounts = {};
     var refCounting = true;
     var floatingPoint = false;
@@ -2608,51 +2607,9 @@ var pxsim;
                 o.destroy();
             }
         }
-        else if (typeof v == "string") {
-            if (stringLiterals && !stringLiterals.hasOwnProperty(v)) {
-                stringRefDelta(v, -1);
-            }
-        }
-        else if (!v) {
-        }
-        else if (typeof v == "function") {
-        }
-        else if (typeof v == "number" || v === true) {
-        }
-        else {
-            throw new Error("bad decr: " + typeof v);
-        }
     }
     pxsim.decr = decr;
-    function setupStringLiterals(strings) {
-        // reset
-        liveRefObjs = {};
-        stringRefCounts = {};
-        // and set up strings
-        strings[""] = 1;
-        strings["true"] = 1;
-        strings["false"] = 1;
-        strings["null"] = 1;
-        strings["undefined"] = 1;
-        // comment out next line to disable string ref counting
-        // stringLiterals = strings
-    }
-    pxsim.setupStringLiterals = setupStringLiterals;
-    function stringRefDelta(s, n) {
-        if (!stringRefCounts.hasOwnProperty(s))
-            stringRefCounts[s] = 0;
-        var r = (stringRefCounts[s] += n);
-        if (r == 0)
-            delete stringRefCounts[s];
-        else
-            check(r > 0);
-        return r;
-    }
     function initString(v) {
-        if (!v || !stringLiterals)
-            return v;
-        if (typeof v == "string" && !stringLiterals.hasOwnProperty(v))
-            stringRefDelta(v, 1);
         return v;
     }
     pxsim.initString = initString;
@@ -2663,10 +2620,6 @@ var pxsim;
             var o = v;
             check(o.refcnt > 0);
             o.refcnt++;
-        }
-        else if (stringLiterals && typeof v == "string" && !stringLiterals.hasOwnProperty(v)) {
-            var k = stringRefDelta(v, 1);
-            check(k > 1);
         }
         return v;
     }
@@ -3187,20 +3140,46 @@ var pxsim;
         Math_.sqrt = sqrt;
         function pow(x, y) { return Math.pow(x, y); }
         Math_.pow = pow;
+        function log(n) { return Math.log(n); }
+        Math_.log = log;
+        function exp(n) { return Math.exp(n); }
+        Math_.exp = exp;
+        function sin(n) { return Math.sin(n); }
+        Math_.sin = sin;
+        function cos(n) { return Math.cos(n); }
+        Math_.cos = cos;
+        function tan(n) { return Math.tan(n); }
+        Math_.tan = tan;
+        function asin(n) { return Math.asin(n); }
+        Math_.asin = asin;
+        function acos(n) { return Math.acos(n); }
+        Math_.acos = acos;
+        function atan(n) { return Math.atan(n); }
+        Math_.atan = atan;
+        function atan2(y, x) { return Math.atan2(y, x); }
+        Math_.atan2 = atan2;
         function trunc(x) {
             return x > 0 ? Math.floor(x) : Math.ceil(x);
         }
         Math_.trunc = trunc;
-        function random(max) {
-            if (max < 1)
-                return 0;
-            var r = 0;
-            do {
-                r = Math.floor(Math.random() * max);
-            } while (r == max);
-            return r;
+        function random() {
+            return Math.random();
         }
         Math_.random = random;
+        function randomRange(min, max) {
+            if (min == max)
+                return min;
+            if (min > max) {
+                var t = min;
+                min = max;
+                max = t;
+            }
+            if (Math.floor(min) == min && Math.floor(max) == max)
+                return min + Math.floor(Math.random() * (max - min + 1));
+            else
+                return min + Math.random() * (max - min);
+        }
+        Math_.randomRange = randomRange;
     })(Math_ = pxsim.Math_ || (pxsim.Math_ = {}));
     // for explanations see:
     // http://stackoverflow.com/questions/3428136/javascript-integer-math-incorrect-results (second answer)
@@ -4012,7 +3991,7 @@ var pxsim;
         function CoreBoard() {
             var _this = this;
             _super.call(this);
-            this.id = "b" + pxsim.Math_.random(2147483647);
+            this.id = "b" + Math.round(Math.random() * 2147483647);
             this.bus = new pxsim.EventBus(pxsim.runtime);
             // updates
             this.updateSubscribers = [];
@@ -4539,7 +4518,7 @@ var pxsim;
             }
             // dispatch to all iframe besides self
             var frames = this.container.getElementsByTagName("iframe");
-            if (source && (msg.type === 'eventbus' || msg.type == 'radiopacket')) {
+            if (source && (msg.type === 'eventbus' || msg.type == 'radiopacket' || msg.type == 'irpacket')) {
                 if (frames.length < 2) {
                     this.container.appendChild(this.createFrame());
                     frames = this.container.getElementsByTagName("iframe");

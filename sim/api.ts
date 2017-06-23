@@ -55,7 +55,7 @@ namespace pxsim.UI {
         className: UITextInputClass,
         style: StylePropertySet,
         initialValue: string,
-        whenTextChanges: pxsim.RefAction): void {
+        whenTextChanges: (text: string) => void): void {
 
     }
 

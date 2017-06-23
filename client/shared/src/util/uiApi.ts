@@ -22,7 +22,7 @@ export namespace pxsimui {
         CodegenRuntime.setTargetRenderProc(function () {
             console.log('targetrenderproc called');
             CodegenRuntime.pushCont();
-            pxsim.runtime.runFiberSync(body, (r) => {
+            CodegenRuntime.getCodegenHost().runFiberSync(body, (r: any) => {
                 console.log('it ran');
             });
             let cl = CodegenRuntime.popCont();
@@ -85,7 +85,7 @@ export namespace pxsimui {
         CodegenRuntime.addProp('visualPurpose', groupClass);
         let props = CodegenRuntime.getProps();
         CodegenRuntime.pushCont();
-        pxsim.runtime.runFiberSync(children, (r) => {
+        CodegenRuntime.getCodegenHost().runFiberSync(children, (r) => {
             console.log('group:it ran');
         });
         let cl = CodegenRuntime.popCont();
@@ -133,7 +133,7 @@ export namespace pxsimui {
         CodegenRuntime.addProp('horizontal', horz);
         let props = CodegenRuntime.getProps();
         CodegenRuntime.pushCont();
-        pxsim.runtime.runFiberSync(children, (r) => {
+        CodegenRuntime.getCodegenHost().runFiberSync(children, (r) => {
             console.log('scroller:it ran');
         });
         let cl = CodegenRuntime.popCont();
@@ -178,9 +178,17 @@ export namespace pxsimui {
         genFlexProp(flex);
         genStyleProp(style);
         CodegenRuntime.addProp('visualPurpose', buttonClass);
+        CodegenRuntime.addProp('onPress', () => {
+            if (whenPressed) {
+                CodegenRuntime.getCodegenHost().runFiberSync(whenPressed, (r) => {
+                    CodegenRuntime.updateUI();
+                });
+            }
+        });
+
         let props = CodegenRuntime.getProps();
         CodegenRuntime.pushCont();
-        pxsim.runtime.runFiberSync(children, (r) => {
+        CodegenRuntime.getCodegenHost().runFiberSync(children, (r) => {
             console.log('button:it ran');
         });
         let cl = CodegenRuntime.popCont();
@@ -227,7 +235,6 @@ export namespace pxsimui {
                 break;
         }
         CodegenRuntime.beginProps();
-        genRefProp(name);
         genFlexProp(flex);
         genStyleProp(style);
 
@@ -266,9 +273,9 @@ export namespace pxsimui {
         genStyleProp(style);
         CodegenRuntime.addProp('visualPurpose', textInputClass);
         CodegenRuntime.addProp('onChangeText', (text: string) => {
-            pxsim.runtime.runFiberAsync(whenTextChanges).then((v) => {
+            CodegenRuntime.getCodegenHost().runFiberSync(whenTextChanges, (r) => {
                 CodegenRuntime.updateUI();
-            });
+            }, text);
         });
         let props = CodegenRuntime.getProps();
         CodegenRuntime.pushElem(

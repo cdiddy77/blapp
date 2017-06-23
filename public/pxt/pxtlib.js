@@ -1330,655 +1330,6 @@ var pxt;
         return pxt.U.lookup(pxt.appTarget.bundledpkgs || {}, id);
     }
     pxt.getEmbeddedScript = getEmbeddedScript;
-    var Package = (function () {
-        function Package(id, _verspec, parent, addedBy) {
-            this.id = id;
-            this._verspec = _verspec;
-            this.parent = parent;
-            this.level = -1;
-            this.isLoaded = false;
-            if (parent) {
-                this.level = this.parent.level + 1;
-            }
-            this.addedBy = [addedBy];
-        }
-        Package.getConfigAsync = function (id, fullVers) {
-            return Promise.resolve().then(function () {
-                if (pxt.github.isGithubId(fullVers)) {
-                    var repoInfo_1 = pxt.github.parseRepoId(fullVers);
-                    return pxt.packagesConfigAsync()
-                        .then(function (config) { return pxt.github.repoAsync(repoInfo_1.fullName, config); }) // Make sure repo exists and is whitelisted
-                        .then(function (gitRepo) { return gitRepo ? pxt.github.pkgConfigAsync(repoInfo_1.fullName, repoInfo_1.tag) : null; });
-                }
-                else {
-                    // If it's not from GH, assume it's a bundled package
-                    // TODO: Add logic for shared packages if we enable that
-                    return JSON.parse(pxt.appTarget.bundledpkgs[Package.upgradePackageReference(id, fullVers)][pxt.CONFIG_NAME]);
-                }
-            });
-        };
-        Package.upgradePackageReference = function (pkg, val) {
-            if (val != "*")
-                return pkg;
-            var upgrades = pxt.appTarget.compile ? pxt.appTarget.compile.upgrades : undefined;
-            var newPackage = pkg;
-            if (upgrades) {
-                upgrades.filter(function (rule) { return rule.type == "package"; })
-                    .forEach(function (rule) {
-                    for (var match in rule.map) {
-                        if (newPackage == match) {
-                            newPackage = rule.map[match];
-                        }
-                    }
-                });
-            }
-            return newPackage;
-        };
-        Package.prototype.version = function () {
-            return this.resolvedVersion || this._verspec;
-        };
-        Package.prototype.verProtocol = function () {
-            var spl = this.version().split(':');
-            if (spl.length > 1)
-                return spl[0];
-            else
-                return "";
-        };
-        Package.prototype.verArgument = function () {
-            var p = this.verProtocol();
-            if (p)
-                return this.version().slice(p.length + 1);
-            return this.version();
-        };
-        Package.prototype.commonDownloadAsync = function () {
-            var _this = this;
-            var proto = this.verProtocol();
-            if (proto == "pub") {
-                return pxt.Cloud.downloadScriptFilesAsync(this.verArgument());
-            }
-            else if (proto == "github") {
-                return pxt.packagesConfigAsync()
-                    .then(function (config) { return pxt.github.downloadPackageAsync(_this.verArgument(), config); })
-                    .then(function (resp) { return resp.files; });
-            }
-            else if (proto == "embed") {
-                var resp = pxt.getEmbeddedScript(this.verArgument());
-                return Promise.resolve(resp);
-            }
-            else
-                return Promise.resolve(null);
-        };
-        Package.prototype.host = function () { return this.parent._host; };
-        Package.prototype.readFile = function (fn) {
-            return this.host().readFile(this, fn);
-        };
-        Package.prototype.resolveDep = function (id) {
-            if (this.parent.deps.hasOwnProperty(id))
-                return this.parent.deps[id];
-            return null;
-        };
-        Package.prototype.saveConfig = function () {
-            var cfg = JSON.stringify(this.config, null, 4) || "\n";
-            this.host().writeFile(this, pxt.CONFIG_NAME, cfg);
-        };
-        Package.prototype.resolveVersionAsync = function () {
-            var v = this._verspec;
-            if (getEmbeddedScript(this.id)) {
-                this.resolvedVersion = v = "embed:" + this.id;
-            }
-            else if (!v || v == "*") {
-                pxt.U.userError(lf("version not specified for {0}", this.id));
-            }
-            return Promise.resolve(v);
-        };
-        Package.prototype.downloadAsync = function () {
-            var _this = this;
-            var kindCfg = "";
-            return this.resolveVersionAsync()
-                .then(function (verNo) {
-                if (!/^embed:/.test(verNo) &&
-                    _this.config && _this.config.installedVersion == verNo)
-                    return;
-                pxt.debug('downloading ' + verNo);
-                return _this.host().downloadPackageAsync(_this)
-                    .then(function () {
-                    var confStr = _this.readFile(pxt.CONFIG_NAME);
-                    if (!confStr)
-                        pxt.U.userError("package " + _this.id + " is missing " + pxt.CONFIG_NAME);
-                    _this.parseConfig(confStr);
-                    if (_this.level != 0)
-                        _this.config.installedVersion = _this.version();
-                    _this.saveConfig();
-                })
-                    .then(function () {
-                    pxt.debug("installed " + _this.id + " /" + verNo);
-                });
-            });
-        };
-        Package.prototype.validateConfig = function () {
-            if (!this.config.dependencies)
-                pxt.U.userError("Missing dependencies in config of: " + this.id);
-            if (!Array.isArray(this.config.files))
-                pxt.U.userError("Missing files in config of: " + this.id);
-            if (typeof this.config.name != "string" || !this.config.name ||
-                (this.config.public && !/^[a-z][a-z0-9\-_]+$/i.test(this.config.name)))
-                pxt.U.userError("Invalid package name: " + this.config.name);
-            if (this.config.targetVersions
-                && this.config.targetVersions.target
-                && pxt.semver.strcmp(this.config.targetVersions.target, pxt.appTarget.versions.target) > 0)
-                pxt.U.userError(lf("Package {0} requires target version {1} (you are running {2})", this.config.name, this.config.targetVersions.target, pxt.appTarget.versions.target));
-        };
-        Package.prototype.isPackageInUse = function (pkgId, ts) {
-            if (ts === void 0) { ts = this.readFile("main.ts"); }
-            // Build the RegExp that will determine whether the dependency is in use. Try to use upgrade rules,
-            // otherwise fallback to the package's name
-            var regex = null;
-            var upgrades = pxt.appTarget.compile ? pxt.appTarget.compile.upgrades : undefined;
-            if (upgrades) {
-                upgrades.filter(function (rule) { return rule.type == "missingPackage"; }).forEach(function (rule) {
-                    Object.keys(rule.map).forEach(function (match) {
-                        if (rule.map[match] === pkgId) {
-                            regex = new RegExp(match, "g");
-                        }
-                    });
-                });
-            }
-            if (!regex) {
-                regex = new RegExp(pkgId + "\\.", "g");
-            }
-            return regex.test(ts);
-        };
-        Package.prototype.getMissingPackages = function (config, ts) {
-            var upgrades = pxt.appTarget.compile ? pxt.appTarget.compile.upgrades : undefined;
-            var missing = {};
-            if (ts && upgrades)
-                upgrades.filter(function (rule) { return rule.type == "missingPackage"; })
-                    .forEach(function (rule) {
-                    var _loop_1 = function(match) {
-                        var regex = new RegExp(match, 'g');
-                        var pkg = rule.map[match];
-                        ts.replace(regex, function (m) {
-                            if (!config.dependencies[pkg]) {
-                                missing[pkg] = "*";
-                            }
-                            return "";
-                        });
-                    };
-                    for (var match in rule.map) {
-                        _loop_1(match);
-                    }
-                });
-            return missing;
-        };
-        /**
-         * For the given package config or ID, looks through all the currently installed packages to find conflicts in
-         * Yotta settings
-         */
-        Package.prototype.findConflictsAsync = function (pkgOrId, version) {
-            var _this = this;
-            var conflicts = [];
-            var pkgCfg;
-            return Promise.resolve()
-                .then(function () {
-                // Get the package config if it's not already provided
-                if (typeof pkgOrId === "string") {
-                    return Package.getConfigAsync(pkgOrId, version);
-                }
-                else {
-                    return Promise.resolve(pkgOrId);
-                }
-            })
-                .then(function (cfg) {
-                pkgCfg = cfg;
-                // Iterate through all installed packages and check for conflicting settings
-                if (pkgCfg && pkgCfg.yotta) {
-                    var yottaCfg_1 = pxt.U.jsonFlatten(pkgCfg.yotta.config);
-                    _this.parent.sortedDeps().forEach(function (depPkg) {
-                        var depConfig = depPkg.config || JSON.parse(depPkg.readFile(pxt.CONFIG_NAME));
-                        var hasYottaSettings = !!depConfig && !!depConfig.yotta && !!depPkg.config.yotta.config;
-                        if (hasYottaSettings) {
-                            var depYottaCfg = pxt.U.jsonFlatten(depConfig.yotta.config);
-                            for (var _i = 0, _a = Object.keys(yottaCfg_1); _i < _a.length; _i++) {
-                                var settingName = _a[_i];
-                                var depSetting = depYottaCfg[settingName];
-                                var isJustDefaults = pkgCfg.yotta.configIsJustDefaults || depConfig.yotta.configIsJustDefaults;
-                                if (depYottaCfg.hasOwnProperty(settingName) && depSetting !== yottaCfg_1[settingName] && !isJustDefaults && (!depPkg.parent.config.yotta || !depPkg.parent.config.yotta.ignoreConflicts)) {
-                                    var conflict = new pxt.cpp.PkgConflictError(lf("conflict on yotta setting {0} between packages {1} and {2}", settingName, pkgCfg.name, depPkg.id));
-                                    conflict.pkg0 = depPkg;
-                                    conflict.settingName = settingName;
-                                    conflicts.push(conflict);
-                                }
-                            }
-                        }
-                    });
-                }
-                // Also check for conflicts for all the specified package's dependencies (recursively)
-                return Object.keys(pkgCfg.dependencies).reduce(function (soFar, pkgDep) {
-                    return soFar
-                        .then(function () { return _this.findConflictsAsync(pkgDep, pkgCfg.dependencies[pkgDep]); })
-                        .then(function (childConflicts) { return conflicts.push.apply(conflicts, childConflicts); });
-                }, Promise.resolve());
-            })
-                .then(function () {
-                // For each conflicting package, we need to include their ancestor tree in the list of conflicts
-                // For example, if package A depends on package B, and package B is in conflict with package C,
-                // then package A is also technically in conflict with C
-                var allAncestors = function (p) {
-                    var ancestors = [];
-                    p.addedBy.forEach(function (a) {
-                        if (a.id !== _this.id) {
-                            ancestors.push.apply(allAncestors(a));
-                            ancestors.push(a);
-                        }
-                    });
-                    return ancestors;
-                };
-                var additionalConflicts = [];
-                conflicts.forEach(function (c) {
-                    additionalConflicts.push.apply(additionalConflicts, allAncestors(c.pkg0).map(function (anc) {
-                        var confl = new pxt.cpp.PkgConflictError(lf("conflict on yotta setting {0} between packages {1} and {2}", c.settingName, pkgCfg.name, c.pkg0.id));
-                        confl.pkg0 = anc;
-                        return confl;
-                    }));
-                });
-                conflicts.push.apply(conflicts, additionalConflicts);
-                // Remove duplicate conflicts (happens if more than one package had the same ancestor)
-                conflicts = conflicts.filter(function (c, index) {
-                    for (var i = 0; i < index; ++i) {
-                        if (c.pkg0.id === conflicts[i].pkg0.id) {
-                            return false;
-                        }
-                    }
-                    return true;
-                });
-                return conflicts;
-            });
-        };
-        Package.prototype.upgradeAPI = function (fileContents) {
-            var upgrades = pxt.appTarget.compile ? pxt.appTarget.compile.upgrades : undefined;
-            var updatedContents = fileContents;
-            if (upgrades) {
-                upgrades.filter(function (rule) { return rule.type == "api"; })
-                    .forEach(function (rule) {
-                    for (var match in rule.map) {
-                        var regex = new RegExp(match, 'g');
-                        updatedContents = updatedContents.replace(regex, rule.map[match]);
-                    }
-                });
-            }
-            return updatedContents;
-        };
-        Package.prototype.parseConfig = function (cfgSrc) {
-            var cfg = JSON.parse(cfgSrc);
-            this.config = cfg;
-            var currentConfig = JSON.stringify(this.config);
-            for (var dep in this.config.dependencies) {
-                var value = Package.upgradePackageReference(dep, this.config.dependencies[dep]);
-                if (value != dep) {
-                    delete this.config.dependencies[dep];
-                    if (value) {
-                        this.config.dependencies[value] = "*";
-                    }
-                }
-            }
-            if (JSON.stringify(this.config) != currentConfig) {
-                this.saveConfig();
-            }
-            this.validateConfig();
-        };
-        Package.prototype.loadAsync = function (isInstall) {
-            var _this = this;
-            if (isInstall === void 0) { isInstall = false; }
-            if (this.isLoaded)
-                return Promise.resolve();
-            var initPromise = Promise.resolve();
-            this.isLoaded = true;
-            var str = this.readFile(pxt.CONFIG_NAME);
-            if (str == null) {
-                if (!isInstall)
-                    pxt.U.userError("Package not installed: " + this.id);
-            }
-            else {
-                initPromise = initPromise.then(function () { return _this.parseConfig(str); });
-            }
-            if (isInstall)
-                initPromise = initPromise.then(function () { return _this.downloadAsync(); });
-            var loadDepsRecursive = function (dependencies) {
-                return pxt.U.mapStringMapAsync(dependencies, function (id, ver) {
-                    var mod = _this.resolveDep(id);
-                    ver = ver || "*";
-                    if (mod) {
-                        if (mod._verspec != ver && !/^file:/.test(mod._verspec) && !/^file:/.test(ver))
-                            pxt.U.userError("Version spec mismatch on " + id);
-                        mod.level = Math.min(mod.level, _this.level + 1);
-                        mod.addedBy.push(_this);
-                        return Promise.resolve();
-                    }
-                    else {
-                        mod = new Package(id, ver, _this.parent, _this);
-                        _this.parent.deps[id] = mod;
-                        return mod.loadAsync(isInstall);
-                    }
-                });
-            };
-            return initPromise
-                .then(function () { return loadDepsRecursive(_this.config.dependencies); })
-                .then(function () {
-                if (_this.level === 0) {
-                    // Check for missing packages. We need to add them 1 by 1 in case they conflict with eachother.
-                    var mainTs = _this.readFile("main.ts");
-                    if (!mainTs)
-                        return Promise.resolve(null);
-                    var missingPackages_1 = _this.getMissingPackages(_this.config, mainTs);
-                    var didAddPackages_1 = false;
-                    var addPackagesPromise = Promise.resolve();
-                    Object.keys(missingPackages_1).reduce(function (addPackagesPromise, missing) {
-                        return addPackagesPromise
-                            .then(function () { return _this.findConflictsAsync(missing, missingPackages_1[missing]); })
-                            .then(function (conflicts) {
-                            if (conflicts.length) {
-                                var conflictNames = conflicts.map(function (c) { return c.pkg0.id; }).join(", ");
-                                var settingNames = conflicts.map(function (c) { return c.settingName; }).filter(function (s) { return !!s; }).join(", ");
-                                pxt.log("skipping missing package " + missing + " because it conflicts with the following packages: " + conflictNames + " (conflicting settings: " + settingNames + ")");
-                                return Promise.resolve(null);
-                            }
-                            else {
-                                pxt.log("adding missing package " + missing);
-                                didAddPackages_1 = true;
-                                _this.config.dependencies[missing] = "*";
-                                var addDependency = {};
-                                addDependency[missing] = missingPackages_1[missing];
-                                return loadDepsRecursive(addDependency);
-                            }
-                        });
-                    }, Promise.resolve(null))
-                        .then(function () {
-                        if (didAddPackages_1) {
-                            _this.saveConfig();
-                            _this.validateConfig();
-                        }
-                        return Promise.resolve(null);
-                    });
-                }
-                return Promise.resolve(null);
-            })
-                .then(function () { return null; });
-        };
-        Package.prototype.getFiles = function () {
-            if (this.level == 0)
-                return this.config.files.concat(this.config.testFiles || []);
-            else
-                return this.config.files.slice(0);
-        };
-        Package.prototype.addSnapshot = function (files, exts) {
-            if (exts === void 0) { exts = [""]; }
-            var _loop_2 = function(fn) {
-                if (exts.some(function (e) { return pxt.U.endsWith(fn, e); })) {
-                    files[this_1.id + "/" + fn] = this_1.readFile(fn);
-                }
-            };
-            var this_1 = this;
-            for (var _i = 0, _a = this.getFiles(); _i < _a.length; _i++) {
-                var fn = _a[_i];
-                _loop_2(fn);
-            }
-            files[this.id + "/" + pxt.CONFIG_NAME] = this.readFile(pxt.CONFIG_NAME);
-        };
-        /**
-         * Returns localized strings qName -> translation
-         */
-        Package.prototype.packageLocalizationStringsAsync = function (lang) {
-            var _this = this;
-            var targetId = pxt.appTarget.id;
-            var filenames = [this.id + "-jsdoc", this.id];
-            var r = {};
-            var theme = pxt.appTarget.appTheme || {};
-            // live loc of bundled packages
-            if (pxt.Util.localizeLive && this.id != "this" && pxt.appTarget.bundledpkgs[this.id]) {
-                pxt.log("loading live translations for " + this.id);
-                var code_1 = pxt.Util.userLanguage();
-                return Promise.all(filenames.map(function (fn) { return pxt.Util.downloadLiveTranslationsAsync(code_1, targetId + "/" + fn + "-strings.json", theme.crowdinBranch)
-                    .then(function (tr) { return pxt.Util.jsonMergeFrom(r, tr); })
-                    .catch(function (e) { return pxt.log("error while downloading " + targetId + "/" + fn + "-strings.json"); }); })).then(function () { return r; });
-            }
-            else {
-                var files_1 = this.config.files;
-                filenames.map(function (name) {
-                    var fn = "_locales/" + lang.toLowerCase() + "/" + name + "-strings.json";
-                    if (files_1.indexOf(fn) > -1)
-                        return JSON.parse(_this.readFile(fn));
-                    if (lang.length > 2) {
-                        fn = "_locales/" + lang.substring(0, 2).toLowerCase() + "/" + name + "-strings.json";
-                        if (files_1.indexOf(fn) > -1)
-                            return JSON.parse(_this.readFile(fn));
-                    }
-                    return undefined;
-                }).filter(function (d) { return !!d; }).forEach(function (d) { return pxt.Util.jsonMergeFrom(r, d); });
-                return Promise.resolve(r);
-            }
-        };
-        return Package;
-    }());
-    pxt.Package = Package;
-    var MainPackage = (function (_super) {
-        __extends(MainPackage, _super);
-        function MainPackage(_host) {
-            _super.call(this, "this", "file:.", null, null);
-            this._host = _host;
-            this.deps = {};
-            this.parent = this;
-            this.addedBy = [this];
-            this.level = 0;
-            this.deps[this.id] = this;
-        }
-        MainPackage.prototype.installAllAsync = function () {
-            return this.loadAsync(true);
-        };
-        MainPackage.prototype.sortedDeps = function () {
-            var _this = this;
-            var visited = {};
-            var ids = [];
-            var rec = function (p) {
-                if (!p || pxt.U.lookup(visited, p.id))
-                    return;
-                visited[p.id] = true;
-                if (p.config && p.config.dependencies) {
-                    var deps = Object.keys(p.config.dependencies);
-                    deps.sort(function (a, b) { return pxt.U.strcmp(a, b); });
-                    deps.forEach(function (id) { return rec(_this.resolveDep(id)); });
-                    ids.push(p.id);
-                }
-            };
-            rec(this);
-            return ids.map(function (id) { return _this.resolveDep(id); });
-        };
-        MainPackage.prototype.localizationStringsAsync = function (lang) {
-            var loc = {};
-            return Promise.all(pxt.Util.values(this.deps).map(function (dep) {
-                return dep.packageLocalizationStringsAsync(lang)
-                    .then(function (depLoc) {
-                    if (depLoc)
-                        for (var k in depLoc)
-                            if (!loc[k])
-                                loc[k] = depLoc[k];
-                });
-            }))
-                .then(function () { return loc; });
-        };
-        MainPackage.prototype.getTargetOptions = function () {
-            var res = pxt.U.clone(pxt.appTarget.compile);
-            pxt.U.assert(!!res);
-            return res;
-        };
-        MainPackage.prototype.getCompileOptionsAsync = function (target) {
-            var _this = this;
-            if (target === void 0) { target = this.getTargetOptions(); }
-            var opts = {
-                sourceFiles: [],
-                fileSystem: {},
-                target: target,
-                hexinfo: { hex: [] }
-            };
-            var generateFile = function (fn, cont) {
-                if (_this.config.files.indexOf(fn) < 0)
-                    pxt.U.userError(lf("please add '{0}' to \"files\" in {1}", fn, pxt.CONFIG_NAME));
-                cont = "// Auto-generated. Do not edit.\n" + cont + "\n// Auto-generated. Do not edit. Really.\n";
-                if (_this.host().readFile(_this, fn) !== cont) {
-                    pxt.log("updating " + fn + " (size=" + cont.length + ")...");
-                    _this.host().writeFile(_this, fn, cont);
-                }
-            };
-            var upgradeFile = function (fn, cont) {
-                var updatedCont = _this.upgradeAPI(cont);
-                if (updatedCont != cont) {
-                    // save file (force write)
-                    pxt.log("updating APIs in " + fn + " (size=" + cont.length + ")...");
-                    _this.host().writeFile(_this, fn, updatedCont, true);
-                }
-                return updatedCont;
-            };
-            return this.loadAsync()
-                .then(function () {
-                pxt.debug("building: " + _this.sortedDeps().map(function (p) { return p.config.name; }).join(", "));
-                var ext = pxt.cpp.getExtensionInfo(_this);
-                if (ext.shimsDTS)
-                    generateFile("shims.d.ts", ext.shimsDTS);
-                if (ext.enumsDTS)
-                    generateFile("enums.d.ts", ext.enumsDTS);
-                return (target.isNative
-                    ? _this.host().getHexInfoAsync(ext)
-                    : Promise.resolve(null))
-                    .then(function (inf) {
-                    ext = pxt.U.flatClone(ext);
-                    delete ext.compileData;
-                    delete ext.generatedFiles;
-                    delete ext.extensionFiles;
-                    opts.extinfo = ext;
-                    opts.hexinfo = inf;
-                });
-            })
-                .then(function () { return _this.config.binaryonly || pxt.appTarget.compile.shortPointers || !opts.target.isNative ? null : _this.filesToBePublishedAsync(true); })
-                .then(function (files) {
-                if (files) {
-                    files = pxt.U.mapMap(files, upgradeFile);
-                    var headerString_1 = JSON.stringify({
-                        name: _this.config.name,
-                        comment: _this.config.description,
-                        status: "unpublished",
-                        scriptId: _this.config.installedVersion,
-                        cloudId: pxt.CLOUD_ID + pxt.appTarget.id,
-                        editor: target.preferredEditor ? target.preferredEditor : (pxt.U.lookup(files, "main.blocks") ? pxt.BLOCKS_PROJECT_NAME : pxt.JAVASCRIPT_PROJECT_NAME),
-                        targetVersions: pxt.appTarget.versions
-                    });
-                    var programText_1 = JSON.stringify(files);
-                    return pxt.lzmaCompressAsync(headerString_1 + programText_1)
-                        .then(function (buf) {
-                        opts.embedMeta = JSON.stringify({
-                            compression: "LZMA",
-                            headerSize: headerString_1.length,
-                            textSize: programText_1.length,
-                            name: _this.config.name,
-                            eURL: pxt.appTarget.appTheme.embedUrl,
-                            eVER: pxt.appTarget.versions ? pxt.appTarget.versions.target : "",
-                            pxtTarget: pxt.appTarget.id,
-                        });
-                        opts.embedBlob = btoa(pxt.U.uint8ArrayToString(buf));
-                    });
-                }
-                else {
-                    return Promise.resolve();
-                }
-            })
-                .then(function () {
-                for (var _i = 0, _a = _this.sortedDeps(); _i < _a.length; _i++) {
-                    var pkg = _a[_i];
-                    for (var _b = 0, _c = pkg.getFiles(); _b < _c.length; _b++) {
-                        var f = _c[_b];
-                        if (/\.(ts|asm)$/.test(f)) {
-                            var sn = f;
-                            if (pkg.level > 0)
-                                sn = "pxt_modules/" + pkg.id + "/" + f;
-                            opts.sourceFiles.push(sn);
-                            opts.fileSystem[sn] = pkg.readFile(f);
-                        }
-                    }
-                }
-                return opts;
-            });
-        };
-        MainPackage.prototype.filesToBePublishedAsync = function (allowPrivate) {
-            var _this = this;
-            if (allowPrivate === void 0) { allowPrivate = false; }
-            var files = {};
-            return this.loadAsync()
-                .then(function () {
-                if (!allowPrivate && !_this.config.public)
-                    pxt.U.userError('Only packages with "public":true can be published');
-                var cfg = pxt.U.clone(_this.config);
-                delete cfg.installedVersion;
-                pxt.U.iterMap(cfg.dependencies, function (k, v) {
-                    if (!v || /^file:/.test(v) || /^workspace:/.test(v)) {
-                        cfg.dependencies[k] = "*";
-                    }
-                });
-                files[pxt.CONFIG_NAME] = JSON.stringify(cfg, null, 4);
-                for (var _i = 0, _a = _this.getFiles(); _i < _a.length; _i++) {
-                    var f = _a[_i];
-                    var str = _this.readFile(f);
-                    if (str == null)
-                        pxt.U.userError("referenced file missing: " + f);
-                    files[f] = str;
-                }
-                return pxt.U.sortObjectFields(files);
-            });
-        };
-        MainPackage.prototype.compressToFileAsync = function (editor) {
-            var _this = this;
-            return this.filesToBePublishedAsync(true)
-                .then(function (files) {
-                var project = {
-                    meta: {
-                        cloudId: pxt.CLOUD_ID + pxt.appTarget.id,
-                        targetVersions: pxt.appTarget.versions,
-                        editor: editor || pxt.BLOCKS_PROJECT_NAME,
-                        name: _this.config.name
-                    },
-                    source: JSON.stringify(files, null, 2)
-                };
-                return pxt.lzmaCompressAsync(JSON.stringify(project, null, 2));
-            });
-        };
-        MainPackage.prototype.computePartDefinitions = function (parts) {
-            if (!parts || !parts.length)
-                return {};
-            var res = {};
-            this.sortedDeps().forEach(function (d) {
-                var pjson = d.readFile("pxtparts.json");
-                if (pjson) {
-                    try {
-                        var p = JSON.parse(pjson);
-                        for (var k in p) {
-                            if (parts.indexOf(k) >= 0) {
-                                var part = res[k] = p[k];
-                                if (typeof part.visual.image === "string" && /\.svg$/i.test(part.visual.image)) {
-                                    var f = d.readFile(part.visual.image);
-                                    if (!f)
-                                        pxt.reportError("parts", "invalid part definition", { "error": "missing visual " + part.visual.image });
-                                    part.visual.image = "data:image/svg+xml," + encodeURIComponent(f);
-                                }
-                            }
-                        }
-                    }
-                    catch (e) {
-                        pxt.reportError("parts", "invalid pxtparts.json file");
-                    }
-                }
-            });
-            return res;
-        };
-        return MainPackage;
-    }(Package));
-    pxt.MainPackage = MainPackage;
     var _targetConfig = undefined;
     function targetConfigAsync() {
         if (!_targetConfig && !pxt.Cloud.isOnline())
@@ -2012,7 +1363,7 @@ var pxt;
                 fn.parameters.forEach(function (pr) { return attrNames[pr.name] = {
                     name: pr.name,
                     type: pr.type,
-                    shadowValue: pr.defaults ? pr.defaults[0] : undefined
+                    shadowValue: pr.default || undefined
                 }; });
             if (fn.attributes.block) {
                 Object.keys(attrNames).forEach(function (k) { return attrNames[k].name = ""; });
@@ -2125,15 +1476,6 @@ var pxt;
                     category: 'math',
                     block: {
                         message0: pxt.Util.lf("absolute of %1")
-                    }
-                },
-                'device_random': {
-                    name: pxt.Util.lf("pick random number"),
-                    tooltip: pxt.Util.lf("Returns a random integer between 0 and the specified bound (inclusive)."),
-                    url: '/blocks/math/random',
-                    category: 'math',
-                    block: {
-                        message0: pxt.Util.lf("pick random 0 to %1")
                     }
                 },
                 'math_number': {
@@ -2346,6 +1688,25 @@ var pxt;
                     block: {
                         TEXT_JOIN_TITLE_CREATEWITH: pxt.Util.lf("join")
                     }
+                },
+                'procedures_defnoreturn': {
+                    name: pxt.Util.lf("define the function"),
+                    tooltip: pxt.Util.lf("Create a function."),
+                    url: 'types/function/define',
+                    category: 'functions',
+                    block: {
+                        PROCEDURES_DEFNORETURN_TITLE: pxt.Util.lf("function"),
+                        PROCEDURE_ALREADY_EXISTS: pxt.Util.lf("A function named '%1' already exists.")
+                    }
+                },
+                'procedures_callnoreturn': {
+                    name: pxt.Util.lf("call the function"),
+                    tooltip: pxt.Util.lf("Call the user-defined function."),
+                    url: 'types/function/call',
+                    category: 'functions',
+                    block: {
+                        PROCEDURES_CALLNORETURN_TITLE: pxt.Util.lf("call function")
+                    }
                 }
             };
             _blockDefinitions[pxtc.ON_START_TYPE] = {
@@ -2360,15 +1721,10 @@ var pxt;
         }
     })(blocks = pxt.blocks || (pxt.blocks = {}));
 })(pxt || (pxt = {}));
-/// <reference path="../typings/globals/winrt/index.d.ts"/>
 var pxt;
 (function (pxt) {
     var BrowserUtils;
     (function (BrowserUtils) {
-        function isWinRT() {
-            return typeof Windows !== "undefined";
-        }
-        BrowserUtils.isWinRT = isWinRT;
         function isIFrame() {
             try {
                 return window && window.self !== window.top;
@@ -3317,6 +2673,10 @@ var pxt;
                             if (pkg.verProtocol() && pkg.verProtocol() != "pub" && pkg.verProtocol() != "embed")
                                 res.onlyPublic = false;
                         }
+                        if (U.endsWith(fn, ".c") || U.endsWith(fn, ".S") || U.endsWith(fn, ".s")) {
+                            var src = pkg.readFile(fn);
+                            res.extensionFiles[sourcePath + pkg.config.name + "/" + fn] = src;
+                        }
                     }
                     if (thisErrors) {
                         allErrors += lf("Package {0}:\n", pkg.id) + thisErrors;
@@ -4027,13 +3387,6 @@ var pxt;
                 return undefined;
             return require("marked");
         };
-        docs.requireHighlightJs = function () {
-            if (typeof hljs !== "undefined")
-                return hljs;
-            if (typeof require === "undefined")
-                return undefined;
-            return require("highlight.js");
-        };
         function parseHtmlAttrs(s) {
             var attrs = {};
             while (s.trim()) {
@@ -4314,18 +3667,7 @@ var pxt;
                     pedantic: false,
                     sanitize: true,
                     smartLists: true,
-                    smartypants: true,
-                    highlight: function (code, lang) {
-                        try {
-                            var hljs_1 = docs.requireHighlightJs();
-                            if (!hljs_1)
-                                return code;
-                            return hljs_1.highlightAuto(code, [lang.replace('-ignore', '')]).value;
-                        }
-                        catch (e) {
-                            return code;
-                        }
-                    }
+                    smartypants: true
                 });
             }
             ;
@@ -4335,7 +3677,7 @@ var pxt;
                 markdown += "\n```package\n" + opts.repo.name.replace(/^pxt-/, '') + "=github:" + opts.repo.fullName + "#" + (opts.repo.tag || "master") + "\n```\n";
             //Uses the CmdLink definitions to replace links to YouTube and Vimeo (limited at the moment)
             markdown = markdown.replace(/^\s*https?:\/\/(\S+)\s*$/mg, function (f, lnk) {
-                var _loop_3 = function(ent) {
+                var _loop_1 = function(ent) {
                     var m = ent.rx.exec(lnk);
                     if (m) {
                         return { value: ent.cmd.replace(/\$(\d+)/g, function (f, k) {
@@ -4345,8 +3687,8 @@ var pxt;
                 };
                 for (var _i = 0, links_1 = links; _i < links_1.length; _i++) {
                     var ent = links_1[_i];
-                    var state_3 = _loop_3(ent);
-                    if (typeof state_3 === "object") return state_3.value;
+                    var state_1 = _loop_1(ent);
+                    if (typeof state_1 === "object") return state_1.value;
                 }
                 return f;
             });
@@ -4545,7 +3887,7 @@ var pxt;
             md = md.replace(/\r/g, "");
             var lines = md.split(/\n/);
             var skipThese = {};
-            var _loop_4 = function(l) {
+            var _loop_2 = function(l) {
                 var m = /^\s*(#+)\s*(.*?)(#(\S+)\s*)?$/.exec(l);
                 var templSect = null;
                 if (template && m) {
@@ -4593,7 +3935,7 @@ var pxt;
             };
             for (var _i = 0, lines_1 = lines; _i < lines_1.length; _i++) {
                 var l = lines_1[_i];
-                _loop_4(l);
+                _loop_2(l);
             }
             return openSections[0];
         }
@@ -5155,8 +4497,16 @@ var pxt;
             return res;
         }
         HF2.decodeU32LE = decodeU32LE;
+        var logEnabled = false;
+        function enableLog() {
+            logEnabled = true;
+        }
+        HF2.enableLog = enableLog;
         function log(msg) {
-            pxt.debug("HF2: " + msg);
+            if (logEnabled)
+                pxt.log("HF2: " + msg);
+            else
+                pxt.debug("HF2: " + msg);
         }
         var Wrapper = (function () {
             function Wrapper(io) {
@@ -5523,6 +4873,7 @@ var pxt;
     pxt.REF_TAG_BUFFER = 2;
     pxt.REF_TAG_IMAGE = 3;
     pxt.REF_TAG_NUMBER = 32;
+    pxt.REF_TAG_ACTION = 33;
 })(pxt || (pxt = {}));
 var pxt;
 (function (pxt) {
@@ -5671,7 +5022,7 @@ var pxt;
         HWDBG.heapExpandAsync = heapExpandAsync;
         function heapExpandMapAsync(vars) {
             var promises = [];
-            var _loop_5 = function(k) {
+            var _loop_3 = function(k) {
                 promises.push(heapExpandAsync(vars[k])
                     .then(function (r) {
                     vars[k] = r;
@@ -5680,7 +5031,7 @@ var pxt;
             };
             for (var _i = 0, _a = Object.keys(vars); _i < _a.length; _i++) {
                 var k = _a[_i];
-                _loop_5(k);
+                _loop_3(k);
             }
             return Promise.all(promises)
                 .then(function () {
@@ -5751,7 +5102,7 @@ var pxt;
                 var w = H.decodeU32LE(buf);
                 var pc = w[0];
                 var globals = {};
-                var _loop_6 = function(l) {
+                var _loop_4 = function(l) {
                     var gbuf = st.globals;
                     var readV = function () {
                         switch (l.type) {
@@ -5773,7 +5124,7 @@ var pxt;
                 };
                 for (var _i = 0, _a = lastCompileResult.procDebugInfo[0].locals; _i < _a.length; _i++) {
                     var l = _a[_i];
-                    _loop_6(l);
+                    _loop_4(l);
                 }
                 currBreakpoint = findPrevBrkp(pc);
                 msg = {
@@ -6224,7 +5575,7 @@ var pxt;
                         break;
                 }
                 var end = getCurrentLine();
-                if (n.id && start != end) {
+                if (n.id) {
                     if (sourceMapById[n.id]) {
                         var node = sourceMapById[n.id];
                         node.start = Math.min(node.start, start);
@@ -6276,6 +5627,664 @@ var pxt;
         }
         blocks.isReservedWord = isReservedWord;
     })(blocks = pxt.blocks || (pxt.blocks = {}));
+})(pxt || (pxt = {}));
+/// <reference path="../typings/globals/bluebird/index.d.ts"/>
+/// <reference path="../localtypings/pxtpackage.d.ts"/>
+/// <reference path="../localtypings/pxtparts.d.ts"/>
+/// <reference path="../localtypings/pxtarget.d.ts"/>
+/// <reference path="util.ts"/>
+var pxt;
+(function (pxt) {
+    var lf = pxt.U.lf;
+    var Package = (function () {
+        function Package(id, _verspec, parent, addedBy) {
+            this.id = id;
+            this._verspec = _verspec;
+            this.parent = parent;
+            this.level = -1;
+            this.isLoaded = false;
+            if (parent) {
+                this.level = this.parent.level + 1;
+            }
+            this.addedBy = [addedBy];
+        }
+        Package.getConfigAsync = function (id, fullVers) {
+            return Promise.resolve().then(function () {
+                if (pxt.github.isGithubId(fullVers)) {
+                    var repoInfo_1 = pxt.github.parseRepoId(fullVers);
+                    return pxt.packagesConfigAsync()
+                        .then(function (config) { return pxt.github.repoAsync(repoInfo_1.fullName, config); }) // Make sure repo exists and is whitelisted
+                        .then(function (gitRepo) { return gitRepo ? pxt.github.pkgConfigAsync(repoInfo_1.fullName, repoInfo_1.tag) : null; });
+                }
+                else {
+                    // If it's not from GH, assume it's a bundled package
+                    // TODO: Add logic for shared packages if we enable that
+                    return JSON.parse(pxt.appTarget.bundledpkgs[Package.upgradePackageReference(id, fullVers)][pxt.CONFIG_NAME]);
+                }
+            });
+        };
+        Package.upgradePackageReference = function (pkg, val) {
+            if (val != "*")
+                return pkg;
+            var upgrades = pxt.appTarget.compile ? pxt.appTarget.compile.upgrades : undefined;
+            var newPackage = pkg;
+            if (upgrades) {
+                upgrades.filter(function (rule) { return rule.type == "package"; })
+                    .forEach(function (rule) {
+                    for (var match in rule.map) {
+                        if (newPackage == match) {
+                            newPackage = rule.map[match];
+                        }
+                    }
+                });
+            }
+            return newPackage;
+        };
+        Package.prototype.version = function () {
+            return this.resolvedVersion || this._verspec;
+        };
+        Package.prototype.verProtocol = function () {
+            var spl = this.version().split(':');
+            if (spl.length > 1)
+                return spl[0];
+            else
+                return "";
+        };
+        Package.prototype.verArgument = function () {
+            var p = this.verProtocol();
+            if (p)
+                return this.version().slice(p.length + 1);
+            return this.version();
+        };
+        Package.prototype.commonDownloadAsync = function () {
+            var _this = this;
+            var proto = this.verProtocol();
+            if (proto == "pub") {
+                return pxt.Cloud.downloadScriptFilesAsync(this.verArgument());
+            }
+            else if (proto == "github") {
+                return pxt.packagesConfigAsync()
+                    .then(function (config) { return pxt.github.downloadPackageAsync(_this.verArgument(), config); })
+                    .then(function (resp) { return resp.files; });
+            }
+            else if (proto == "embed") {
+                var resp = pxt.getEmbeddedScript(this.verArgument());
+                return Promise.resolve(resp);
+            }
+            else
+                return Promise.resolve(null);
+        };
+        Package.prototype.host = function () { return this.parent._host; };
+        Package.prototype.readFile = function (fn) {
+            return this.host().readFile(this, fn);
+        };
+        Package.prototype.resolveDep = function (id) {
+            if (this.parent.deps.hasOwnProperty(id))
+                return this.parent.deps[id];
+            return null;
+        };
+        Package.prototype.saveConfig = function () {
+            var cfg = JSON.stringify(this.config, null, 4) || "\n";
+            this.host().writeFile(this, pxt.CONFIG_NAME, cfg);
+        };
+        Package.prototype.resolveVersionAsync = function () {
+            var v = this._verspec;
+            if (pxt.getEmbeddedScript(this.id)) {
+                this.resolvedVersion = v = "embed:" + this.id;
+            }
+            else if (!v || v == "*") {
+                pxt.U.userError(lf("version not specified for {0}", this.id));
+            }
+            return Promise.resolve(v);
+        };
+        Package.prototype.downloadAsync = function () {
+            var _this = this;
+            var kindCfg = "";
+            return this.resolveVersionAsync()
+                .then(function (verNo) {
+                if (!/^embed:/.test(verNo) &&
+                    _this.config && _this.config.installedVersion == verNo)
+                    return;
+                pxt.debug('downloading ' + verNo);
+                return _this.host().downloadPackageAsync(_this)
+                    .then(function () {
+                    var confStr = _this.readFile(pxt.CONFIG_NAME);
+                    if (!confStr)
+                        pxt.U.userError("package " + _this.id + " is missing " + pxt.CONFIG_NAME);
+                    _this.parseConfig(confStr);
+                    if (_this.level != 0)
+                        _this.config.installedVersion = _this.version();
+                    _this.saveConfig();
+                })
+                    .then(function () {
+                    pxt.debug("installed " + _this.id + " /" + verNo);
+                });
+            });
+        };
+        Package.prototype.validateConfig = function () {
+            if (!this.config.dependencies)
+                pxt.U.userError("Missing dependencies in config of: " + this.id);
+            if (!Array.isArray(this.config.files))
+                pxt.U.userError("Missing files in config of: " + this.id);
+            if (typeof this.config.name != "string" || !this.config.name ||
+                (this.config.public && !/^[a-z][a-z0-9\-_]+$/i.test(this.config.name)))
+                pxt.U.userError("Invalid package name: " + this.config.name);
+            if (this.config.targetVersions
+                && this.config.targetVersions.target
+                && pxt.semver.strcmp(this.config.targetVersions.target, pxt.appTarget.versions.target) > 0)
+                pxt.U.userError(lf("Package {0} requires target version {1} (you are running {2})", this.config.name, this.config.targetVersions.target, pxt.appTarget.versions.target));
+        };
+        Package.prototype.isPackageInUse = function (pkgId, ts) {
+            if (ts === void 0) { ts = this.readFile("main.ts"); }
+            // Build the RegExp that will determine whether the dependency is in use. Try to use upgrade rules,
+            // otherwise fallback to the package's name
+            var regex = null;
+            var upgrades = pxt.appTarget.compile ? pxt.appTarget.compile.upgrades : undefined;
+            if (upgrades) {
+                upgrades.filter(function (rule) { return rule.type == "missingPackage"; }).forEach(function (rule) {
+                    Object.keys(rule.map).forEach(function (match) {
+                        if (rule.map[match] === pkgId) {
+                            regex = new RegExp(match, "g");
+                        }
+                    });
+                });
+            }
+            if (!regex) {
+                regex = new RegExp(pkgId + "\\.", "g");
+            }
+            return regex.test(ts);
+        };
+        Package.prototype.getMissingPackages = function (config, ts) {
+            var upgrades = pxt.appTarget.compile ? pxt.appTarget.compile.upgrades : undefined;
+            var missing = {};
+            if (ts && upgrades)
+                upgrades.filter(function (rule) { return rule.type == "missingPackage"; })
+                    .forEach(function (rule) {
+                    var _loop_5 = function(match) {
+                        var regex = new RegExp(match, 'g');
+                        var pkg = rule.map[match];
+                        ts.replace(regex, function (m) {
+                            if (!config.dependencies[pkg]) {
+                                missing[pkg] = "*";
+                            }
+                            return "";
+                        });
+                    };
+                    for (var match in rule.map) {
+                        _loop_5(match);
+                    }
+                });
+            return missing;
+        };
+        /**
+         * For the given package config or ID, looks through all the currently installed packages to find conflicts in
+         * Yotta settings
+         */
+        Package.prototype.findConflictsAsync = function (pkgOrId, version) {
+            var _this = this;
+            var conflicts = [];
+            var pkgCfg;
+            return Promise.resolve()
+                .then(function () {
+                // Get the package config if it's not already provided
+                if (typeof pkgOrId === "string") {
+                    return Package.getConfigAsync(pkgOrId, version);
+                }
+                else {
+                    return Promise.resolve(pkgOrId);
+                }
+            })
+                .then(function (cfg) {
+                pkgCfg = cfg;
+                // Iterate through all installed packages and check for conflicting settings
+                if (pkgCfg && pkgCfg.yotta) {
+                    var yottaCfg_1 = pxt.U.jsonFlatten(pkgCfg.yotta.config);
+                    _this.parent.sortedDeps().forEach(function (depPkg) {
+                        var depConfig = depPkg.config || JSON.parse(depPkg.readFile(pxt.CONFIG_NAME));
+                        var hasYottaSettings = !!depConfig && !!depConfig.yotta && !!depPkg.config.yotta.config;
+                        if (hasYottaSettings) {
+                            var depYottaCfg = pxt.U.jsonFlatten(depConfig.yotta.config);
+                            for (var _i = 0, _a = Object.keys(yottaCfg_1); _i < _a.length; _i++) {
+                                var settingName = _a[_i];
+                                var depSetting = depYottaCfg[settingName];
+                                var isJustDefaults = pkgCfg.yotta.configIsJustDefaults || depConfig.yotta.configIsJustDefaults;
+                                if (depYottaCfg.hasOwnProperty(settingName) && depSetting !== yottaCfg_1[settingName] && !isJustDefaults && (!depPkg.parent.config.yotta || !depPkg.parent.config.yotta.ignoreConflicts)) {
+                                    var conflict = new pxt.cpp.PkgConflictError(lf("conflict on yotta setting {0} between packages {1} and {2}", settingName, pkgCfg.name, depPkg.id));
+                                    conflict.pkg0 = depPkg;
+                                    conflict.settingName = settingName;
+                                    conflicts.push(conflict);
+                                }
+                            }
+                        }
+                    });
+                }
+                // Also check for conflicts for all the specified package's dependencies (recursively)
+                return Object.keys(pkgCfg.dependencies).reduce(function (soFar, pkgDep) {
+                    return soFar
+                        .then(function () { return _this.findConflictsAsync(pkgDep, pkgCfg.dependencies[pkgDep]); })
+                        .then(function (childConflicts) { return conflicts.push.apply(conflicts, childConflicts); });
+                }, Promise.resolve());
+            })
+                .then(function () {
+                // For each conflicting package, we need to include their ancestor tree in the list of conflicts
+                // For example, if package A depends on package B, and package B is in conflict with package C,
+                // then package A is also technically in conflict with C
+                var allAncestors = function (p) {
+                    var ancestors = [];
+                    p.addedBy.forEach(function (a) {
+                        if (a.id !== _this.id) {
+                            ancestors.push.apply(allAncestors(a));
+                            ancestors.push(a);
+                        }
+                    });
+                    return ancestors;
+                };
+                var additionalConflicts = [];
+                conflicts.forEach(function (c) {
+                    additionalConflicts.push.apply(additionalConflicts, allAncestors(c.pkg0).map(function (anc) {
+                        var confl = new pxt.cpp.PkgConflictError(lf("conflict on yotta setting {0} between packages {1} and {2}", c.settingName, pkgCfg.name, c.pkg0.id));
+                        confl.pkg0 = anc;
+                        return confl;
+                    }));
+                });
+                conflicts.push.apply(conflicts, additionalConflicts);
+                // Remove duplicate conflicts (happens if more than one package had the same ancestor)
+                conflicts = conflicts.filter(function (c, index) {
+                    for (var i = 0; i < index; ++i) {
+                        if (c.pkg0.id === conflicts[i].pkg0.id) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+                return conflicts;
+            });
+        };
+        Package.prototype.upgradeAPI = function (fileContents) {
+            var upgrades = pxt.appTarget.compile ? pxt.appTarget.compile.upgrades : undefined;
+            var updatedContents = fileContents;
+            if (upgrades) {
+                upgrades.filter(function (rule) { return rule.type == "api"; })
+                    .forEach(function (rule) {
+                    for (var match in rule.map) {
+                        var regex = new RegExp(match, 'g');
+                        updatedContents = updatedContents.replace(regex, rule.map[match]);
+                    }
+                });
+            }
+            return updatedContents;
+        };
+        Package.prototype.parseConfig = function (cfgSrc) {
+            var cfg = JSON.parse(cfgSrc);
+            this.config = cfg;
+            var currentConfig = JSON.stringify(this.config);
+            for (var dep in this.config.dependencies) {
+                var value = Package.upgradePackageReference(dep, this.config.dependencies[dep]);
+                if (value != dep) {
+                    delete this.config.dependencies[dep];
+                    if (value) {
+                        this.config.dependencies[value] = "*";
+                    }
+                }
+            }
+            if (JSON.stringify(this.config) != currentConfig) {
+                this.saveConfig();
+            }
+            this.validateConfig();
+        };
+        Package.prototype.loadAsync = function (isInstall) {
+            var _this = this;
+            if (isInstall === void 0) { isInstall = false; }
+            if (this.isLoaded)
+                return Promise.resolve();
+            var initPromise = Promise.resolve();
+            this.isLoaded = true;
+            var str = this.readFile(pxt.CONFIG_NAME);
+            if (str == null) {
+                if (!isInstall)
+                    pxt.U.userError("Package not installed: " + this.id + ", did you forget to run `pxt install`?");
+            }
+            else {
+                initPromise = initPromise.then(function () { return _this.parseConfig(str); });
+            }
+            if (isInstall)
+                initPromise = initPromise.then(function () { return _this.downloadAsync(); });
+            var loadDepsRecursive = function (dependencies) {
+                return pxt.U.mapStringMapAsync(dependencies, function (id, ver) {
+                    var mod = _this.resolveDep(id);
+                    ver = ver || "*";
+                    if (mod) {
+                        if (mod._verspec != ver && !/^file:/.test(mod._verspec) && !/^file:/.test(ver))
+                            pxt.U.userError("Version spec mismatch on " + id);
+                        mod.level = Math.min(mod.level, _this.level + 1);
+                        mod.addedBy.push(_this);
+                        return Promise.resolve();
+                    }
+                    else {
+                        mod = new Package(id, ver, _this.parent, _this);
+                        _this.parent.deps[id] = mod;
+                        return mod.loadAsync(isInstall);
+                    }
+                });
+            };
+            return initPromise
+                .then(function () { return loadDepsRecursive(_this.config.dependencies); })
+                .then(function () {
+                if (_this.level === 0) {
+                    // Check for missing packages. We need to add them 1 by 1 in case they conflict with eachother.
+                    var mainTs = _this.readFile("main.ts");
+                    if (!mainTs)
+                        return Promise.resolve(null);
+                    var missingPackages_1 = _this.getMissingPackages(_this.config, mainTs);
+                    var didAddPackages_1 = false;
+                    var addPackagesPromise = Promise.resolve();
+                    Object.keys(missingPackages_1).reduce(function (addPackagesPromise, missing) {
+                        return addPackagesPromise
+                            .then(function () { return _this.findConflictsAsync(missing, missingPackages_1[missing]); })
+                            .then(function (conflicts) {
+                            if (conflicts.length) {
+                                var conflictNames = conflicts.map(function (c) { return c.pkg0.id; }).join(", ");
+                                var settingNames = conflicts.map(function (c) { return c.settingName; }).filter(function (s) { return !!s; }).join(", ");
+                                pxt.log("skipping missing package " + missing + " because it conflicts with the following packages: " + conflictNames + " (conflicting settings: " + settingNames + ")");
+                                return Promise.resolve(null);
+                            }
+                            else {
+                                pxt.log("adding missing package " + missing);
+                                didAddPackages_1 = true;
+                                _this.config.dependencies[missing] = "*";
+                                var addDependency = {};
+                                addDependency[missing] = missingPackages_1[missing];
+                                return loadDepsRecursive(addDependency);
+                            }
+                        });
+                    }, Promise.resolve(null))
+                        .then(function () {
+                        if (didAddPackages_1) {
+                            _this.saveConfig();
+                            _this.validateConfig();
+                        }
+                        return Promise.resolve(null);
+                    });
+                }
+                return Promise.resolve(null);
+            })
+                .then(function () { return null; });
+        };
+        Package.prototype.getFiles = function () {
+            if (this.level == 0)
+                return this.config.files.concat(this.config.testFiles || []);
+            else
+                return this.config.files.slice(0);
+        };
+        Package.prototype.addSnapshot = function (files, exts) {
+            if (exts === void 0) { exts = [""]; }
+            var _loop_6 = function(fn) {
+                if (exts.some(function (e) { return pxt.U.endsWith(fn, e); })) {
+                    files[this_1.id + "/" + fn] = this_1.readFile(fn);
+                }
+            };
+            var this_1 = this;
+            for (var _i = 0, _a = this.getFiles(); _i < _a.length; _i++) {
+                var fn = _a[_i];
+                _loop_6(fn);
+            }
+            files[this.id + "/" + pxt.CONFIG_NAME] = this.readFile(pxt.CONFIG_NAME);
+        };
+        /**
+         * Returns localized strings qName -> translation
+         */
+        Package.prototype.packageLocalizationStringsAsync = function (lang) {
+            var _this = this;
+            var targetId = pxt.appTarget.id;
+            var filenames = [this.id + "-jsdoc", this.id];
+            var r = {};
+            var theme = pxt.appTarget.appTheme || {};
+            // live loc of bundled packages
+            if (pxt.Util.localizeLive && this.id != "this" && pxt.appTarget.bundledpkgs[this.id]) {
+                pxt.log("loading live translations for " + this.id);
+                var code_1 = pxt.Util.userLanguage();
+                return Promise.all(filenames.map(function (fn) { return pxt.Util.downloadLiveTranslationsAsync(code_1, targetId + "/" + fn + "-strings.json", theme.crowdinBranch)
+                    .then(function (tr) { return pxt.Util.jsonMergeFrom(r, tr); })
+                    .catch(function (e) { return pxt.log("error while downloading " + targetId + "/" + fn + "-strings.json"); }); })).then(function () { return r; });
+            }
+            else {
+                var files_1 = this.config.files;
+                filenames.map(function (name) {
+                    var fn = "_locales/" + lang.toLowerCase() + "/" + name + "-strings.json";
+                    if (files_1.indexOf(fn) > -1)
+                        return JSON.parse(_this.readFile(fn));
+                    if (lang.length > 2) {
+                        fn = "_locales/" + lang.substring(0, 2).toLowerCase() + "/" + name + "-strings.json";
+                        if (files_1.indexOf(fn) > -1)
+                            return JSON.parse(_this.readFile(fn));
+                    }
+                    return undefined;
+                }).filter(function (d) { return !!d; }).forEach(function (d) { return pxt.Util.jsonMergeFrom(r, d); });
+                return Promise.resolve(r);
+            }
+        };
+        return Package;
+    }());
+    pxt.Package = Package;
+    var MainPackage = (function (_super) {
+        __extends(MainPackage, _super);
+        function MainPackage(_host) {
+            _super.call(this, "this", "file:.", null, null);
+            this._host = _host;
+            this.deps = {};
+            this.parent = this;
+            this.addedBy = [this];
+            this.level = 0;
+            this.deps[this.id] = this;
+        }
+        MainPackage.prototype.installAllAsync = function () {
+            return this.loadAsync(true);
+        };
+        MainPackage.prototype.sortedDeps = function () {
+            var _this = this;
+            var visited = {};
+            var ids = [];
+            var rec = function (p) {
+                if (!p || pxt.U.lookup(visited, p.id))
+                    return;
+                visited[p.id] = true;
+                if (p.config && p.config.dependencies) {
+                    var deps = Object.keys(p.config.dependencies);
+                    deps.sort(function (a, b) { return pxt.U.strcmp(a, b); });
+                    deps.forEach(function (id) { return rec(_this.resolveDep(id)); });
+                    ids.push(p.id);
+                }
+            };
+            rec(this);
+            return ids.map(function (id) { return _this.resolveDep(id); });
+        };
+        MainPackage.prototype.localizationStringsAsync = function (lang) {
+            var loc = {};
+            return Promise.all(pxt.Util.values(this.deps).map(function (dep) {
+                return dep.packageLocalizationStringsAsync(lang)
+                    .then(function (depLoc) {
+                    if (depLoc)
+                        for (var k in depLoc)
+                            if (!loc[k])
+                                loc[k] = depLoc[k];
+                });
+            }))
+                .then(function () { return loc; });
+        };
+        MainPackage.prototype.getTargetOptions = function () {
+            var res = pxt.U.clone(pxt.appTarget.compile);
+            pxt.U.assert(!!res);
+            return res;
+        };
+        MainPackage.prototype.getCompileOptionsAsync = function (target) {
+            var _this = this;
+            if (target === void 0) { target = this.getTargetOptions(); }
+            var opts = {
+                sourceFiles: [],
+                fileSystem: {},
+                target: target,
+                hexinfo: { hex: [] }
+            };
+            var generateFile = function (fn, cont) {
+                if (_this.config.files.indexOf(fn) < 0)
+                    pxt.U.userError(lf("please add '{0}' to \"files\" in {1}", fn, pxt.CONFIG_NAME));
+                cont = "// Auto-generated. Do not edit.\n" + cont + "\n// Auto-generated. Do not edit. Really.\n";
+                if (_this.host().readFile(_this, fn) !== cont) {
+                    pxt.log("updating " + fn + " (size=" + cont.length + ")...");
+                    _this.host().writeFile(_this, fn, cont);
+                }
+            };
+            var upgradeFile = function (fn, cont) {
+                var updatedCont = _this.upgradeAPI(cont);
+                if (updatedCont != cont) {
+                    // save file (force write)
+                    pxt.log("updating APIs in " + fn + " (size=" + cont.length + ")...");
+                    _this.host().writeFile(_this, fn, updatedCont, true);
+                }
+                return updatedCont;
+            };
+            return this.loadAsync()
+                .then(function () {
+                pxt.debug("building: " + _this.sortedDeps().map(function (p) { return p.config.name; }).join(", "));
+                var ext = pxt.cpp.getExtensionInfo(_this);
+                if (ext.shimsDTS)
+                    generateFile("shims.d.ts", ext.shimsDTS);
+                if (ext.enumsDTS)
+                    generateFile("enums.d.ts", ext.enumsDTS);
+                return (target.isNative
+                    ? _this.host().getHexInfoAsync(ext)
+                    : Promise.resolve(null))
+                    .then(function (inf) {
+                    ext = pxt.U.flatClone(ext);
+                    delete ext.compileData;
+                    delete ext.generatedFiles;
+                    delete ext.extensionFiles;
+                    opts.extinfo = ext;
+                    opts.hexinfo = inf;
+                });
+            })
+                .then(function () { return _this.config.binaryonly || pxt.appTarget.compile.shortPointers || !opts.target.isNative ? null : _this.filesToBePublishedAsync(true); })
+                .then(function (files) {
+                if (files) {
+                    files = pxt.U.mapMap(files, upgradeFile);
+                    var headerString_1 = JSON.stringify({
+                        name: _this.config.name,
+                        comment: _this.config.description,
+                        status: "unpublished",
+                        scriptId: _this.config.installedVersion,
+                        cloudId: pxt.CLOUD_ID + pxt.appTarget.id,
+                        editor: target.preferredEditor ? target.preferredEditor : (pxt.U.lookup(files, "main.blocks") ? pxt.BLOCKS_PROJECT_NAME : pxt.JAVASCRIPT_PROJECT_NAME),
+                        targetVersions: pxt.appTarget.versions
+                    });
+                    var programText_1 = JSON.stringify(files);
+                    return pxt.lzmaCompressAsync(headerString_1 + programText_1)
+                        .then(function (buf) {
+                        opts.embedMeta = JSON.stringify({
+                            compression: "LZMA",
+                            headerSize: headerString_1.length,
+                            textSize: programText_1.length,
+                            name: _this.config.name,
+                            eURL: pxt.appTarget.appTheme.embedUrl,
+                            eVER: pxt.appTarget.versions ? pxt.appTarget.versions.target : "",
+                            pxtTarget: pxt.appTarget.id,
+                        });
+                        opts.embedBlob = btoa(pxt.U.uint8ArrayToString(buf));
+                    });
+                }
+                else {
+                    return Promise.resolve();
+                }
+            })
+                .then(function () {
+                for (var _i = 0, _a = _this.sortedDeps(); _i < _a.length; _i++) {
+                    var pkg = _a[_i];
+                    for (var _b = 0, _c = pkg.getFiles(); _b < _c.length; _b++) {
+                        var f = _c[_b];
+                        if (/\.(ts|asm)$/.test(f)) {
+                            var sn = f;
+                            if (pkg.level > 0)
+                                sn = "pxt_modules/" + pkg.id + "/" + f;
+                            opts.sourceFiles.push(sn);
+                            opts.fileSystem[sn] = pkg.readFile(f);
+                        }
+                    }
+                }
+                return opts;
+            });
+        };
+        MainPackage.prototype.filesToBePublishedAsync = function (allowPrivate) {
+            var _this = this;
+            if (allowPrivate === void 0) { allowPrivate = false; }
+            var files = {};
+            return this.loadAsync()
+                .then(function () {
+                if (!allowPrivate && !_this.config.public)
+                    pxt.U.userError('Only packages with "public":true can be published');
+                var cfg = pxt.U.clone(_this.config);
+                delete cfg.installedVersion;
+                pxt.U.iterMap(cfg.dependencies, function (k, v) {
+                    if (!v || /^file:/.test(v) || /^workspace:/.test(v)) {
+                        cfg.dependencies[k] = "*";
+                    }
+                });
+                files[pxt.CONFIG_NAME] = JSON.stringify(cfg, null, 4);
+                for (var _i = 0, _a = _this.getFiles(); _i < _a.length; _i++) {
+                    var f = _a[_i];
+                    var str = _this.readFile(f);
+                    if (str == null)
+                        pxt.U.userError("referenced file missing: " + f);
+                    files[f] = str;
+                }
+                return pxt.U.sortObjectFields(files);
+            });
+        };
+        MainPackage.prototype.compressToFileAsync = function (editor) {
+            var _this = this;
+            return this.filesToBePublishedAsync(true)
+                .then(function (files) {
+                var project = {
+                    meta: {
+                        cloudId: pxt.CLOUD_ID + pxt.appTarget.id,
+                        targetVersions: pxt.appTarget.versions,
+                        editor: editor || pxt.BLOCKS_PROJECT_NAME,
+                        name: _this.config.name
+                    },
+                    source: JSON.stringify(files, null, 2)
+                };
+                return pxt.lzmaCompressAsync(JSON.stringify(project, null, 2));
+            });
+        };
+        MainPackage.prototype.computePartDefinitions = function (parts) {
+            if (!parts || !parts.length)
+                return {};
+            var res = {};
+            this.sortedDeps().forEach(function (d) {
+                var pjson = d.readFile("pxtparts.json");
+                if (pjson) {
+                    try {
+                        var p = JSON.parse(pjson);
+                        for (var k in p) {
+                            if (parts.indexOf(k) >= 0) {
+                                var part = res[k] = p[k];
+                                if (typeof part.visual.image === "string" && /\.svg$/i.test(part.visual.image)) {
+                                    var f = d.readFile(part.visual.image);
+                                    if (!f)
+                                        pxt.reportError("parts", "invalid part definition", { "error": "missing visual " + part.visual.image });
+                                    part.visual.image = "data:image/svg+xml," + encodeURIComponent(f);
+                                }
+                            }
+                        }
+                    }
+                    catch (e) {
+                        pxt.reportError("parts", "invalid pxtparts.json file");
+                    }
+                }
+            });
+            return res;
+        };
+        return MainPackage;
+    }(Package));
+    pxt.MainPackage = MainPackage;
 })(pxt || (pxt = {}));
 // see http://semver.org/
 var pxt;
@@ -6611,6 +6620,12 @@ var ts;
                 doccmt = doccmt.replace(/\n\s*(\*\s*)?/g, "\n");
                 doccmt = doccmt.replace(/^\s*@param\s+(\w+)\s+(.*)$/mg, function (full, name, desc) {
                     res.paramHelp[name] = desc;
+                    if (!res.paramDefl[name]) {
+                        var m = /\beg\.?:\s*(.+)/.exec(desc);
+                        if (m) {
+                            res.paramDefl[name] = m[1].trim() ? m[1].split(/,\s*/).map(function (e) { return e.trim(); })[0] : undefined;
+                        }
+                    }
                     return "";
                 });
                 res.jsDoc += doccmt;

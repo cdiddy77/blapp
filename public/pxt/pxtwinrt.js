@@ -1,11 +1,11 @@
 /// <reference path="../typings/globals/bluebird/index.d.ts"/>
-/// <reference path="../typings/globals/winrt/index.d.ts"/>
+/// <reference path="./winrtrefs.d.ts"/>
 /// <reference path="../built/pxtlib.d.ts"/>
 var pxt;
 (function (pxt) {
     var winrt;
     (function (winrt) {
-        function deployCoreAsync(res) {
+        function driveDeployCoreAsync(res) {
             var drives = pxt.appTarget.compile.deployDrives;
             pxt.Util.assert(!!drives);
             pxt.debug("deploying to drives " + drives);
@@ -27,7 +27,7 @@ var pxt;
                 return all;
             }).then(function (r) { });
         }
-        winrt.deployCoreAsync = deployCoreAsync;
+        winrt.driveDeployCoreAsync = driveDeployCoreAsync;
         function browserDownloadAsync(text, name, contentType) {
             var file;
             return pxt.winrt.promisify(Windows.Storage.ApplicationData.current.temporaryFolder.createFileAsync(name, Windows.Storage.CreationCollisionOption.replaceExisting)
@@ -38,7 +38,98 @@ var pxt;
         winrt.browserDownloadAsync = browserDownloadAsync;
     })(winrt = pxt.winrt || (pxt.winrt = {}));
 })(pxt || (pxt = {}));
-/// <reference path="../typings/globals/winrt/index.d.ts"/>
+/// <reference path="../typings/globals/bluebird/index.d.ts"/>
+/// <reference path="./winrtrefs.d.ts"/>
+/// <reference path="../built/pxtlib.d.ts"/>
+var pxt;
+(function (pxt) {
+    var winrt;
+    (function (winrt) {
+        var WindowsRuntimeIO = (function () {
+            function WindowsRuntimeIO() {
+                this.onData = function (v) { };
+                this.onEvent = function (v) { };
+                this.onError = function (e) { };
+            }
+            WindowsRuntimeIO.prototype.error = function (msg) {
+                throw new Error(pxt.U.lf("USB/HID error ({0})", msg));
+            };
+            WindowsRuntimeIO.prototype.reconnectAsync = function () {
+                var _this = this;
+                return this.disconnectAsync()
+                    .then(function () { return _this.initAsync(); });
+            };
+            WindowsRuntimeIO.prototype.disconnectAsync = function () {
+                if (this.dev) {
+                    this.dev.removeEventListener('inputreportreceived', this.onInputReportReceived);
+                    this.dev.close();
+                    delete this.dev;
+                }
+                return Promise.resolve();
+            };
+            WindowsRuntimeIO.prototype.sendPacketAsync = function (pkt) {
+                if (!this.dev)
+                    return Promise.resolve();
+                var ar = [0];
+                for (var i = 0; i < 64; ++i)
+                    ar.push(pkt[i] || 0);
+                var dataWriter = new Windows.Storage.Streams.DataWriter();
+                dataWriter.writeBytes(ar);
+                var buffer = dataWriter.detachBuffer();
+                var report = this.dev.createOutputReport(0);
+                report.data = buffer;
+                return pxt.winrt.promisify(this.dev.sendOutputReportAsync(report)
+                    .then(function (value) {
+                    pxt.debug("hf2: " + value + " bytes written");
+                }));
+            };
+            WindowsRuntimeIO.prototype.initAsync = function () {
+                var _this = this;
+                pxt.Util.assert(!this.dev, "HID interface not properly reseted");
+                var selector = Windows.Devices.HumanInterfaceDevice.HidDevice.getDeviceSelector(0xff97, 0x0001);
+                return pxt.winrt.promisify(Windows.Devices.Enumeration.DeviceInformation.findAllAsync(selector, null)
+                    .then(function (devices) {
+                    pxt.debug("hid enumerate " + devices.length + " devices");
+                    var device = devices[0];
+                    if (device) {
+                        pxt.debug("hid connect to " + device.name + " (" + device.id + ")");
+                        return Windows.Devices.HumanInterfaceDevice.HidDevice.fromIdAsync(device.id, Windows.Storage.FileAccessMode.readWrite)
+                            .then(function (r) {
+                            _this.dev = r;
+                            if (_this.dev) {
+                                pxt.debug("hid device version " + _this.dev.version);
+                                _this.dev.addEventListener("inputreportreceived", _this.onInputReportReceived);
+                            }
+                            else {
+                                pxt.debug("no hid device found");
+                            }
+                        });
+                    }
+                    else
+                        return Promise.resolve();
+                }));
+            };
+            WindowsRuntimeIO.prototype.onInputReportReceived = function (e) {
+                pxt.debug("input report");
+                var dr = Windows.Storage.Streams.DataReader.fromBuffer(e.report.data);
+                var ar = [];
+                dr.readBytes(ar);
+                var uar = new Uint8Array(ar.length);
+                for (var i = 0; i < ar.length; ++i)
+                    uar[i] = ar[i];
+                this.onData(uar);
+            };
+            return WindowsRuntimeIO;
+        }());
+        function mkPacketIOAsync() {
+            var b = new WindowsRuntimeIO();
+            return b.initAsync()
+                .then(function () { return b; });
+        }
+        winrt.mkPacketIOAsync = mkPacketIOAsync;
+    })(winrt = pxt.winrt || (pxt.winrt = {}));
+})(pxt || (pxt = {}));
+/// <reference path="./winrtrefs.d.ts"/>
 var pxt;
 (function (pxt) {
     var winrt;
@@ -108,7 +199,7 @@ var pxt;
         }
     })(winrt = pxt.winrt || (pxt.winrt = {}));
 })(pxt || (pxt = {}));
-/// <reference path="../typings/globals/bluebird/index.d.ts"/>
+/// <reference path="./winrtrefs.d.ts"/>
 var pxt;
 (function (pxt) {
     var winrt;
@@ -158,11 +249,12 @@ var pxt;
                         var f = file;
                         Windows.Storage.FileIO.readBufferAsync(f)
                             .done(function (buffer) {
-                            var ar = new Uint8Array(buffer.length);
+                            //let ar = new Uint8Array(buffer.length);
+                            var ar = [];
                             var dataReader = Windows.Storage.Streams.DataReader.fromBuffer(buffer);
                             dataReader.readBytes(ar);
                             dataReader.close();
-                            pxt.cpp.unpackSourceFromHexAsync(ar)
+                            pxt.cpp.unpackSourceFromHexAsync(new Uint8Array(ar))
                                 .done(function (hex) { return onHexFileImported(hex); });
                         });
                     }
@@ -174,6 +266,7 @@ var pxt;
 })(pxt || (pxt = {}));
 /// <reference path="../built/pxtlib.d.ts"/>
 /// <reference path="../built/pxteditor.d.ts"/>
+/// <reference path="./winrtrefs.d.ts"/>
 var pxt;
 (function (pxt) {
     var winrt;

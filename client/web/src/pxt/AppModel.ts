@@ -1,3 +1,4 @@
+/// <reference path="../../../../node_modules/pxt-core/built/pxtsim.d.ts"/>
 import * as jsutil from '../../../shared/src/util/jsutil';
 import { ModelWithEvents } from '../models/ModelWithEvents';
 import { CodegenRuntime, CodegenHost } from '../../../shared/src/util/CodegenRuntime';
@@ -20,11 +21,16 @@ export class AppModel extends ModelWithEvents<AppModelData>
         CodegenRuntime.setCodegenHost(this);
     }
 
-    // CodegenHost implementation /////////////////////////
+    // CodegenHost interface ///////////////////////////////////////////////////
     //
-
+    runFiberAsync(a: any, arg0?: any, arg1?: any, arg2?: any): Promise<any> {
+        return pxsim.runtime.runFiberAsync(a, arg0, arg1, arg2);
+    }
+    runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void {
+        pxsim.runtime.runFiberSync(a, resolve, arg0, arg1, arg2);
+    }
     //
-    ///////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
 
     // ServiceConnectionHost implementation ///////////////
     //

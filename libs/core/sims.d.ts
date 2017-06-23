@@ -22,7 +22,7 @@ declare namespace UI {
 
     //%
     //% shim=UI::textInputElementImpl
-    function textInputElementImpl(name: string, flex: boolean, className: UITextInputClass, style: StylePropertySet, initialValue: string, whenTextChanges: () => void): void;
+    function textInputElementImpl(name: string, flex: boolean, className: UITextInputClass, style: StylePropertySet, initialValue: string, whenTextChanges: (text: string) => void): void;
 
     //%
     //% shim=UI::imageElementImpl

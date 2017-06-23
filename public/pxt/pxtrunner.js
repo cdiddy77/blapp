@@ -169,20 +169,13 @@ var pxt;
         }
         function appendJs($parent, $js, woptions) {
             $parent.append($('<div class="ui content js"/>').append($js));
-            $('code.highlight').each(function (i, block) {
-                var hljs = pxt.docs.requireHighlightJs();
-                if (hljs)
+            if (typeof hljs !== "undefined")
+                $js.find('code.highlight').each(function (i, block) {
                     hljs.highlightBlock(block);
-            });
+                });
         }
         function fillWithWidget(options, $container, $js, $svg, decompileResult, woptions) {
             if (woptions === void 0) { woptions = {}; }
-            if (!$svg || !$svg[0]) {
-                var $c_1 = $('<div class="ui segment"></div>');
-                $c_1.append($js);
-                $container.replaceWith($c_1);
-                return;
-            }
             var cdn = pxt.webConfig.commitCdnUrl;
             var images = cdn + "images";
             var $h = $('<div class="ui bottom attached tabular icon small compact menu hideprint">'
@@ -197,7 +190,7 @@ var pxt;
                 });
                 $menu.append($editBtn);
             }
-            if (options.showJavaScript) {
+            if (options.showJavaScript || !$svg) {
                 // blocks
                 $c.append($js);
                 // js menu
@@ -628,6 +621,27 @@ var pxt;
                 $c.remove();
             });
         }
+        function renderTypeScript(options) {
+            var woptions = {
+                showEdit: !!options.showEdit,
+                run: !!options.simulator
+            };
+            function render(e) {
+                if (typeof hljs !== "undefined") {
+                    $(e).text($(e).text().replace(/^\s*\r?\n/, ''));
+                    hljs.highlightBlock(e);
+                }
+                fillWithWidget(options, $(e).parent(), $(e), undefined, undefined, woptions);
+            }
+            $('code.lang-typescript').each(function (i, e) {
+                render(e);
+                $(e).removeClass('lang-typescript');
+            });
+            $('code.lang-typescript-ignore').each(function (i, e) {
+                render(e);
+                $(e).removeClass('lang-typescript-ignore');
+            });
+        }
         function renderAsync(options) {
             if (!options)
                 options = {};
@@ -649,6 +663,7 @@ var pxt;
                     $c.replaceWith($sim);
                 });
             }
+            renderTypeScript(options);
             return Promise.resolve()
                 .then(function () { return renderInlineBlocksAsync(options); })
                 .then(function () { return renderShuffleAsync(options); })
@@ -950,6 +965,11 @@ var pxt;
                         var docsUrl = pxt.webConfig.docsUrl || '/--docs';
                         var url = mp[1] == "doc" ? "" + mp[2] : docsUrl + "?md=" + mp[2];
                         window.open(url, "_blank");
+                        // notify parent iframe that we have completed the popout
+                        if (window.parent)
+                            window.parent.postMessage({
+                                type: "popoutcomplete"
+                            }, "*");
                     }
                     break;
                 case "localtoken":
@@ -1142,9 +1162,11 @@ var pxt;
                     // Split the steps
                     var stepcontent = content.innerHTML.split(/<h3.*\/h3>/gi);
                     for (var i = 0; i < stepcontent.length - 1; i++) {
-                        stepInfo[i].headerContent = stepcontent[i + 1].split(/(<.*?>.*<\/.*?>)/i)[1];
+                        content.innerHTML = stepcontent[i + 1];
+                        stepInfo[i].headerContent = "<p>" + content.firstElementChild.innerHTML + "</p>";
                         stepInfo[i].content = stepcontent[i + 1];
                     }
+                    content.innerHTML = '';
                     // return the result
                     window.parent.postMessage({
                         type: "tutorial",

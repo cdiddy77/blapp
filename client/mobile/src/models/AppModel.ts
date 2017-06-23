@@ -2,6 +2,7 @@
 import { AsyncStorage } from 'react-native';
 import { ModelBase } from './ModelBase';
 import { CodegenRuntime, CodegenHost } from '../../../shared/src/util/CodegenRuntime';
+import * as pxtexec from '../util/PxtExec';
 
 export class AppModel extends ModelBase implements CodegenHost {
     constructor() {
@@ -15,7 +16,7 @@ export class AppModel extends ModelBase implements CodegenHost {
     readonly code: string;
     readonly connectionState: string = 'not connected';
 
-    loadSettings(): Promise<[void, void]> {
+    loadSettings(): Promise<void[]> {
         let p1 = AsyncStorage.getItem('serverUri').then((v) => {
             this.setProperty('serverUri', v);
         })
@@ -36,10 +37,12 @@ export class AppModel extends ModelBase implements CodegenHost {
         let CgRt = CodegenRuntime;
         CgRt.resetCodeState();
         CgRt.updateUI();
+
+        // need to figure out a way to know whether we are pxt or not
         try {
             console.log('evaluating new code');
             console.log(this.code);
-            eval(this.code);
+            pxtexec.executeCode(this.code);
             // eval(this.testCode());
             this.setProperty('lastEvalError', null);
         } catch (e) {
@@ -47,65 +50,6 @@ export class AppModel extends ModelBase implements CodegenHost {
         }
     }
 
-    private testCode(): string {
-        // React.createElement()
-        return `
-var rowstyle, colstyle;
-
-
-
-var __f,result={};
-CgRt.setTargetRenderProc(function(){
-CgRt.pushCont();
-  {
-  CgRt.beginProps();
-
-  CgRt.addProp("style",rowstyle);
-  var p113=CgRt.getProps();
-  CgRt.pushCont();
-  {  {
-    CgRt.beginProps();
-
-    var p111=CgRt.getProps();
-    CgRt.pushElem(CgRt.createElement(CgRt.Textr,p111,['jhjhjh']));
-    }
-    {
-    CgRt.beginProps();
-
-    var p112=CgRt.getProps();
-    CgRt.pushElem(CgRt.createElement(CgRt.Textr,p112,['line 2']));
-    }
-  }
-  var cl114=CgRt.popCont();
-  CgRt.pushElem(CgRt.createElement(CgRt.Viewr, p113,cl114));
-  }
-  {
-  CgRt.beginProps();
-
-  var p115=CgRt.getProps();
-  CgRt.pushElem(CgRt.createElement(CgRt.Textr,p115,['line 3']));
-  }
-
-var cl=CgRt.popCont();
-return CgRt.createElement(CgRt.Viewr, {style:{backgroundColor:"white",height:600}}, cl);
-});
-rowstyle =
-__f= function(){
-var result={};
-  result.flexDirection="row";
-  result.backgroundColor="#ff0000";
-return result;
-}();
-
-colstyle =
-__f= function(){
-var result={};
-  result.flexDirection="column";
-return result;
-}();
-`;
-
-    }
     setProperty<T>(prop: keyof AppModel, v: T) {
         (<any>this)[prop] = v;
         if (prop == 'code') {
@@ -114,4 +58,14 @@ return result;
         this.fire("change", prop);
     }
 
+    // CodegenHost interface ///////////////////////////////////////////////////
+    //
+    runFiberAsync(a: any, arg0?: any, arg1?: any, arg2?: any): Promise<any> {
+        return pxtexec.pxsim.runtime.runFiberAsync(a, arg0, arg1, arg2);
+    }
+    runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void {
+        pxtexec.pxsim.runtime.runFiberSync(a, resolve, arg0, arg1, arg2);
+    }
+    //
+    ////////////////////////////////////////////////////////////////////////////
 }

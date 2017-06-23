@@ -12,6 +12,15 @@ body{
     height:100%;
 }
 
+#appRoot{
+  height:100%;
+}
+
+#pairingCode{
+  float:right;
+  color:white;
+}
+
 #codearea {
   margin: 10px;
 }

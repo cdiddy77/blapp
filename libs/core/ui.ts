@@ -60,8 +60,9 @@ namespace UI {
         flex: boolean,
         className: UIButtonClass,
         style: StylePropertySet,
-        children: Action): void {
-        buttonElementImpl(name, flex, className, style, children, null);
+        children: Action,
+        whenPressed: Action): void {
+        buttonElementImpl(name, flex, className, style, children, whenPressed);
     }
 
     /**
@@ -79,6 +80,9 @@ namespace UI {
         textElementImpl(flex, className, style, value);
     }
 
+    export class WhenTextChangesArgs {
+        text: string;
+    }
     /**
      * A block for making a text input element
      */
@@ -86,14 +90,22 @@ namespace UI {
     //% blockId=textinput_element
     //% block="Text Input id %name|flex %flex|class %className|style %style|initial %initialValue| when text changes"
     //% handlerStmt=true
+    //% mutate=objectdestructuring
+    //% mutateText="new text"
+    //% mutateDefaults="text;text"
     export function textInputElement(
         name: string,
         flex: boolean,
         className: UITextInputClass,
         style: StylePropertySet,
         initialValue: string,
-        whenTextChanges: Action): void {
-        textInputElementImpl(name, flex, className, style, initialValue, whenTextChanges);
+        whenTextChanges: (args: WhenTextChangesArgs) => void): void {
+
+        textInputElementImpl(name, flex, className, style, initialValue, (t) => {
+            let args = new WhenTextChangesArgs();
+            args.text = t;
+            whenTextChanges(args);
+        });
     }
 
     /**

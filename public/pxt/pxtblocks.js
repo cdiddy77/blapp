@@ -14,6 +14,17 @@ var pxt;
 (function (pxt) {
     var blocks;
     (function (blocks) {
+        blocks.reservedWords = ["abstract", "any", "as", "break",
+            "case", "catch", "class", "continue", "const", "constructor", "debugger",
+            "declare", "default", "delete", "do", "else", "enum", "export", "extends",
+            "false", "finally", "for", "from", "function", "get", "if", "implements",
+            "import", "in", "instanceof", "interface", "is", "let", "module", "namespace",
+            "new", "null", "package", "private", "protected", "public",
+            "require", "global", "return", "set", "static", "super", "switch",
+            "symbol", "this", "throw", "true", "try", "type", "typeof", "var", "void",
+            "while", "with", "yield", "async", "await", "of",
+            // PXT Specific
+            "Math"];
         function initWorker() {
             if (!iface) {
                 iface = pxt.worker.makeWebWorker(pxt.webConfig.workerjs);
@@ -472,13 +483,13 @@ var pxt;
         // each property ref, the right value for its [parent] property.
         ///////////////////////////////////////////////////////////////////////////////
         function extractNumber(b) {
-            var v = b.getFieldValue("NUM");
+            var v = b.getFieldValue(b.type === "math_number_minmax" ? "SLIDER" : "NUM");
             var parsed = parseFloat(v);
             checkNumber(parsed);
             return parsed;
         }
         function checkNumber(n) {
-            if (n === Infinity || n === NaN) {
+            if (n === Infinity || isNaN(n)) {
                 pxt.U.userError(lf("Number entered is either too large or too small"));
             }
         }
@@ -586,21 +597,6 @@ var pxt;
             var expr = compileExpression(e, getInputTargetBlock(b, "BOOL"), comments);
             return blocks.mkPrefix("!", [blocks.H.mkParenthesizedExpression(expr)]);
         }
-        function extractNumberLit(e) {
-            if (e.type != blocks.NT.Prefix || !/^-?\d+$/.test(e.op))
-                return null;
-            var parsed = parseInt(e.op);
-            checkNumber(parsed);
-            return parsed;
-        }
-        function compileRandom(e, b, comments) {
-            var expr = compileExpression(e, getInputTargetBlock(b, "limit"), comments);
-            var v = extractNumberLit(expr);
-            if (v != null)
-                return blocks.H.mathCall("random", [blocks.H.mkNumberLiteral(v + 1)]);
-            else
-                return blocks.H.mathCall("random", [blocks.H.mkSimpleCall(opToTok["ADD"], [expr, blocks.H.mkNumberLiteral(1)])]);
-        }
         function compileCreateList(e, b, comments) {
             // collect argument
             var args = b.inputList.map(function (input) { return input.connection && input.connection.targetBlock() ? compileExpression(e, input.connection.targetBlock(), comments) : undefined; })
@@ -621,6 +617,18 @@ var pxt;
             var value = compileExpression(e, getInputTargetBlock(b, "VALUE"), comments);
             var res = blocks.mkGroup([listExpr, blocks.mkText("["), index, blocks.mkText("] = "), value]);
             return listBlock.type === "lists_create_with" ? prefixWithSemicolon(res) : res;
+        }
+        function compileProcedure(e, b, comments) {
+            var name = escapeVarName(b.getFieldValue("NAME"), e);
+            var stmts = getInputTargetBlock(b, "STACK");
+            return [
+                blocks.mkText("function " + name + "() "),
+                compileStatements(e, stmts)
+            ];
+        }
+        function compileProcedureCall(e, b, comments) {
+            var name = escapeVarName(b.getFieldValue("NAME"), e);
+            return blocks.mkStmt(blocks.mkText(name + "()"));
         }
         function defaultValueForType(t) {
             if (t.type == null) {
@@ -681,9 +689,6 @@ var pxt;
                         break;
                     case "math_op3":
                         expr = compileMathOp3(e, b, comments);
-                        break;
-                    case "device_random":
-                        expr = compileRandom(e, b, comments);
                         break;
                     case "math_arithmetic":
                     case "logic_compare":
@@ -876,7 +881,7 @@ var pxt;
         function compileForever(e, b) {
             var bBody = getInputTargetBlock(b, "HANDLER");
             var body = compileStatements(e, bBody);
-            return mkCallWithCallback(e, "basic", "forever", [], body);
+            return mkCallWithCallbacks(e, "basic", "forever", [], [body]);
         }
         // convert to javascript friendly name
         function escapeVarName(name, e) {
@@ -888,7 +893,7 @@ var pxt;
             var n = name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_$]/g, function (a) {
                 return ts.pxtc.isIdentifierPart(a.charCodeAt(0), ts.pxtc.ScriptTarget.ES5) ? a : "";
             });
-            if (!n || !ts.pxtc.isIdentifierStart(n.charCodeAt(0), ts.pxtc.ScriptTarget.ES5)) {
+            if (!n || !ts.pxtc.isIdentifierStart(n.charCodeAt(0), ts.pxtc.ScriptTarget.ES5) || blocks.reservedWords.indexOf(n) !== -1) {
                 n = "_" + n;
             }
             if (e.renames.takenNames[n]) {
@@ -1010,20 +1015,24 @@ var pxt;
         function compileStdBlock(e, b, f, comments) {
             return blocks.mkStmt(compileStdCall(e, b, f, comments));
         }
-        function mkCallWithCallback(e, n, f, args, body, argumentDeclaration, isExtension) {
+        function mkCallWithCallbacks(e, n, f, args, bodies, argumentDeclaration, isExtension) {
             if (isExtension === void 0) { isExtension = false; }
-            body.noFinalNewline = true;
-            var callback;
-            if (argumentDeclaration) {
-                callback = blocks.mkGroup([argumentDeclaration, body]);
-            }
-            else {
-                callback = blocks.mkGroup([blocks.mkText("() =>"), body]);
+            // bodies[bodies.length - 1].noFinalNewline = true;
+            var callbacks = [];
+            for (var i = 0; i < bodies.length; i++) {
+                var body = bodies[i];
+                body.noFinalNewline = true;
+                if (argumentDeclaration) {
+                    callbacks.push(blocks.mkGroup([argumentDeclaration, body]));
+                }
+                else {
+                    callbacks.push(blocks.mkGroup([blocks.mkText("() =>"), body]));
+                }
             }
             if (isExtension)
-                return blocks.mkStmt(blocks.H.extensionCall(f, args.concat([callback]), false));
+                return blocks.mkStmt(blocks.H.extensionCall(f, args.concat(callbacks), false));
             else
-                return blocks.mkStmt(blocks.H.namespaceCall(n, f, args.concat([callback]), false));
+                return blocks.mkStmt(blocks.H.namespaceCall(n, f, args.concat(callbacks), false));
         }
         function compileArg(e, b, arg, comments) {
             // b.getFieldValue may be string, numbers
@@ -1042,13 +1051,24 @@ var pxt;
         }
         function compileEvent(e, b, stdfun, args, ns, comments) {
             var compiledArgs = args.map(function (arg) { return compileArg(e, b, arg, comments); });
-            var bBody = getInputTargetBlock(b, "HANDLER");
-            var body = compileStatements(e, bBody);
+            var symbolInfo = pxt.blocks.blockSymbol(b.type);
+            var bodies = symbolInfo.parameters ? symbolInfo.parameters.filter(function (pr) { return pr.type == "() => void"; }) : [];
+            var bodyStmts = [];
+            if (bodies.length > 0) {
+                for (var i = 0; i < bodies.length; i++) {
+                    var body = bodies[i];
+                    var bBody = getInputTargetBlock(b, "HANDLER" + body.name);
+                    bodyStmts.push(compileStatements(e, bBody));
+                }
+            }
+            else {
+                bodyStmts.push(compileStatements(e, getInputTargetBlock(b, "HANDLER")));
+            }
             var argumentDeclaration;
             if (isMutatingBlock(b) && b.mutation.getMutationType() === blocks.MutatorTypes.ObjectDestructuringMutator) {
                 argumentDeclaration = b.mutation.compileMutation(e, comments);
             }
-            return mkCallWithCallback(e, ns, stdfun.f, compiledArgs, body, argumentDeclaration, stdfun.isExtensionMethod);
+            return mkCallWithCallbacks(e, ns, stdfun.f, compiledArgs, bodyStmts, argumentDeclaration, stdfun.isExtensionMethod);
         }
         function isMutatingBlock(b) {
             return !!b.mutation;
@@ -1098,6 +1118,12 @@ var pxt;
                 case 'device_while':
                     r = compileWhile(e, b, comments);
                     break;
+                case 'procedures_defnoreturn':
+                    r = compileProcedure(e, b, comments);
+                    break;
+                case 'procedures_callnoreturn':
+                    r = [compileProcedureCall(e, b, comments)];
+                    break;
                 case ts.pxtc.ON_START_TYPE:
                     r = compileStartEvent(e, b).children;
                     break;
@@ -1115,14 +1141,14 @@ var pxt;
             var l = r[r.length - 1];
             if (l)
                 l.id = b.id;
-            r.forEach(function (l) {
-                if (l.type === blocks.NT.Block) {
-                    l.id = b.id;
-                }
-            });
             if (comments.length) {
                 addCommentNodes(comments, r);
             }
+            r.forEach(function (l) {
+                if (l.type === blocks.NT.Block || l.type === blocks.NT.Prefix && pxt.Util.startsWith(l.op, "//")) {
+                    l.id = b.id;
+                }
+            });
             return r;
         }
         function compileStatements(e, b) {
@@ -1183,13 +1209,22 @@ var pxt;
             // The to-be-returned environment.
             var e = emptyEnv(w);
             // append functions in stdcalltable
-            if (blockInfo)
+            if (blockInfo) {
+                // Enums are not enclosed in namespaces, so add them to the taken names
+                // to avoid collision
+                Object.keys(blockInfo.apis.byQName).forEach(function (name) {
+                    var info = blockInfo.apis.byQName[name];
+                    if (info.kind === pxtc.SymbolKind.Enum) {
+                        e.renames.takenNames[info.qName] = true;
+                    }
+                });
                 blockInfo.blocks
                     .forEach(function (fn) {
                     if (e.stdCallTable[fn.attributes.blockId]) {
                         pxt.reportError("blocks", "function already defined", { "details": fn.attributes.blockId });
                         return;
                     }
+                    e.renames.takenNames[fn.namespace] = true;
                     var fieldMap = pxt.blocks.parameterNames(fn);
                     var instance = fn.kind == pxtc.SymbolKind.Method || fn.kind == pxtc.SymbolKind.Property;
                     var args = (fn.parameters || []).map(function (p) {
@@ -1216,6 +1251,7 @@ var pxt;
                         isIdentity: fn.attributes.shim == "TD_ID"
                     };
                 });
+            }
             if (skipVariables)
                 return e;
             var variableIsScoped = function (b, name) {
@@ -1374,7 +1410,7 @@ var pxt;
                 // multiple calls allowed
                 if (b.type == ts.pxtc.ON_START_TYPE)
                     flagDuplicate(ts.pxtc.ON_START_TYPE, b);
-                else if (call && call.attrs.blockAllowMultiple)
+                else if (b.type === "procedures_defnoreturn" || call && call.attrs.blockAllowMultiple)
                     return;
                 else if (call && call.hasHandler) {
                     // compute key that identifies event call
@@ -1977,6 +2013,7 @@ var pxt;
             math: '#712672',
             images: '#5C2D91',
             variables: '#A80000',
+            functions: '#005a9e',
             text: '#996600',
             arrays: '#A94400',
             advanced: '#3c3c3c'
@@ -2049,7 +2086,19 @@ var pxt;
             if (typeInfo) {
                 var field = document.createElement("field");
                 shadow.appendChild(field);
-                field.setAttribute("name", shadowType == "variables_get" ? "VAR" : typeInfo.field);
+                var fieldName = void 0;
+                switch (shadowType) {
+                    case "variables_get":
+                        fieldName = "VAR";
+                        break;
+                    case "math_number_minmax":
+                        fieldName = "SLIDER";
+                        break;
+                    default:
+                        fieldName = typeInfo.field;
+                        break;
+                }
+                field.setAttribute("name", fieldName);
                 var value_1;
                 if (type == "boolean") {
                     value_1 = document.createTextNode((v || typeInfo.defaultValue).toUpperCase());
@@ -2299,13 +2348,14 @@ var pxt;
             var ci = 0;
             for (ci = 0; ci < categories.length; ++ci) {
                 var cat = categories[ci];
+                var catAdvanced = cat.hasAttribute("advanced") && cat.getAttribute("advanced") !== "false";
                 // Advanced categories always come last
                 if (isAdvanced) {
-                    if (!cat.hasAttribute("advanced")) {
+                    if (!catAdvanced) {
                         continue;
                     }
                 }
-                else if (cat.hasAttribute("advanced")) {
+                else if (catAdvanced) {
                     tb.insertBefore(category, cat);
                     break;
                 }
@@ -2598,10 +2648,13 @@ var pxt;
                     });
                 });
             };
-            var body = fn.parameters ? fn.parameters.filter(function (pr) { return pr.type == "() => void"; })[0] : undefined;
-            if (body) {
-                block.appendStatementInput("HANDLER")
-                    .setCheck("null");
+            var bodies = fn.parameters ? fn.parameters.filter(function (pr) { return pr.type == "() => void"; }) : [];
+            for (var i = 0; i < bodies.length; i++) {
+                var body = bodies[i];
+                var input = block.appendStatementInput("HANDLER" + body.name);
+                if (bodies.length > 1)
+                    input.appendField(body.name);
+                input.setCheck("null");
             }
             if (fn.attributes.imageLiteral) {
                 for (var r = 0; r < 5; ++r) {
@@ -2747,51 +2800,17 @@ var pxt;
             if (tb && showCategories !== CategoryMode.None) {
                 // remove unused categories
                 var config = pxt.appTarget.runtime || {};
-                if (!config.mathBlocks)
-                    removeCategory(tb, "Math");
-                if (!config.variablesBlocks)
-                    removeCategory(tb, "Variables");
-                if (!config.logicBlocks)
-                    removeCategory(tb, "Logic");
-                if (!config.loopsBlocks)
-                    removeCategory(tb, "Loops");
-                // Advanced builtin categories
-                if (!config.textBlocks) {
-                    removeCategory(tb, "Text");
-                }
-                else {
-                    showAdvanced = true;
-                    var cat = categoryElement(tb, "Text");
+                initBuiltinCategoryXml("Math", !config.mathBlocks);
+                initBuiltinCategoryXml("Variables", !config.variablesBlocks);
+                initBuiltinCategoryXml("Logic", !config.logicBlocks);
+                initBuiltinCategoryXml("Loops", !config.loopsBlocks);
+                initBuiltinCategoryXml("Text", !config.textBlocks);
+                initBuiltinCategoryXml("Arrays", !config.listsBlocks);
+                initBuiltinCategoryXml("Functions", !config.functionBlocks);
+                if (!config.listsBlocks && config.loopsBlocks) {
+                    var cat = categoryElement(tb, "Loops");
                     if (cat) {
-                        var blockElements = cat.getElementsByTagName("block");
-                        for (var i = 0; i < blockElements.length; i++) {
-                            var b = blockElements.item(i);
-                            usedBlocks[b.getAttribute("type")] = true;
-                        }
-                    }
-                    if (showCategories === CategoryMode.Basic) {
-                        removeCategory(tb, "Text");
-                    }
-                }
-                if (!config.listsBlocks) {
-                    removeCategory(tb, "Arrays");
-                    if (config.loopsBlocks) {
-                        var cat = categoryElement(tb, "Loops");
                         cat.removeChild(blocks_6.getFirstChildWithAttr(cat, "block", "type", "controls_for_of"));
-                    }
-                }
-                else {
-                    showAdvanced = true;
-                    var cat = categoryElement(tb, "Arrays");
-                    if (cat) {
-                        var blockElements = cat.getElementsByTagName("block");
-                        for (var i = 0; i < blockElements.length; i++) {
-                            var b = blockElements.item(i);
-                            usedBlocks[b.getAttribute("type")] = true;
-                        }
-                    }
-                    if (showCategories === CategoryMode.Basic) {
-                        removeCategory(tb, "Arrays");
                     }
                 }
                 // Load localized names for default categories
@@ -2884,6 +2903,15 @@ var pxt;
                         if (catName === "more" || catName === "advanced") {
                             continue;
                         }
+                        // The variables category is special and won't have any children so we
+                        // need to check manually
+                        if (catName === "variables" && (!filters.blocks ||
+                            filters.blocks["variables_set"] ||
+                            filters.blocks["variables_get"] ||
+                            filters.blocks["variables_change"]) &&
+                            (!filters.namespaces || filters.namespaces["variables"] !== FilterState.Disabled)) {
+                            continue;
+                        }
                         var categoryState = filters.namespaces && filters.namespaces[catName] != undefined ? filters.namespaces[catName] : filters.defaultState;
                         var blocks_8 = cat.getElementsByTagName("block");
                         var hasVisibleChildren = filterBlocks(blocks_8, categoryState);
@@ -2945,6 +2973,29 @@ var pxt;
                 }
             }
             return tb;
+            function initBuiltinCategoryXml(name, remove) {
+                if (remove) {
+                    removeCategory(tb, name);
+                    return;
+                }
+                var cat = categoryElement(tb, name);
+                if (cat) {
+                    var attr = cat.getAttribute("advanced");
+                    if (attr && attr !== "false") {
+                        showAdvanced = true;
+                        // Record all block usages in case this category doesn't show up
+                        // in the toolbox (i.e. advanced is collapsed)
+                        var blockElements = cat.getElementsByTagName("block");
+                        for (var i = 0; i < blockElements.length; i++) {
+                            var b = blockElements.item(i);
+                            usedBlocks[b.getAttribute("type")] = true;
+                        }
+                        if (showCategories === CategoryMode.Basic) {
+                            removeCategory(tb, name);
+                        }
+                    }
+                }
+            }
         }
         blocks_6.createToolbox = createToolbox;
         function initBlocks(blockInfo, toolbox, showCategories, filters) {
@@ -3105,6 +3156,7 @@ var pxt;
             initOnStart();
             initMath();
             initVariables();
+            initFunctions();
             initLists();
             initLoops();
             initLogic();
@@ -3788,27 +3840,6 @@ var pxt;
                     setBuiltinHelpInfo(this, mathOp3Id);
                 }
             };
-            // device_random
-            var deviceRandomId = "device_random";
-            var deviceRandomDef = pxt.blocks.getBlockDefinition(deviceRandomId);
-            Blockly.Blocks[deviceRandomId] = {
-                init: function () {
-                    this.jsonInit({
-                        "message0": deviceRandomDef.block["message0"],
-                        "args0": [
-                            {
-                                "type": "input_value",
-                                "name": "limit",
-                                "check": "Number"
-                            }
-                        ],
-                        "inputsInline": true,
-                        "output": "Number",
-                        "colour": getNamespaceColor('math')
-                    });
-                    setBuiltinHelpInfo(this, deviceRandomId);
-                }
-            };
             // builtin math_number
             //XXX Integer validation needed.
             var mInfo = pxt.blocks.getBlockDefinition("math_number");
@@ -3846,6 +3877,7 @@ var pxt;
         blocks_6.getNamespaceColor = getNamespaceColor;
         function initFlyouts(workspace) {
             workspace.registerToolboxCategoryCallback(Blockly.VARIABLE_CATEGORY_NAME, Blockly.Variables.flyoutCategory);
+            workspace.registerToolboxCategoryCallback(Blockly.PROCEDURE_CATEGORY_NAME, Blockly.Procedures.flyoutCategory);
         }
         blocks_6.initFlyouts = initFlyouts;
         function initVariables() {
@@ -3971,6 +4003,241 @@ var pxt;
                     });
                     setBuiltinHelpInfo(this, variablesChangeId);
                 }
+            };
+        }
+        function initFunctions() {
+            var msg = Blockly.Msg;
+            // builtin procedures_defnoreturn
+            var proceduresDefId = "procedures_defnoreturn";
+            var proceduresDef = pxt.blocks.getBlockDefinition(proceduresDefId);
+            msg.PROCEDURES_DEFNORETURN_TITLE = proceduresDef.block["PROCEDURES_DEFNORETURN_TITLE"];
+            msg.PROCEDURE_ALREADY_EXISTS = proceduresDef.block["PROCEDURE_ALREADY_EXISTS"];
+            Blockly.Blocks['procedures_defnoreturn'].init = function () {
+                var nameField = new Blockly.FieldTextInput('', Blockly.Procedures.rename);
+                //nameField.setSpellcheck(false); //TODO
+                this.appendDummyInput()
+                    .appendField(Blockly.Msg.PROCEDURES_DEFNORETURN_TITLE)
+                    .appendField(nameField, 'NAME')
+                    .appendField('', 'PARAMS');
+                this.setColour(getNamespaceColor('functions'));
+                this.arguments_ = [];
+                this.setStatements_(true);
+                this.statementConnection_ = null;
+            };
+            installBuiltinHelpInfo(proceduresDefId);
+            // builtin procedures_defnoreturn
+            var proceduresCallId = "procedures_callnoreturn";
+            var proceduresCallDef = pxt.blocks.getBlockDefinition(proceduresCallId);
+            msg.PROCEDURES_CALLRETURN_TOOLTIP = proceduresDef.tooltip;
+            Blockly.Blocks['procedures_callnoreturn'] = {
+                init: function () {
+                    var nameField = new pxtblockly.FieldProcedure('');
+                    nameField.setSourceBlock(this);
+                    this.appendDummyInput('TOPROW')
+                        .appendField(proceduresCallDef.block['PROCEDURES_CALLNORETURN_TITLE'])
+                        .appendField(nameField, 'NAME');
+                    this.setPreviousStatement(true);
+                    this.setNextStatement(true);
+                    this.setColour(getNamespaceColor('functions'));
+                    this.arguments_ = [];
+                    this.quarkConnections_ = {};
+                    this.quarkIds_ = null;
+                },
+                /**
+                 * Returns the name of the procedure this block calls.
+                 * @return {string} Procedure name.
+                 * @this Blockly.Block
+                 */
+                getProcedureCall: function () {
+                    // The NAME field is guaranteed to exist, null will never be returned.
+                    return (this.getFieldValue('NAME'));
+                },
+                /**
+                 * Notification that a procedure is renaming.
+                 * If the name matches this block's procedure, rename it.
+                 * @param {string} oldName Previous name of procedure.
+                 * @param {string} newName Renamed procedure.
+                 * @this Blockly.Block
+                 */
+                renameProcedure: function (oldName, newName) {
+                    if (Blockly.Names.equals(oldName, this.getProcedureCall())) {
+                        this.setFieldValue(newName, 'NAME');
+                    }
+                },
+                /**
+                 * Procedure calls cannot exist without the corresponding procedure
+                 * definition.  Enforce this link whenever an event is fired.
+                 * @param {!Blockly.Events.Abstract} event Change event.
+                 * @this Blockly.Block
+                 */
+                onchange: function (event) {
+                    if (!this.workspace || this.workspace.isFlyout) {
+                        // Block is deleted or is in a flyout.
+                        return;
+                    }
+                    if (event.type == Blockly.Events.CREATE &&
+                        event.ids.indexOf(this.id) != -1) {
+                        // Look for the case where a procedure call was created (usually through
+                        // paste) and there is no matching definition.  In this case, create
+                        // an empty definition block with the correct signature.
+                        var name_2 = this.getProcedureCall();
+                        var def = Blockly.Procedures.getDefinition(name_2, this.workspace);
+                        if (def && (def.type != this.defType_ ||
+                            JSON.stringify(def.arguments_) != JSON.stringify(this.arguments_))) {
+                            // The signatures don't match.
+                            def = null;
+                        }
+                        if (!def) {
+                            Blockly.Events.setGroup(event.group);
+                            /**
+                             * Create matching definition block.
+                             * <xml>
+                             *   <block type="procedures_defreturn" x="10" y="20">
+                             *     <field name="NAME">test</field>
+                             *   </block>
+                             * </xml>
+                             */
+                            var xml = goog.dom.createDom('xml');
+                            var block = goog.dom.createDom('block');
+                            block.setAttribute('type', this.defType_);
+                            var xy = this.getRelativeToSurfaceXY();
+                            var x = xy.x + Blockly.SNAP_RADIUS * (this.RTL ? -1 : 1);
+                            var y = xy.y + Blockly.SNAP_RADIUS * 2;
+                            block.setAttribute('x', x);
+                            block.setAttribute('y', y);
+                            var field = goog.dom.createDom('field');
+                            field.setAttribute('name', 'NAME');
+                            field.appendChild(document.createTextNode(this.getProcedureCall()));
+                            block.appendChild(field);
+                            xml.appendChild(block);
+                            Blockly.Xml.domToWorkspace(xml, this.workspace);
+                            Blockly.Events.setGroup(false);
+                        }
+                    }
+                    else if (event.type == Blockly.Events.DELETE) {
+                        // Look for the case where a procedure definition has been deleted,
+                        // leaving this block (a procedure call) orphaned.  In this case, delete
+                        // the orphan.
+                        var name_3 = this.getProcedureCall();
+                        var def = Blockly.Procedures.getDefinition(name_3, this.workspace);
+                        if (!def) {
+                            Blockly.Events.setGroup(event.group);
+                            this.dispose(true, false);
+                            Blockly.Events.setGroup(false);
+                        }
+                    }
+                },
+                /**
+                 * Add menu option to find the definition block for this call.
+                 * @param {!Array} options List of menu options to add to.
+                 * @this Blockly.Block
+                 */
+                customContextMenu: function (options) {
+                    var option = { enabled: true };
+                    option.text = Blockly.Msg.PROCEDURES_HIGHLIGHT_DEF;
+                    var name = this.getProcedureCall();
+                    var workspace = this.workspace;
+                    option.callback = function () {
+                        var def = Blockly.Procedures.getDefinition(name, workspace);
+                        def && def.select();
+                    };
+                    options.push(option);
+                },
+                defType_: 'procedures_defnoreturn'
+            };
+            installBuiltinHelpInfo(proceduresCallId);
+            Blockly.Procedures.flyoutCategory = function (workspace) {
+                var xmlList = [];
+                var newFunction = lf("Make a Function");
+                var newFunctionTitle = lf("New function name:");
+                // Add the "Make a function" button
+                var button = goog.dom.createDom('button');
+                button.setAttribute('text', newFunction);
+                button.setAttribute('callbackKey', 'CREATE_FUNCTION');
+                var createFunction = function (name) {
+                    /**
+                     * Create matching definition block.
+                     * <xml>
+                     *   <block type="procedures_defreturn" x="10" y="20">
+                     *     <field name="NAME">test</field>
+                     *   </block>
+                     * </xml>
+                     */
+                    var topBlock = workspace.getTopBlocks(true)[0];
+                    var x = 0, y = 0;
+                    if (topBlock) {
+                        var xy = topBlock.getRelativeToSurfaceXY();
+                        x = xy.x + Blockly.SNAP_RADIUS * (topBlock.RTL ? -1 : 1);
+                        y = xy.y + Blockly.SNAP_RADIUS * 2;
+                    }
+                    var xml = goog.dom.createDom('xml');
+                    var block = goog.dom.createDom('block');
+                    block.setAttribute('type', 'procedures_defnoreturn');
+                    block.setAttribute('x', String(x));
+                    block.setAttribute('y', String(y));
+                    var field = goog.dom.createDom('field');
+                    field.setAttribute('name', 'NAME');
+                    field.appendChild(document.createTextNode(name));
+                    block.appendChild(field);
+                    xml.appendChild(block);
+                    var newBlockIds = Blockly.Xml.domToWorkspace(xml, workspace);
+                    // Close flyout and highlight block
+                    workspace.toolbox_.clearSelection();
+                    var newBlock = workspace.getBlockById(newBlockIds[0]);
+                    newBlock.select();
+                };
+                workspace.registerButtonCallback('CREATE_FUNCTION', function (button) {
+                    var promptAndCheckWithAlert = function (defaultName) {
+                        Blockly.prompt(newFunctionTitle, defaultName, function (newFunc) {
+                            // Merge runs of whitespace.  Strip leading and trailing whitespace.
+                            // Beyond this, all names are legal.
+                            if (newFunc) {
+                                newFunc = newFunc.replace(/[\s\xa0]+/g, ' ').replace(/^ | $/g, '');
+                                if (newFunc == newFunction) {
+                                    // Ok, not ALL names are legal...
+                                    newFunc = null;
+                                }
+                            }
+                            if (newFunc) {
+                                if (workspace.variableIndexOf(newFunc) != -1) {
+                                    Blockly.alert(Blockly.Msg.VARIABLE_ALREADY_EXISTS.replace('%1', newFunc.toLowerCase()), function () {
+                                        promptAndCheckWithAlert(newFunc); // Recurse
+                                    });
+                                }
+                                else if (!Blockly.Procedures.isLegalName_(newFunc, workspace)) {
+                                    Blockly.alert(Blockly.Msg.PROCEDURE_ALREADY_EXISTS.replace('%1', newFunc.toLowerCase()), function () {
+                                        promptAndCheckWithAlert(newFunc); // Recurse
+                                    });
+                                }
+                                else {
+                                    createFunction(newFunc);
+                                }
+                            }
+                        });
+                    };
+                    promptAndCheckWithAlert('doSomething');
+                });
+                xmlList.push(button);
+                function populateProcedures(procedureList, templateName) {
+                    for (var i = 0; i < procedureList.length; i++) {
+                        var name_4 = procedureList[i][0];
+                        var args = procedureList[i][1];
+                        // <block type="procedures_callnoreturn" gap="16">
+                        //   <field name="NAME">name</field>
+                        // </block>
+                        var block = goog.dom.createDom('block');
+                        block.setAttribute('type', templateName);
+                        block.setAttribute('gap', '16');
+                        block.setAttribute('colour', getNamespaceColor('functions'));
+                        var field = goog.dom.createDom('field', null, name_4);
+                        field.setAttribute('name', 'NAME');
+                        block.appendChild(field);
+                        xmlList.push(block);
+                    }
+                }
+                var tuple = Blockly.Procedures.allProcedures(workspace);
+                populateProcedures(tuple[0], 'procedures_callnoreturn');
+                return xmlList;
             };
         }
         function initLogic() {
@@ -4438,10 +4705,10 @@ var pxt;
                 }
                 this.currentlyVisible.forEach(function (param) {
                     if (_this.parameters.indexOf(param) === -1) {
-                        var name_2 = _this.block.getFieldValue(param);
+                        var name_5 = _this.block.getFieldValue(param);
                         // Persist renames
-                        if (name_2 !== param) {
-                            _this.parameterRenames[param] = name_2;
+                        if (name_5 !== param) {
+                            _this.parameterRenames[param] = name_5;
                         }
                         dummyInput.removeField(param);
                     }
@@ -5725,6 +5992,94 @@ var pxtblockly;
         return FieldNote;
     }(Blockly.FieldNumber));
     pxtblockly.FieldNote = FieldNote;
+})(pxtblockly || (pxtblockly = {}));
+/// <reference path="../../localtypings/blockly.d.ts" />
+var pxtblockly;
+(function (pxtblockly) {
+    var FieldProcedure = (function (_super) {
+        __extends(FieldProcedure, _super);
+        function FieldProcedure(funcname, opt_validator) {
+            _super.call(this, null, opt_validator);
+            this.setValue(funcname || '');
+        }
+        FieldProcedure.prototype.getOptions = function () {
+            return this.dropdownCreate();
+        };
+        ;
+        FieldProcedure.prototype.init = function () {
+            if (this.fieldGroup_) {
+                // Dropdown has already been initialized once.
+                return;
+            }
+            _super.prototype.init.call(this);
+        };
+        ;
+        FieldProcedure.prototype.setSourceBlock = function (block) {
+            goog.asserts.assert(!block.isShadow(), 'Procedure fields are not allowed to exist on shadow blocks.');
+            _super.prototype.setSourceBlock.call(this, block);
+        };
+        ;
+        FieldProcedure.prototype.getValue = function () {
+            return this.getText();
+        };
+        ;
+        FieldProcedure.prototype.setValue = function (newValue) {
+            if (this.sourceBlock_ && Blockly.Events.isEnabled()) {
+                Blockly.Events.fire(new Blockly.Events.Change(this.sourceBlock_, 'field', this.name, this.value_, newValue));
+            }
+            this.value_ = newValue;
+            this.setText(newValue);
+        };
+        ;
+        /**
+         * Return a sorted list of variable names for procedure dropdown menus.
+         * Include a special option at the end for creating a new function name.
+         * @return {!Array.<string>} Array of procedure names.
+         * @this {pxtblockly.FieldProcedure}
+         */
+        FieldProcedure.prototype.dropdownCreate = function () {
+            var functionList = [];
+            if (this.sourceBlock_ && this.sourceBlock_.workspace) {
+                var blocks = this.sourceBlock_.workspace.getAllBlocks();
+                // Iterate through every block and check the name.
+                for (var i = 0; i < blocks.length; i++) {
+                    if (blocks[i].getProcedureDef) {
+                        var procName = blocks[i].getProcedureDef();
+                        functionList.push(procName[0]);
+                    }
+                }
+            }
+            // Ensure that the currently selected variable is an option.
+            var name = this.getText();
+            if (name && functionList.indexOf(name) == -1) {
+                functionList.push(name);
+            }
+            functionList.sort(goog.string.caseInsensitiveCompare);
+            if (!functionList.length) {
+                // Add temporary list item so the dropdown doesn't break
+                functionList.push("Temp");
+            }
+            // Variables are not language-specific, use the name as both the user-facing
+            // text and the internal representation.
+            var options = [];
+            for (var i = 0; i < functionList.length; i++) {
+                options[i] = [functionList[i], functionList[i]];
+            }
+            return options;
+        };
+        FieldProcedure.prototype.onItemSelected = function (menu, menuItem) {
+            var itemText = menuItem.getValue();
+            if (this.sourceBlock_) {
+                // Call any validation function, and allow it to override.
+                itemText = this.callValidator(itemText);
+            }
+            if (itemText !== null) {
+                this.setValue(itemText);
+            }
+        };
+        return FieldProcedure;
+    }(Blockly.FieldDropdown));
+    pxtblockly.FieldProcedure = FieldProcedure;
 })(pxtblockly || (pxtblockly = {}));
 var pxtblockly;
 (function (pxtblockly) {
