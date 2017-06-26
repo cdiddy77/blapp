@@ -1,8 +1,10 @@
 import * as uiApi from '../../../shared/src/util/uiApi';
+import * as dataApi from '../../../shared/src/util/dataApi';
 
-
+///
 export namespace pxsim {
     export var UI = uiApi.pxsimui;
+    export var Data = dataApi.pxsimdata;
 
     export interface SimulatorMessage {
         type: string;

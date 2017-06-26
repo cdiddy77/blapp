@@ -35,7 +35,56 @@ var pxsim;
         function dividerElementImpl(className, style) {
         }
         UI.dividerElementImpl = dividerElementImpl;
+        //%
+        function updateUIImpl() {
+        }
+        UI.updateUIImpl = updateUIImpl;
     })(UI = pxsim.UI || (pxsim.UI = {}));
+})(pxsim || (pxsim = {}));
+(function (pxsim) {
+    var Data;
+    (function (Data) {
+        //%
+        function getSharedStringImpl(name) {
+            return "sample";
+        }
+        Data.getSharedStringImpl = getSharedStringImpl;
+        //%
+        function getSharedNumberImpl(name) {
+            return -1;
+        }
+        Data.getSharedNumberImpl = getSharedNumberImpl;
+        //%
+        function getSharedBooleanImpl(name) {
+            return false;
+        }
+        Data.getSharedBooleanImpl = getSharedBooleanImpl;
+        //%
+        function getSharedListImpl(name) {
+            return [];
+        }
+        Data.getSharedListImpl = getSharedListImpl;
+        //%
+        function setSharedStringImpl(name, v) {
+        }
+        Data.setSharedStringImpl = setSharedStringImpl;
+        //%
+        function setSharedNumberImpl(name, v) {
+        }
+        Data.setSharedNumberImpl = setSharedNumberImpl;
+        //%
+        function setSharedBooleanImpl(name, v) {
+        }
+        Data.setSharedBooleanImpl = setSharedBooleanImpl;
+        //%
+        function setSharedListImpl(name, v) {
+        }
+        Data.setSharedListImpl = setSharedListImpl;
+        //%
+        function onSharedVariableChangeImpl(name, body) {
+        }
+        Data.onSharedVariableChangeImpl = onSharedVariableChangeImpl;
+    })(Data = pxsim.Data || (pxsim.Data = {}));
 })(pxsim || (pxsim = {}));
 /// <reference path="../node_modules/pxt-core/typings/globals/bluebird/index.d.ts"/>
 /// <reference path="../node_modules/pxt-core/built/pxtsim.d.ts"/>

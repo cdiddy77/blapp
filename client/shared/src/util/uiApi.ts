@@ -329,6 +329,10 @@ export namespace pxsimui {
             CodegenRuntime.createElement(CodegenRuntime.DividerBlockf, props));
     }
 
+    export function updateUIImpl(): void {
+        CodegenRuntime.updateUI();
+    }
+
     function genRefProp(name: string) {
         if (name && name != '') {
             CodegenRuntime.addProp('ref', (e: any) => CodegenRuntime.setIdElem(name, e));

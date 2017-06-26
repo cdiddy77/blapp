@@ -75,5 +75,53 @@ namespace pxsim.UI {
         style: StylePropertySet): void {
 
     }
+
+    //%
+    export function updateUIImpl(): void {
+
+    }
+}
+
+namespace pxsim.Data {
+    //%
+    export function getSharedStringImpl(name: string): string {
+        return "sample";
+    }
+
+    //%
+    export function getSharedNumberImpl(name: string): number {
+        return -1;
+    }
+
+    //%
+    export function getSharedBooleanImpl(name: string): boolean {
+        return false;
+    }
+
+    //%
+    export function getSharedListImpl(name: string): Array<string> {
+        return [];
+    }
+
+    //%
+    export function setSharedStringImpl(name: string, v: string): void {
+    }
+
+    //%
+    export function setSharedNumberImpl(name: string, v: number): void {
+    }
+
+    //%
+    export function setSharedBooleanImpl(name: string, v: boolean): void {
+    }
+
+    //%
+    export function setSharedListImpl(name: string, v: Array<string>): void {
+    }
+
+    //%
+    export function onSharedVariableChangeImpl(name: string, body: pxsim.RefAction): void {
+
+    }
 }
 

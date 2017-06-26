@@ -134,4 +134,14 @@ namespace UI {
         style: StylePropertySet): void {
         dividerElementImpl(className, style);
     }
+
+    /**
+     * Cause the UI to update
+    **/
+    //% weight=20
+    //% blockId=update_ui
+    //% block="Update UI"
+    export function updateUI() {
+        updateUIImpl();
+    }
 }

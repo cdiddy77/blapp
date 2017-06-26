@@ -32,6 +32,48 @@ declare namespace UI {
     //% shim=UI::dividerElementImpl
     function dividerElementImpl(className: UIDividerClass, style: StylePropertySet): void;
 
+    //%
+    //% shim=UI::updateUIImpl
+    function updateUIImpl(): void;
+
+}
+declare namespace Data {
+    //%
+    //% shim=Data::getSharedStringImpl
+    function getSharedStringImpl(name: string): string;
+
+    //%
+    //% shim=Data::getSharedNumberImpl
+    function getSharedNumberImpl(name: string): number;
+
+    //%
+    //% shim=Data::getSharedBooleanImpl
+    function getSharedBooleanImpl(name: string): boolean;
+
+    //%
+    //% shim=Data::getSharedListImpl
+    function getSharedListImpl(name: string): string[];
+
+    //%
+    //% shim=Data::setSharedStringImpl
+    function setSharedStringImpl(name: string, v: string): void;
+
+    //%
+    //% shim=Data::setSharedNumberImpl
+    function setSharedNumberImpl(name: string, v: number): void;
+
+    //%
+    //% shim=Data::setSharedBooleanImpl
+    function setSharedBooleanImpl(name: string, v: boolean): void;
+
+    //%
+    //% shim=Data::setSharedListImpl
+    function setSharedListImpl(name: string, v: string[]): void;
+
+    //%
+    //% shim=Data::onSharedVariableChangeImpl
+    function onSharedVariableChangeImpl(name: string, body: () => void): void;
+
 }
 
 // Auto-generated. Do not edit. Really.
