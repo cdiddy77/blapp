@@ -149,7 +149,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
         this.setNextStatement(true, null);
         this.setColour(230);
         this.setTooltip('container to put other UI elements into');
-        this.setHelpUrl('');
+        this.setHelpUrl('https://www.youtube.com/watch?v=SUOJ1PODnKk&list=PLCRKPBgyt2IYvEp0Dw92HfSHb9zo25X4X&index=1');
         UIBlockConfig.blockDefInitHelper.call(this, 'friendly_group_element');
     };
     Blockly.Blocks[defName] = viewBlockDef;
