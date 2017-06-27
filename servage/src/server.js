@@ -20,6 +20,7 @@ var server = http.createServer(function (req, res) {
         pathName = urlObj.pathname;
     }
     ;
+    console.log("serving file:" + (rootDir + pathName));
     fs.readFile(rootDir + pathName, function (err, data) {
         if (err) {
             console.log('error trying to serve with pathname=', urlObj.pathname);
