@@ -26,8 +26,6 @@
       "snap": true
     }
   },
-  "simAnimationEnter": "rotate in",
-  "simAnimationExit": "rotate out",
   "TOC": [
     {
       "name": "Blocks",

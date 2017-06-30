@@ -37,6 +37,12 @@ declare namespace UI {
     function updateUIImpl(): void;
 
 }
+declare namespace Style {
+    //%
+    //% shim=Style::styleDefImpl
+    function styleDefImpl(body: () => void): StylePropertySet;
+
+}
 declare namespace Data {
     //%
     //% shim=Data::getSharedStringImpl

@@ -1,299 +1,203 @@
-var input_text, buttonstyle, buttontextstyle, error_message, rowstyle;
+pxsim.noRefCounting();
+pxsim.enableFloatingPoint();
 
 
-input_text = '';
+var _main___P1 = entryPoint = function (s) {
+var r0 = s.r0, step = s.pc;
+s.pc = -1;
+while (true) {
+if (yieldSteps-- < 0 && maybeYield(s, step, r0)) return null;
+switch (step) {
+  case 0:
+
+    s.tmp_0 = { fn: userInterface__P19, parent: s };
+    r0 = 0;
+    s.tmp_0.arg0 = r0;
+    r0 = inline__P39;
+    s.tmp_0.arg1 = r0;
+    s.pc = 2;
+    return actionCall(s.tmp_0)
+  case 2:
+    r0 = s.retval;
+    s.tmp_0 = { fn: styleDef__P38, parent: s };
+    r0 = inline__P51;
+    s.tmp_0.arg0 = r0;
+    s.pc = 3;
+    return actionCall(s.tmp_0)
+  case 3:
+    r0 = s.retval;
+  case 1:
+    return leave(s, r0)
+  default: oops()
+} } }
+_main___P1.info = {"start":0,"length":0,"line":0,"column":0,"endLine":0,"endColumn":0,"fileName":"pxt_modules/core/pxt-core.d.ts","functionName":"<main>"}
+_main___P1.continuations = [  ]
 
 
-var __f, result = {};
-CgRt.setTargetRenderProc(function () {
-  CgRt.pushCont();
-  {
-    CgRt.beginProps();
-    undefined
-    CgRt.addProp("style", (
-      function () {
-        var result = {};
-        result.flexDirection = "column";
-        result.flex = 1;
-        return result;
-      }()));
-    var p490 = CgRt.getProps();
-    CgRt.pushCont();
-    {
-      {
-        CgRt.beginProps();
 
-        CgRt.addProp("ref", function (e) { CgRt.setIdElem('top2', e); });
-        CgRt.addProp("style", (
-          function () {
-            var result = {};
-            result.flexDirection = "row";
-            result.justifyContent = "flex-start";
-            result.flex = 1;
-            return result;
-          }()));
-        var p477 = CgRt.getProps();
-        CgRt.pushCont();
-        {
-          {
-            CgRt.beginProps();
+var inline__P39  = function (s) {
+var r0 = s.r0, step = s.pc;
+s.pc = -1;
+while (true) {
+if (yieldSteps-- < 0 && maybeYield(s, step, r0)) return null;
+switch (step) {
+  case 0:
 
-            CgRt.addProp("ref", function (e) { CgRt.setIdElem('left', e); });
-            CgRt.addProp("style", (
-              function () {
-                var result = {};
-                result.flex = 1;
-                result.margin = 2;
-                return result;
-              }()));
-            var p467 = CgRt.getProps();
-            CgRt.pushCont();
-            {
-              {
-                CgRt.beginProps();
-                undefined
-                CgRt.addProp("style", (
-                  function () {
-                    var result = {};
-                    result.borderWidth = 1;
-                    result.flex = 1;
-                    result.margin = 2;
-                    return result;
-                  }()));
-                var p465 = CgRt.getProps();
-                CgRt.pushCont();
-                { }
-                var cl466 = CgRt.popCont();
-                CgRt.pushElem(CgRt.createElement(CgRt.ScrollViewr, p465, cl466));
-              }
-            }
-            var cl468 = CgRt.popCont();
-            CgRt.pushElem(CgRt.createElement(CgRt.Viewr, p467, cl468));
-          }
-          {
-            CgRt.beginProps();
+    s.tmp_0 = { fn: groupElement__P20, parent: s };
+    r0 = pxsim.String_.mkEmpty();
+    s.tmp_0.arg0 = r0;
+    r0 = 0;
+    s.tmp_0.arg1 = r0;
+    r0 = true;
+    s.tmp_0.arg2 = r0;
+    r0 = 2;
+    s.tmp_0.arg3 = r0;
+    r0 = null;
+    s.tmp_0.arg4 = r0;
+    r0 = inline__P40;
+    s.tmp_0.arg5 = r0;
+    s.pc = 2;
+    return actionCall(s.tmp_0)
+  case 2:
+    r0 = s.retval;
+  case 1:
+    return leave(s, r0)
+  default: oops()
+} } }
+inline__P39.info = {"start":31,"length":116,"line":0,"column":31,"endLine":4,"endColumn":1,"fileName":"main.ts","functionName":"inline"}
 
-            CgRt.addProp("ref", function (e) { CgRt.setIdElem('right', e); });
-            var p475 = CgRt.getProps();
-            CgRt.pushCont();
-            {
-              {
-                CgRt.beginProps();
 
-                CgRt.addProp("onPress", function () {
-                  CgRt.updateUI();
-                });
-                CgRt.addProp("style", buttonstyle);
-                var p470 = CgRt.getProps();
-                CgRt.pushCont();
-                {
-                  {
-                    CgRt.beginProps();
 
-                    CgRt.addProp("style", buttontextstyle);
-                    var p469 = CgRt.getProps();
-                    CgRt.pushElem(CgRt.createElement(CgRt.Textr, p469, ['Button']));
-                  }
-                }
-                var cl471 = CgRt.popCont();
-                CgRt.pushElem(CgRt.createElement(CgRt.TouchableHighlightr, p470, cl471));
-              }
-              {
-                CgRt.beginProps();
+var inline__P40  = function (s) {
+var r0 = s.r0, step = s.pc;
+s.pc = -1;
+while (true) {
+if (yieldSteps-- < 0 && maybeYield(s, step, r0)) return null;
+switch (step) {
+  case 0:
 
-                CgRt.addProp("onPress", function () {
-                  CgRt.updateUI();
-                });
-                CgRt.addProp("style", buttonstyle);
-                var p473 = CgRt.getProps();
-                CgRt.pushCont();
-                {
-                  {
-                    CgRt.beginProps();
+  case 1:
+    return leave(s, r0)
+  default: oops()
+} } }
+inline__P40.info = {"start":125,"length":19,"line":1,"column":86,"endLine":3,"endColumn":5,"fileName":"main.ts","functionName":"inline"}
 
-                    CgRt.addProp("style", buttontextstyle);
-                    var p472 = CgRt.getProps();
-                    CgRt.pushElem(CgRt.createElement(CgRt.Textr, p472, ['Other button']));
-                  }
-                }
-                var cl474 = CgRt.popCont();
-                CgRt.pushElem(CgRt.createElement(CgRt.TouchableHighlightr, p473, cl474));
-              }
-            }
-            var cl476 = CgRt.popCont();
-            CgRt.pushElem(CgRt.createElement(CgRt.Viewr, p475, cl476));
-          }
-        }
-        var cl478 = CgRt.popCont();
-        CgRt.pushElem(CgRt.createElement(CgRt.Viewr, p477, cl478));
-      }
-      {
-        CgRt.beginProps();
 
-        CgRt.addProp("ref", function (e) { CgRt.setIdElem('bottom', e); });
-        CgRt.addProp("style", (
-          function () {
-            var result = {};
-            result.flexDirection = "row";
-            result.justifyContent = "flex-start";
-            return result;
-          }()));
-        var p488 = CgRt.getProps();
-        CgRt.pushCont();
-        {
-          {
-            CgRt.beginProps();
 
-            CgRt.addProp("ref", function (e) { CgRt.setIdElem('left', e); });
-            CgRt.addProp("style", (
-              function () {
-                var result = {};
-                result.flex = 1;
-                result.margin = 2;
-                return result;
-              }()));
-            var p481 = CgRt.getProps();
-            CgRt.pushCont();
-            {
-              {
-                CgRt.beginProps();
+var groupElement__P20  = function (s) {
+var r0 = s.r0, step = s.pc;
+s.pc = -1;
+while (true) {
+if (yieldSteps-- < 0 && maybeYield(s, step, r0)) return null;
+switch (step) {
+  case 0:
 
-                CgRt.addProp("style", (
-                  function () {
-                    var result = {};
-                    result.color = "#cc0000";
-                    return result;
-                  }()));
-                var p479 = CgRt.getProps();
-                CgRt.pushElem(CgRt.createElement(CgRt.Textr, p479, [error_message]));
-              }
-              {
-                CgRt.beginProps();
-
-                CgRt.addProp("onChangeText", function (text) {
-                  input_text = text;
-
-                  CgRt.updateUI();
-                });
-                CgRt.addProp("value", input_text);
-                CgRt.addProp("style", (
-                  function () {
-                    var result = {};
-                    result.borderWidth = 1;
-                    result.flex = 1;
-                    result.margin = 2;
-                    result.padding = 5;
-                    return result;
-                  }()));
-                var p480 = CgRt.getProps();
-                CgRt.pushElem(CgRt.createElement(CgRt.TextInputr, p480));
-              }
-            }
-            var cl482 = CgRt.popCont();
-            CgRt.pushElem(CgRt.createElement(CgRt.Viewr, p481, cl482));
-          }
-          {
-            CgRt.beginProps();
-
-            CgRt.addProp("ref", function (e) { CgRt.setIdElem('right', e); });
-            CgRt.addProp("style", (
-              function () {
-                var result = {};
-                result.justifyContent = "flex-end";
-                return result;
-              }()));
-            var p486 = CgRt.getProps();
-            CgRt.pushCont();
-            {
-              {
-                CgRt.beginProps();
-
-                CgRt.addProp("onPress", function () {
-                  if (!) {
-                  }
-
-                  CgRt.updateUI();
-                });
-                CgRt.addProp("style", buttonstyle);
-                var p484 = CgRt.getProps();
-                CgRt.pushCont();
-                {
-                  {
-                    CgRt.beginProps();
-
-                    CgRt.addProp("style", buttontextstyle);
-                    var p483 = CgRt.getProps();
-                    CgRt.pushElem(CgRt.createElement(CgRt.Textr, p483, ['Insert']));
-                  }
-                }
-                var cl485 = CgRt.popCont();
-                CgRt.pushElem(CgRt.createElement(CgRt.TouchableHighlightr, p484, cl485));
-              }
-            }
-            var cl487 = CgRt.popCont();
-            CgRt.pushElem(CgRt.createElement(CgRt.Viewr, p486, cl487));
-          }
-        }
-        var cl489 = CgRt.popCont();
-        CgRt.pushElem(CgRt.createElement(CgRt.Viewr, p488, cl489));
-      }
+    if (s.lambdaArgs) {
+      s.arg0 = pxtrt.incr(s.lambdaArgs[0]);
+      s.arg1 = (s.lambdaArgs[1]);
+      s.arg2 = (s.lambdaArgs[2]);
+      s.arg3 = (s.lambdaArgs[3]);
+      s.arg4 = pxtrt.incr(s.lambdaArgs[4]);
+      s.arg5 = pxtrt.incr(s.lambdaArgs[5]);
+      s.lambdaArgs = null;
     }
-    var cl491 = CgRt.popCont();
-    CgRt.pushElem(CgRt.createElement(CgRt.Viewr, p490, cl491));
-  }
-
-  var cl = CgRt.popCont();
-  return CgRt.createElement(CgRt.Viewr, { style: { backgroundColor: "white", flex: 1 } }, cl);
-});
-rowstyle =
-  function () {
-    var result = {};
-    result.flexDirection = "row";
-    result.justifyContent = "center";
-    return result;
-  }();
-buttonstyle =
-  function () {
-    var result = {};
-    result.alignItems = "center";
-    result.justifyContent = "center";
-    result.backgroundColor = "#3366ff";
-    result.borderRadius = 5;
-    result.margin = 5;
-    result.padding = 5;
-    result.minWidth = 100;
-    return result;
-  }();
-buttontextstyle =
-  function () {
-    var result = {};
-    result.color = "#ffffff";
-    return result;
-  }();
-
-{
-  CgRt.beginProps();
-  undefined
-  CgRt.addProp("style", (
-    function () {
-      var result = {};
-      result.borderWidth = 1;
-      result.flex = 1;
-      result.margin = 2;
-      return result;
-    }()));
-  var p492 = CgRt.getProps();
-  CgRt.pushCont();
-  { }
-  var cl493 = CgRt.popCont();
-  CgRt.pushElem(CgRt.createElement(CgRt.ScrollViewr, p492, cl493));
-}
+    r0 = s.arg0;
+    s.tmp_0 = r0;
+    r0 = s.arg4;
+    s.tmp_1 = r0;
+    r0 = s.arg5;
+    s.tmp_2 = r0;
+    r0 = pxsim.UI.groupElementImpl(s.tmp_0, s.arg1, s.arg2, s.arg3, s.tmp_1, s.tmp_2);
+    s.tmp_3 = r0;
+    r0 = s.tmp_0;
+    r0 = s.tmp_1;
+    r0 = s.tmp_2;
+    r0 = s.tmp_3;
+  case 1:
+    r0 = s.arg0;
+    r0 = s.arg4;
+    r0 = s.arg5;
+    return leave(s, r0)
+  default: oops()
+} } }
+groupElement__P20.info = {"start":655,"length":294,"line":23,"column":4,"endLine":31,"endColumn":5,"fileName":"pxt_modules/core/ui.ts","functionName":"groupElement"}
 
 
-{
-  CgRt.beginProps();
 
-  CgRt.addProp("source", { uri: '' });
-  var p = CgRt.getProps();
-  CgRt.pushElem(CgRt.createElement(CgRt.Imager, p));
-}
+var userInterface__P19  = function (s) {
+var r0 = s.r0, step = s.pc;
+s.pc = -1;
+while (true) {
+if (yieldSteps-- < 0 && maybeYield(s, step, r0)) return null;
+switch (step) {
+  case 0:
+
+    if (s.lambdaArgs) {
+      s.arg0 = (s.lambdaArgs[0]);
+      s.arg1 = pxtrt.incr(s.lambdaArgs[1]);
+      s.lambdaArgs = null;
+    }
+    r0 = s.arg1;
+    s.tmp_0 = r0;
+    r0 = pxsim.UI.userInterfaceImpl(s.arg0, s.tmp_0);
+    s.tmp_1 = r0;
+    r0 = s.tmp_0;
+    r0 = s.tmp_1;
+  case 1:
+    r0 = s.arg1;
+    return leave(s, r0)
+  default: oops()
+} } }
+userInterface__P19.info = {"start":302,"length":107,"line":13,"column":4,"endLine":15,"endColumn":5,"fileName":"pxt_modules/core/ui.ts","functionName":"userInterface"}
+
+
+
+var inline__P51  = function (s) {
+var r0 = s.r0, step = s.pc;
+s.pc = -1;
+while (true) {
+if (yieldSteps-- < 0 && maybeYield(s, step, r0)) return null;
+switch (step) {
+  case 0:
+
+  case 1:
+    return leave(s, r0)
+  default: oops()
+} } }
+inline__P51.info = {"start":164,"length":11,"line":5,"column":15,"endLine":7,"endColumn":1,"fileName":"main.ts","functionName":"inline"}
+
+
+
+var styleDef__P38  = function (s) {
+var r0 = s.r0, step = s.pc;
+s.pc = -1;
+while (true) {
+if (yieldSteps-- < 0 && maybeYield(s, step, r0)) return null;
+switch (step) {
+  case 0:
+
+    if (s.lambdaArgs) {
+      s.arg0 = pxtrt.incr(s.lambdaArgs[0]);
+      s.lambdaArgs = null;
+    }
+    r0 = s.arg0;
+    s.tmp_0 = r0;
+    r0 = pxsim.Style.styleDefImpl(s.tmp_0);
+    s.tmp_1 = r0;
+    r0 = s.tmp_0;
+    r0 = s.tmp_1;
+    { step = 1; continue; }
+  case 1:
+    // jmp value (already in r0)
+    s.tmp_0 = r0;
+    r0 = s.arg0;
+    r0 = s.tmp_0;
+    { step = 2; continue; }
+  case 2:
+    return leave(s, r0)
+  default: oops()
+} } }
+styleDef__P38.info = {"start":231,"length":101,"line":12,"column":4,"endLine":14,"endColumn":5,"fileName":"pxt_modules/core/style.ts","functionName":"styleDef"}
+
+
+setupDebugger(1)

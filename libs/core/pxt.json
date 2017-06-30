@@ -8,7 +8,8 @@
         "types.d.ts",
         "sims.d.ts",
         "ui.ts",
-        "data.ts"
+        "data.ts",
+        "style.ts"
     ],
     "testFiles": [
         "test.ts"

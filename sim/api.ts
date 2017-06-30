@@ -82,6 +82,13 @@ namespace pxsim.UI {
     }
 }
 
+namespace pxsim.Style {
+    //%
+    export function styleDefImpl(body: pxsim.RefAction): StylePropertySet {
+        return null;
+    }
+}
+
 namespace pxsim.Data {
     //%
     export function getSharedStringImpl(name: string): string {

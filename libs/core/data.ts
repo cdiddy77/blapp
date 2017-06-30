@@ -1,7 +1,7 @@
 /**
  * Basic functionalities.
  */
-//% color=#00BCD4 weight=100
+//% color=#00BCD4 weight=80
 namespace Data {
     /**
      * get the current value of a shared variable
@@ -89,7 +89,7 @@ namespace Data {
     //% weight=30
     //% blockId=on_shared_change
     //% block="When shared %name|changes"
-    export function onSharedVariableChange(name: string, body: Action) {
+    export function onSharedVariableChange(name: string, body: Action):void {
         onSharedVariableChangeImpl(name, body);
     }
 

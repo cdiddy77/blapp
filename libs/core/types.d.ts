@@ -1,5 +1,13 @@
 declare interface StylePropertySet {
-    name: string;
+   [key: string]: any;
+}
+
+declare interface StyleProperty {
+   [key: string]: any;
+}
+
+declare interface AnyValue{
+    v:any;
 }
 
 declare const enum UITheme {
@@ -96,3 +104,4 @@ declare const enum UIDividerClass {
     //% block="(none)"
     None
 }
+

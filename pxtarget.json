@@ -19,7 +19,8 @@
         "listsBlocks": true
     },
     "simulator": {
-        "autoRun": true
+        "autoRun": true,
+        "functionblocks": true
     },
     "appTheme": {
         "logoUrl": "http://sample.pxt.io/",
@@ -48,8 +49,6 @@
                 "colour": "rgba(189, 195, 199, 0.30)",
                 "snap": true
             }
-        },
-        "simAnimationEnter": "rotate in",
-        "simAnimationExit": "rotate out"
+        }
     }
 }
