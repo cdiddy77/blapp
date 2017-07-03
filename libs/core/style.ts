@@ -10,7 +10,8 @@ namespace Style {
     //% weight=100
     //% blockId=styledef
     //% block="Rules %props=Array<StyleProperty>"
-    export function styleDef(props: Array<StyleProperty>): StylePropertySet {
+    //% acceptArrays=true
+    export function styleDef(props: StyleProperty[]): StylePropertySet {
         return {};//styleDefImpl(null);
     }
 

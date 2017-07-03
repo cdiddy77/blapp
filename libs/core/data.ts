@@ -39,7 +39,7 @@ namespace Data {
     //% weight=50
     //% blockId=get_shared_list
     //% block="shared list %name"
-    export function getSharedList(name: string): Array<string> {
+    export function getSharedList(name: string): string[] {
         return getSharedListImpl(name);
     }
 
@@ -79,7 +79,7 @@ namespace Data {
     //% weight=50
     //% blockId=set_shared_list
     //% block="set shared list %name|to %v"
-    export function setSharedList(name: string, v: Array<string>): void {
+    export function setSharedList(name: string, v: string[]): void {
         return setSharedListImpl(name, v);
     }
 
