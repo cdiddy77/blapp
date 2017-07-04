@@ -1052,6 +1052,8 @@ var pxt;
         function compileEvent(e, b, stdfun, args, ns, comments) {
             var compiledArgs = args.map(function (arg) { return compileArg(e, b, arg, comments); });
             var symbolInfo = pxt.blocks.blockSymbol(b.type);
+            // TODO : this will work for actions with no arguments, but not for action parameters that
+            // actually take arguments
             var bodies = symbolInfo.parameters ? symbolInfo.parameters.filter(function (pr) { return pr.type == "() => void"; }) : [];
             var bodyStmts = [];
             if (bodies.length > 0) {
@@ -2465,8 +2467,16 @@ var pxt;
             if (right)
                 i.setAlign(Blockly.ALIGN_RIGHT);
             // ignore generic types
-            if (type && type != "T")
-                i.setCheck(type);
+            if (type && type != "T") {
+                // ChParker HACK : fields which take array types need to be able to accept 
+                // generic arrays.
+                if (fn.attributes.acceptArrays && type.length > 2 && type.substr(type.length - 2) == '[]') {
+                    i.setCheck(['Array', type]);
+                }
+                else {
+                    i.setCheck(type);
+                }
+            }
             return i;
         }
         function cleanOuterHTML(el) {
