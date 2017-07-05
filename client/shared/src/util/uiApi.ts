@@ -36,7 +36,7 @@ export namespace pxsimui {
         direction: UIGroupDirection,
         flex: boolean,
         className: UIGroupClass,
-        style: StylePropertySet,
+        style: StyleProperty[],
         children: pxsim.RefAction): void {
         let childDirection: string;
         switch (direction) {
@@ -98,7 +98,7 @@ export namespace pxsimui {
         flex: boolean,
         className: UIGroupClass,
         horz: boolean,
-        style: StylePropertySet,
+        style: StyleProperty[],
         children: pxsim.RefAction): void {
 
         let groupClass: string;
@@ -145,7 +145,7 @@ export namespace pxsimui {
         id: string,
         flex: boolean,
         className: UIButtonClass,
-        style: StylePropertySet,
+        style: StyleProperty[],
         children: pxsim.RefAction,
         whenPressed: pxsim.RefAction): void {
 
@@ -199,7 +199,7 @@ export namespace pxsimui {
     export function textElementImpl(
         flex: boolean,
         className: UITextClass,
-        style: StylePropertySet,
+        style: StyleProperty[],
         value: string): void {
         let textClass: string;
         switch (className) {
@@ -248,7 +248,7 @@ export namespace pxsimui {
         id: string,
         flex: boolean,
         className: UITextInputClass,
-        style: StylePropertySet,
+        style: StyleProperty[],
         initialValue: string,
         whenTextChanges: pxsim.RefAction): void {
 
@@ -286,7 +286,7 @@ export namespace pxsimui {
         flex: boolean,
         width: number,
         height: number,
-        style: StylePropertySet,
+        style: StyleProperty[],
         url: string): void {
         CodegenRuntime.beginProps();
         genFlexProp(flex);
@@ -301,7 +301,7 @@ export namespace pxsimui {
 
     export function dividerElementImpl(
         className: UIDividerClass,
-        style: StylePropertySet): void {
+        style: StyleProperty[]): void {
         let dividerClass: string;
         switch (className) {
             case UIDividerClass.HorzTop:
@@ -345,7 +345,7 @@ export namespace pxsimui {
         }
     }
 
-    function genStyleProp(style: StylePropertySet) {
+    function genStyleProp(style: StyleProperty[]) {
         if (!style) return;
     }
 }

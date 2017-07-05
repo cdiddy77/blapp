@@ -6,41 +6,35 @@ declare namespace UI {
 
     //%
     //% shim=UI::groupElementImpl
-    function groupElementImpl(name: string, direction: UIGroupDirection, flex: boolean, className: UIGroupClass, style: StylePropertySet, children: () => void): void;
+    function groupElementImpl(name: string, direction: UIGroupDirection, flex: boolean, className: UIGroupClass, style: StyleProperty[], children: () => void): void;
 
     //%
     //% shim=UI::scrollerElementImpl
-    function scrollerElementImpl(name: string, flex: boolean, className: UIGroupClass, horz: boolean, style: StylePropertySet, children: () => void): void;
+    function scrollerElementImpl(name: string, flex: boolean, className: UIGroupClass, horz: boolean, style: StyleProperty[], children: () => void): void;
 
     //%
     //% shim=UI::buttonElementImpl
-    function buttonElementImpl(name: string, flex: boolean, className: UIButtonClass, style: StylePropertySet, children: () => void, whenPressed: () => void): void;
+    function buttonElementImpl(name: string, flex: boolean, className: UIButtonClass, style: StyleProperty[], children: () => void, whenPressed: () => void): void;
 
     //%
     //% shim=UI::textElementImpl
-    function textElementImpl(flex: boolean, className: UITextClass, style: StylePropertySet, value: string): void;
+    function textElementImpl(flex: boolean, className: UITextClass, style: StyleProperty[], value: string): void;
 
     //%
     //% shim=UI::textInputElementImpl
-    function textInputElementImpl(name: string, flex: boolean, className: UITextInputClass, style: StylePropertySet, initialValue: string, whenTextChanges: (text: string) => void): void;
+    function textInputElementImpl(name: string, flex: boolean, className: UITextInputClass, style: StyleProperty[], initialValue: string, whenTextChanges: (text: string) => void): void;
 
     //%
     //% shim=UI::imageElementImpl
-    function imageElementImpl(flex: boolean, width: number, height: number, style: StylePropertySet, url: string): void;
+    function imageElementImpl(flex: boolean, width: number, height: number, style: StyleProperty[], url: string): void;
 
     //%
     //% shim=UI::dividerElementImpl
-    function dividerElementImpl(className: UIDividerClass, style: StylePropertySet): void;
+    function dividerElementImpl(className: UIDividerClass, style: StyleProperty[]): void;
 
     //%
     //% shim=UI::updateUIImpl
     function updateUIImpl(): void;
-
-}
-declare namespace Style {
-    //%
-    //% shim=Style::styleDefImpl
-    function styleDefImpl(body: () => void): StylePropertySet;
 
 }
 declare namespace Data {

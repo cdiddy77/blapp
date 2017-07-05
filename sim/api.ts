@@ -12,7 +12,7 @@ namespace pxsim.UI {
         direction: UIGroupDirection,
         flex: boolean,
         className: UIGroupClass,
-        style: StylePropertySet,
+        style: StyleProperty[],
         children: pxsim.RefAction): void {
 
     }
@@ -23,7 +23,7 @@ namespace pxsim.UI {
         flex: boolean,
         className: UIGroupClass,
         horz: boolean,
-        style: StylePropertySet,
+        style: StyleProperty[],
         children: pxsim.RefAction): void {
 
     }
@@ -33,7 +33,7 @@ namespace pxsim.UI {
         name: string,
         flex: boolean,
         className: UIButtonClass,
-        style: StylePropertySet,
+        style: StyleProperty[],
         children: pxsim.RefAction,
         whenPressed: pxsim.RefAction): void {
 
@@ -43,7 +43,7 @@ namespace pxsim.UI {
     export function textElementImpl(
         flex: boolean,
         className: UITextClass,
-        style: StylePropertySet,
+        style: StyleProperty[],
         value: string): void {
 
     }
@@ -53,7 +53,7 @@ namespace pxsim.UI {
         name: string,
         flex: boolean,
         className: UITextInputClass,
-        style: StylePropertySet,
+        style: StyleProperty[],
         initialValue: string,
         whenTextChanges: (text: string) => void): void {
 
@@ -64,7 +64,7 @@ namespace pxsim.UI {
         flex: boolean,
         width: number,
         height: number,
-        style: StylePropertySet,
+        style: StyleProperty[],
         url: string): void {
 
     }
@@ -72,7 +72,7 @@ namespace pxsim.UI {
     //%
     export function dividerElementImpl(
         className: UIDividerClass,
-        style: StylePropertySet): void {
+        style: StyleProperty[]): void {
 
     }
 
@@ -83,10 +83,6 @@ namespace pxsim.UI {
 }
 
 namespace pxsim.Style {
-    //%
-    export function styleDefImpl(body: pxsim.RefAction): StylePropertySet {
-        return null;
-    }
 }
 
 namespace pxsim.Data {

@@ -19,8 +19,9 @@ namespace UI {
       */
     //% weight=90
     //% blockId=group_element
-    //% block="Group id %name|dir %direction|flex %flex|class %className|style %style=StylePropertySet"
+    //% block="Group id %name|dir %direction|flex %flex|class %className|style %style=StyleProperty[]"
     //% handlerStmt=true
+    //% acceptArrays=true
     export function groupElement(
         name: string,
         direction: UIGroupDirection,
@@ -28,7 +29,7 @@ namespace UI {
         className: UIGroupClass,
         style: StylePropertySet,
         children: Action): void {
-        groupElementImpl(name, direction, flex, className, style, children);
+        groupElementImpl(name, direction, flex, className, style.rules, children);
     }
 
     /**
@@ -38,12 +39,13 @@ namespace UI {
     //% blockId=scroller_element
     //% block="Scroller id %name|flex %flex|class %className|horizontal? %horz|style %style"
     //% handlerStmt=true
+    //% acceptArrays=true
     export function scrollerElement(
         name: string,
         flex: boolean,
         className: UIGroupClass,
         horz: boolean,
-        style: StylePropertySet,
+        style: StyleProperty[],
         children: Action): void {
         scrollerElementImpl(name, flex, className, horz, style, children);
     }
@@ -55,11 +57,12 @@ namespace UI {
     //% blockId=button_element
     //% block="Button id %name|flex %flex|class %className|style %style"
     //% handlerStmt=true
+    //% acceptArrays=true
     export function buttonElement(
         name: string,
         flex: boolean,
         className: UIButtonClass,
-        style: StylePropertySet,
+        style: StyleProperty[],
         children: Action,
         whenPressed: Action): void {
         buttonElementImpl(name, flex, className, style, children, whenPressed);
@@ -72,10 +75,11 @@ namespace UI {
     //% blockId=text_element
     //% block="Text flex %flex|class %className|style %style|%value"
     //% handlerStmt=true
+    //% acceptArrays=true
     export function textElement(
         flex: boolean,
         className: UITextClass,
-        style: StylePropertySet,
+        style: StyleProperty[],
         value: string): void {
         textElementImpl(flex, className, style, value);
     }
@@ -93,11 +97,12 @@ namespace UI {
     //% mutate=objectdestructuring
     //% mutateText="new text"
     //% mutateDefaults="text;text"
+    //% acceptArrays=true
     export function textInputElement(
         name: string,
         flex: boolean,
         className: UITextInputClass,
-        style: StylePropertySet,
+        style: StyleProperty[],
         initialValue: string,
         whenTextChanges: (args: WhenTextChangesArgs) => void): void {
 
@@ -114,11 +119,12 @@ namespace UI {
     //% weight=60
     //% blockId=image_element
     //% block="Image flex %flex|width %width|height %height|style %style|URL %url"
+    //% acceptArrays=true
     export function imageElement(
         flex: boolean,
         width: number,
         height: number,
-        style: StylePropertySet,
+        style: StyleProperty[],
         url: string): void {
         imageElementImpl(flex, width, height, style, url);
     }
@@ -129,9 +135,10 @@ namespace UI {
     //% weight=40
     //% blockId=divider_element
     //% block="Divider class %className|style %style"
+    //% acceptArrays=true
     export function dividerElement(
         className: UIDividerClass,
-        style: StylePropertySet): void {
+        style: StyleProperty[]): void {
         dividerElementImpl(className, style);
     }
 

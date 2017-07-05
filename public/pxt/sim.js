@@ -42,16 +42,6 @@ var pxsim;
     })(UI = pxsim.UI || (pxsim.UI = {}));
 })(pxsim || (pxsim = {}));
 (function (pxsim) {
-    var Style;
-    (function (Style) {
-        //%
-        function styleDefImpl(body) {
-            return null;
-        }
-        Style.styleDefImpl = styleDefImpl;
-    })(Style = pxsim.Style || (pxsim.Style = {}));
-})(pxsim || (pxsim = {}));
-(function (pxsim) {
     var Data;
     (function (Data) {
         //%
