@@ -347,6 +347,18 @@ export namespace pxsimui {
 
     function genStyleProp(style: StyleProperty[]) {
         if (!style) return;
+        let s: any = {};
+        for (let i = 0; i < style.length; i++) {
+            let elem = style[i];
+            if (elem.stringValue) {
+                s[elem.name] = elem.stringValue;
+            } else if (elem.numberValue) {
+                s[elem.name] = elem.numberValue;
+            } else if (elem.boolValue) {
+                s[elem.name] = elem.boolValue;
+            }
+        }
+        CodegenRuntime.addProp('style', s);
     }
 }
 

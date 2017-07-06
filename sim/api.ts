@@ -12,7 +12,7 @@ namespace pxsim.UI {
         direction: UIGroupDirection,
         flex: boolean,
         className: UIGroupClass,
-        style: StyleProperty[],
+        style: RefCollection,
         children: pxsim.RefAction): void {
 
     }

@@ -9,24 +9,10 @@ namespace Style {
     **/
     //% weight=100
     //% blockId=styledef
-    //% block="Rules %props=Array<StyleProperty>"
+    //% block="Rules %props"
     //% acceptArrays=true
     export function styleDef(props: StyleProperty[]): StylePropertySet {
         return { rules: props };//styleDefImpl(null);
-    }
-
-    /**
-     * Set a property of a style
-    **/
-    //% weight=100
-    //% blockId=stylepropdef
-    //% block="Prop %prop|with %value=AnyValue"
-    export function stylePropDef(name: string, value: AnyValue): StyleProperty {
-        let retval: StyleProperty = {};//styleDefImpl(null);
-        if (value) {
-            retval[name] = value.v;
-        }
-        return retval;
     }
 
     /**
@@ -57,7 +43,7 @@ namespace Style {
                 value = 'space-around';
                 break;
         }
-        return { name: 'alignContent', value: value };
+        return { name: 'alignContent', stringValue: value };
     }
 
     //% blockId=styleprop_alignitems
@@ -82,7 +68,7 @@ namespace Style {
                 value = 'baseline';
                 break;
         }
-        return { name: 'alignItems', value: value };
+        return { name: 'alignItems', stringValue: value };
     }
 
     //% blockId=styleprop_alignself
@@ -107,7 +93,7 @@ namespace Style {
                 value = 'baseline';
                 break;
         }
-        return { name: 'alignSelf', value: value };
+        return { name: 'alignSelf', stringValue: value };
     }
 
     //% blockId=styleprop_flexdirection
@@ -132,7 +118,7 @@ namespace Style {
                 value = '';
                 break;
         }
-        return { name: 'flexDirection', value };
+        return { name: 'flexDirection', stringValue: value };
     }
 
     //% blockId=styleprop_justifycontent
@@ -160,7 +146,7 @@ namespace Style {
                 value = 'space-around';
                 break;
         }
-        return { name: 'justifyContent', value: value };
+        return { name: 'justifyContent', stringValue: value };
     }
 
     //% blockId=styleprop_flexwrap
@@ -176,7 +162,7 @@ namespace Style {
                 value = 'nowrap';
                 break;
         }
-        return { name: 'flexWrap', value: value };
+        return { name: 'flexWrap', stringValue: value };
     }
 
     //% blockId=styleprop_position
@@ -192,7 +178,7 @@ namespace Style {
                 value = 'relative';
                 break;
         }
-        return { name: 'position', value: value };
+        return { name: 'position', stringValue: value };
     }
 
 
@@ -218,21 +204,21 @@ namespace Style {
                 property = 'zIndex';
                 break;
         }
-        return { name: property, value: p };
+        return { name: property, numberValue: p };
     }
 
     //% blockId=styleprop_aspectratio
     //% block="aspect ratio %v"
     //% subcategory=Layout
     export function stylePropAspectRatio(v: number): StyleProperty {
-        return { name: 'aspectRatio', value: v };
+        return { name: 'aspectRatio', numberValue: v };
     }
 
     //% blockId=styleprop_backgroundcolor
     //% block="background color %v"
     //% subcategory=Color
     export function stylePropBackgroundColor(v: string): StyleProperty {
-        return { name: 'backgroundColor', value: v };
+        return { name: 'backgroundColor', stringValue: v };
     }
 
     //     //% blockId=styleprop_generic'] = {
@@ -326,7 +312,7 @@ namespace Style {
                 property = 'borderColor';
                 break;
         }
-        return { name: property, value: v };
+        return { name: property, stringValue: v };
     }
 
     //% blockId=styleprop_borderradius
@@ -351,7 +337,7 @@ namespace Style {
                 property = 'borderTopRightRadius';
                 break;
         }
-        return { name: property, value: v };
+        return { name: property, numberValue: v };
     }
 
     //% blockId=styleprop_borderwidth
@@ -376,7 +362,7 @@ namespace Style {
                 property = 'borderWidth';
                 break;
         }
-        return { name: property, value: v };
+        return { name: property, numberValue: v };
     }
 
     //% blockId=styleprop_borderstyle
@@ -398,7 +384,7 @@ namespace Style {
                 value = 'dashed';
                 break;
         }
-        return { name: 'borderStyle', value: value };
+        return { name: 'borderStyle', stringValue: value };
     }
 
     //% blockId=styleprop_flexvalues
@@ -420,7 +406,7 @@ namespace Style {
                 property = 'flexShrink';
                 break;
         }
-        return { name: property, value: v };
+        return { name: property, numberValue: v };
     }
 
     //% blockId=styleprop_size
@@ -448,7 +434,7 @@ namespace Style {
                 property = 'minWidth';
                 break;
         }
-        return { name: property, value: v };
+        return { name: property, numberValue: v };
     }
 
     //% blockId=styleprop_margin
@@ -479,7 +465,7 @@ namespace Style {
                 property = 'marginVertical';
                 break;
         }
-        return { name: property, value: v };
+        return { name: property, numberValue: v };
     }
 
     //% blockId=styleprop_padding
@@ -510,7 +496,7 @@ namespace Style {
                 property = 'paddingVertical';
                 break;
         }
-        return { name: property, value: v };
+        return { name: property, numberValue: v };
     }
 
     //% blockId=styleprop_overflow
@@ -529,7 +515,7 @@ namespace Style {
                 value = 'scroll';
                 break;
         }
-        return { name: 'overflow', value: value };
+        return { name: 'overflow', stringValue: value };
     }
 
     /**
@@ -540,7 +526,7 @@ namespace Style {
     //% block="opacity %v"
     //% subcategory=Color
     export function stylePropOpacity(v: number): StyleProperty {
-        return { name: 'opacity', value: v };
+        return { name: 'opacity', numberValue: v };
     }
 
     //% blockId=styleprop_image_resizemode
@@ -565,28 +551,28 @@ namespace Style {
                 value = "repeat";
                 break;
         }
-        return { name: 'resizeMode', value: value };
+        return { name: 'resizeMode', stringValue: value };
     }
 
     //% blockId=styleprop_image_tintcolor
     //% block="tint color %v"
     //% subcategory=Image
     export function stylePropImageTintColor(v: string): StyleProperty {
-        return { name: 'tintColor', v };
+        return { name: 'tintColor', stringValue: v };
     }
 
     //% blockId=styleprop_text_color
     //% block="text color %v"
     //% subcategory="Text styles"
     export function stylePropTextColor(v: string): StyleProperty {
-        return { name: 'color', v };
+        return { name: 'color', stringValue: v };
     }
 
     //% blockId=styleprop_text_fontfamily
     //% block="font family %v"
     //% subcategory="Text styles"
     export function stylePropTextFontFamily(v: string): StyleProperty {
-        return { name: 'fontFamily', v };
+        return { name: 'fontFamily', stringValue: v };
     }
 
     /**
@@ -597,7 +583,7 @@ namespace Style {
     //% block="font size %v"
     //% subcategory="Text styles"
     export function stylePropTextFontSize(v: number): StyleProperty {
-        return { name: 'fontSize', v };
+        return { name: 'fontSize', numberValue: v };
     }
 
     //% blockId=styleprop_text_fontstyle
@@ -613,7 +599,7 @@ namespace Style {
                 value = "italic";
                 break;
         }
-        return { name: 'fontStyle', value: value };
+        return { name: 'fontStyle', stringValue: value };
     }
 
     //% blockId=styleprop_text_fontweight
@@ -656,14 +642,14 @@ namespace Style {
                 value = '900';
                 break;
         }
-        return { name: 'fontWeight', value: value };
+        return { name: 'fontWeight', stringValue: value };
     }
 
     //% blockId=styleprop_text_lineheight
     //% block="line height %v"
     //% subcategory="Text styles"
     export function stylePropTextLineHeight(v: number): StyleProperty {
-        return { name: 'lineHeight', v };
+        return { name: 'lineHeight', numberValue: v };
     }
 
     //% blockId=styleprop_text_textalign
@@ -691,7 +677,7 @@ namespace Style {
                 value = 'justify-all';
                 break;
         }
-        return { name: 'textAlign', value: value };
+        return { name: 'textAlign', stringValue: value };
     }
 
     //% blockId=styleprop_text_textdecorationline
@@ -713,7 +699,7 @@ namespace Style {
                 value = 'underline line-through';
                 break;
         }
-        return { name: 'textAlign', value: value };
+        return { name: 'textAlign', stringValue: value };
     }
 
 }

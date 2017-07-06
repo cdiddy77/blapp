@@ -3,11 +3,10 @@ declare interface StylePropertySet {
 }
 
 declare interface StyleProperty {
-    [key: string]: any;
-}
-
-declare interface AnyValue {
-    v: any;
+    name:string;
+    stringValue?:string;
+    numberValue?:number;
+    boolValue?:boolean;
 }
 
 declare const enum UITheme {

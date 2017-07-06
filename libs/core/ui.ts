@@ -27,9 +27,9 @@ namespace UI {
         direction: UIGroupDirection,
         flex: boolean,
         className: UIGroupClass,
-        style: StylePropertySet,
+        style: StyleProperty[],
         children: Action): void {
-        groupElementImpl(name, direction, flex, className, style.rules, children);
+        groupElementImpl(name, direction, flex, className, style, children);
     }
 
     /**
