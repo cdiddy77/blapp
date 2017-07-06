@@ -36,7 +36,7 @@ export namespace pxsimui {
         direction: UIGroupDirection,
         flex: boolean,
         className: UIGroupClass,
-        style: StyleProperty[],
+        style: pxsim.RefCollection,
         children: pxsim.RefAction): void {
         let childDirection: string;
         switch (direction) {
@@ -98,7 +98,7 @@ export namespace pxsimui {
         flex: boolean,
         className: UIGroupClass,
         horz: boolean,
-        style: StyleProperty[],
+        style: pxsim.RefCollection,
         children: pxsim.RefAction): void {
 
         let groupClass: string;
@@ -145,7 +145,7 @@ export namespace pxsimui {
         id: string,
         flex: boolean,
         className: UIButtonClass,
-        style: StyleProperty[],
+        style: pxsim.RefCollection,
         children: pxsim.RefAction,
         whenPressed: pxsim.RefAction): void {
 
@@ -199,7 +199,7 @@ export namespace pxsimui {
     export function textElementImpl(
         flex: boolean,
         className: UITextClass,
-        style: StyleProperty[],
+        style: pxsim.RefCollection,
         value: string): void {
         let textClass: string;
         switch (className) {
@@ -248,7 +248,7 @@ export namespace pxsimui {
         id: string,
         flex: boolean,
         className: UITextInputClass,
-        style: StyleProperty[],
+        style: pxsim.RefCollection,
         initialValue: string,
         whenTextChanges: pxsim.RefAction): void {
 
@@ -286,7 +286,7 @@ export namespace pxsimui {
         flex: boolean,
         width: number,
         height: number,
-        style: StyleProperty[],
+        style: pxsim.RefCollection,
         url: string): void {
         CodegenRuntime.beginProps();
         genFlexProp(flex);
@@ -301,7 +301,7 @@ export namespace pxsimui {
 
     export function dividerElementImpl(
         className: UIDividerClass,
-        style: StyleProperty[]): void {
+        style: pxsim.RefCollection): void {
         let dividerClass: string;
         switch (className) {
             case UIDividerClass.HorzTop:
@@ -345,11 +345,11 @@ export namespace pxsimui {
         }
     }
 
-    function genStyleProp(style: StyleProperty[]) {
+    function genStyleProp(style: pxsim.RefCollection) {
         if (!style) return;
         let s: any = {};
-        for (let i = 0; i < style.length; i++) {
-            let elem = style[i];
+        for (let i = 0; i < style.getLength(); i++) {
+            let elem:pxsim.RefMap = style.getAt(i);
             if (elem.stringValue) {
                 s[elem.name] = elem.stringValue;
             } else if (elem.numberValue) {

@@ -669,7 +669,7 @@ var pxt;
                         var call = e.stdCallTable[b.parentBlock_.type];
                         isExpression = call && call.isExpression;
                     }
-                    var arrayNode = blocks.mkText("[]");
+                    var arrayNode = blocks.mkText("[0]");
                     expr = isExpression ? arrayNode : prefixWithSemicolon(arrayNode);
                 }
                 else {

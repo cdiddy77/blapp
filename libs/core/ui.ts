@@ -19,7 +19,7 @@ namespace UI {
       */
     //% weight=90
     //% blockId=group_element
-    //% block="Group id %name|dir %direction|flex %flex|class %className|style %style=StyleProperty[]"
+    //% block="Group id %name|dir %direction|flex %flex|class %className|style %style=lists_create_empty"
     //% handlerStmt=true
     //% acceptArrays=true
     export function groupElement(
@@ -37,7 +37,7 @@ namespace UI {
       */
     //% weight=30
     //% blockId=scroller_element
-    //% block="Scroller id %name|flex %flex|class %className|horizontal? %horz|style %style"
+    //% block="Scroller id %name|flex %flex|class %className|horizontal? %horz|style %style=lists_create_empty"
     //% handlerStmt=true
     //% acceptArrays=true
     export function scrollerElement(
@@ -55,7 +55,7 @@ namespace UI {
      */
     //% weight=70
     //% blockId=button_element
-    //% block="Button id %name|flex %flex|class %className|style %style"
+    //% block="Button id %name|flex %flex|class %className|style %style=lists_create_empty"
     //% handlerStmt=true
     //% acceptArrays=true
     export function buttonElement(
@@ -73,7 +73,7 @@ namespace UI {
      */
     //% weight=80
     //% blockId=text_element
-    //% block="Text flex %flex|class %className|style %style|%value"
+    //% block="Text flex %flex|class %className|style %style=lists_create_empty|%value"
     //% handlerStmt=true
     //% acceptArrays=true
     export function textElement(
@@ -92,7 +92,7 @@ namespace UI {
      */
     //% weight=50
     //% blockId=textinput_element
-    //% block="Text Input id %name|flex %flex|class %className|style %style|initial %initialValue| when text changes"
+    //% block="Text Input id %name|flex %flex|class %className|style %style=lists_create_empty|initial %initialValue| when text changes"
     //% handlerStmt=true
     //% mutate=objectdestructuring
     //% mutateText="new text"
@@ -118,7 +118,7 @@ namespace UI {
      */
     //% weight=60
     //% blockId=image_element
-    //% block="Image flex %flex|width %width|height %height|style %style|URL %url"
+    //% block="Image flex %flex|width %width|height %height|style %style=lists_create_empty|URL %url"
     //% acceptArrays=true
     export function imageElement(
         flex: boolean,
@@ -134,7 +134,7 @@ namespace UI {
      */
     //% weight=40
     //% blockId=divider_element
-    //% block="Divider class %className|style %style"
+    //% block="Divider class %className|style %style=lists_create_empty"
     //% acceptArrays=true
     export function dividerElement(
         className: UIDividerClass,
