@@ -1,13 +1,13 @@
-declare interface StylePropertySet {
-    rules: StyleProperty[];
-}
+// declare interface StylePropertySet {
+//     rules: StyleProperty[];
+// }
 
-declare interface StyleProperty {
-    name:string;
-    stringValue?:string;
-    numberValue?:number;
-    boolValue?:boolean;
-}
+// declare interface StyleProperty {
+//     name:string;
+//     stringValue?:string;
+//     numberValue?:number;
+//     boolValue?:boolean;
+// }
 
 declare const enum UITheme {
     //% block=calm

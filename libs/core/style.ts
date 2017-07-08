@@ -4,24 +4,13 @@
  */
 //% color=#00BCD4 weight=90
 namespace Style {
-    /**
-     * Modify the visual appearance of a UI element
-    **/
-    //% weight=100
-    //% blockId=styledef
-    //% block="Rules %props"
-    //% acceptArrays=true
-    export function styleDef(props: StyleProperty[]): StylePropertySet {
-        return { rules: props };//styleDefImpl(null);
-    }
-
-    /**
-     * align content
-     */
+  /**
+   * align content
+   */
     //% blockId=styleprop_aligncontent
     //% block="align content %v"
     //% subcategory=Layout
-    export function stylePropAlignContent(v: StyAlignContent): StyleProperty {
+    export function stylePropAlignContent(v: StyAlignContent): string {
         let value: string;
         switch (v) {
             case StyAlignContent.Start:
@@ -49,7 +38,7 @@ namespace Style {
     //% blockId=styleprop_alignitems
     //% block="align items %v"
     //% subcategory=Layout
-    export function stylePropAlignItems(v: StyAlignItems): StyleProperty {
+    export function stylePropAlignItems(v: StyAlignItems): string {
         let value: string;
         switch (v) {
             case StyAlignItems.start:
@@ -74,7 +63,7 @@ namespace Style {
     //% blockId=styleprop_alignself
     //% block="align self %v"
     //% subcategory=Layout
-    export function stylePropAlignSelf(v: StyAlignItems): StyleProperty {
+    export function stylePropAlignSelf(v: StyAlignItems): string {
         let value: string;
         switch (v) {
             case StyAlignItems.start:
@@ -99,7 +88,7 @@ namespace Style {
     //% blockId=styleprop_flexdirection
     //% block="flex direction %v"
     //% subcategory=Layout
-    export function stylePropFlexDirection(v: StyFlexDirection): StyleProperty {
+    export function stylePropFlexDirection(v: StyFlexDirection): string {
         let value: string;
         switch (v) {
             case StyFlexDirection.row:
@@ -124,7 +113,7 @@ namespace Style {
     //% blockId=styleprop_justifycontent
     //% block="justify content %v"
     //% subcategory=Layout
-    export function stylePropJustifyContent(v: StyAlignContent): StyleProperty {
+    export function stylePropJustifyContent(v: StyAlignContent): string {
         let value: string;
         switch (v) {
             case StyAlignContent.Start:
@@ -152,7 +141,7 @@ namespace Style {
     //% blockId=styleprop_flexwrap
     //% block="wrap content %v"
     //% subcategory=Layout
-    export function stylePropFlexWrap(v: StyFlexWrap): StyleProperty {
+    export function stylePropFlexWrap(v: StyFlexWrap): string {
         let value: string;
         switch (v) {
             case StyFlexWrap.wrap:
@@ -168,7 +157,7 @@ namespace Style {
     //% blockId=styleprop_position
     //% block="position %v"
     //% subcategory=Layout
-    export function stylePropPosition(v: StyPosition): StyleProperty {
+    export function stylePropPosition(v: StyPosition): string {
         let value: string;
         switch (v) {
             case StyPosition.absolute:
@@ -185,7 +174,7 @@ namespace Style {
     //% blockId=styleprop_offset
     //% block="offset %v|%p"
     //% subcategory=Layout
-    export function stylePropOffset(v: StyOffsetType, p: number): StyleProperty {
+    export function stylePropOffset(v: StyOffsetType, p: number): string {
         let property: string;
         switch (v) {
             case StyOffsetType.bottom:
@@ -210,14 +199,14 @@ namespace Style {
     //% blockId=styleprop_aspectratio
     //% block="aspect ratio %v"
     //% subcategory=Layout
-    export function stylePropAspectRatio(v: number): StyleProperty {
+    export function stylePropAspectRatio(v: number): string {
         return { name: 'aspectRatio', numberValue: v };
     }
 
     //% blockId=styleprop_backgroundcolor
     //% block="background color %v"
     //% subcategory=Color
-    export function stylePropBackgroundColor(v: string): StyleProperty {
+    export function stylePropBackgroundColor(v: string): string {
         return { name: 'backgroundColor', stringValue: v };
     }
 
@@ -293,7 +282,7 @@ namespace Style {
     //% blockId=styleprop_bordercolor
     //% block="border color %p|%v"
     //% subcategory=Box
-    export function stylePropBorderColor(p: StyBoxSide, v: string): StyleProperty {
+    export function stylePropBorderColor(p: StyBoxSide, v: string): string {
         let property: string;
         switch (p) {
             case StyBoxSide.bottom:
@@ -318,7 +307,7 @@ namespace Style {
     //% blockId=styleprop_borderradius
     //% block="border radius %p|%v"
     //% subcategory=Box
-    export function stylePropBorderRadius(p: StyBoxCorner, v: number): StyleProperty {
+    export function stylePropBorderRadius(p: StyBoxCorner, v: number): string {
         let property: string;
         switch (p) {
             case StyBoxCorner.all:
@@ -343,7 +332,7 @@ namespace Style {
     //% blockId=styleprop_borderwidth
     //% block="border width %p|%v"
     //% subcategory=Box
-    export function stylePropBorderWidth(p: StyBoxSide, v: number): StyleProperty {
+    export function stylePropBorderWidth(p: StyBoxSide, v: number): string {
         let property: string;
         switch (p) {
             case StyBoxSide.bottom:
@@ -368,7 +357,7 @@ namespace Style {
     //% blockId=styleprop_borderstyle
     //% block="border style %v"
     //% subcategory=Box
-    export function stylePropBorderStyle(v: StyBorderStyle): StyleProperty {
+    export function stylePropBorderStyle(v: StyBorderStyle): string {
         let value: string;
         switch (v) {
             case StyBorderStyle.solid:
@@ -390,7 +379,7 @@ namespace Style {
     //% blockId=styleprop_flexvalues
     //% block="flex %p|%v"
     //% subcategory=Layout
-    export function stylePropFlexValues(p: StyFlexType, v: number): StyleProperty {
+    export function stylePropFlexValues(p: StyFlexType, v: number): string {
         let property: string;
         switch (p) {
             case StyFlexType.flex:
@@ -412,7 +401,7 @@ namespace Style {
     //% blockId=styleprop_size
     //% block="size %p|%v"
     //% subcategory=Layout
-    export function stylePropSize(p: StyPropSize, v: number): StyleProperty {
+    export function stylePropSize(p: StyPropSize, v: number): string {
         let property: string;
         switch (p) {
             case StyPropSize.height:
@@ -440,7 +429,7 @@ namespace Style {
     //% blockId=styleprop_margin
     //% block="border margin %p|%v"
     //% subcategory=Box
-    export function stylePropMargin(p: StyPropMargin, v: number): StyleProperty {
+    export function stylePropMargin(p: StyPropMargin, v: number): string {
         let property: string;
         switch (p) {
             case StyPropMargin.margin:
@@ -471,7 +460,7 @@ namespace Style {
     //% blockId=styleprop_padding
     //% block="padding %p|%v"
     //% subcategory=Box
-    export function stylePropPadding(p: StyPropPadding, v: number): StyleProperty {
+    export function stylePropPadding(p: StyPropPadding, v: number): string {
         let property: string;
         switch (p) {
             case StyPropPadding.padding:
@@ -502,7 +491,7 @@ namespace Style {
     //% blockId=styleprop_overflow
     //% block="overflow %v"
     //% subcategory=Layout
-    export function stylePropOverflow(v: StyPropOverflow): StyleProperty {
+    export function stylePropOverflow(v: StyPropOverflow): string {
         let value: string;
         switch (v) {
             case StyPropOverflow.hidden:
@@ -525,14 +514,14 @@ namespace Style {
     //% blockId=styleprop_opacity
     //% block="opacity %v"
     //% subcategory=Color
-    export function stylePropOpacity(v: number): StyleProperty {
+    export function stylePropOpacity(v: number): string {
         return { name: 'opacity', numberValue: v };
     }
 
     //% blockId=styleprop_image_resizemode
     //% block="resize mode %v"
     //% subcategory=Image
-    export function stylePropImageResizeMode(v: StyImageResizeMode): StyleProperty {
+    export function stylePropImageResizeMode(v: StyImageResizeMode): string {
         let value: string;
         switch (v) {
             case StyImageResizeMode.cover:
@@ -557,21 +546,21 @@ namespace Style {
     //% blockId=styleprop_image_tintcolor
     //% block="tint color %v"
     //% subcategory=Image
-    export function stylePropImageTintColor(v: string): StyleProperty {
+    export function stylePropImageTintColor(v: string): string {
         return { name: 'tintColor', stringValue: v };
     }
 
     //% blockId=styleprop_text_color
     //% block="text color %v"
     //% subcategory="Text styles"
-    export function stylePropTextColor(v: string): StyleProperty {
+    export function stylePropTextColor(v: string): string {
         return { name: 'color', stringValue: v };
     }
 
     //% blockId=styleprop_text_fontfamily
     //% block="font family %v"
     //% subcategory="Text styles"
-    export function stylePropTextFontFamily(v: string): StyleProperty {
+    export function stylePropTextFontFamily(v: string): string {
         return { name: 'fontFamily', stringValue: v };
     }
 
@@ -582,14 +571,14 @@ namespace Style {
     //% blockId=styleprop_text_fontsize
     //% block="font size %v"
     //% subcategory="Text styles"
-    export function stylePropTextFontSize(v: number): StyleProperty {
+    export function stylePropTextFontSize(v: number): string {
         return { name: 'fontSize', numberValue: v };
     }
 
     //% blockId=styleprop_text_fontstyle
     //% block="font style %v"
     //% subcategory="Text styles"
-    export function stylePropTextFontStyle(v: StyTextFontStyle): StyleProperty {
+    export function stylePropTextFontStyle(v: StyTextFontStyle): string {
         let value: string;
         switch (v) {
             case StyTextFontStyle.normal:
@@ -605,7 +594,7 @@ namespace Style {
     //% blockId=styleprop_text_fontweight
     //% block="font weight %v"
     //% subcategory="Text styles"
-    export function stylePropTextFontWeight(v: StyTextFontWeight): StyleProperty {
+    export function stylePropTextFontWeight(v: StyTextFontWeight): string {
         let value: string;
         switch (v) {
             case StyTextFontWeight.normal:
@@ -648,14 +637,14 @@ namespace Style {
     //% blockId=styleprop_text_lineheight
     //% block="line height %v"
     //% subcategory="Text styles"
-    export function stylePropTextLineHeight(v: number): StyleProperty {
+    export function stylePropTextLineHeight(v: number): string {
         return { name: 'lineHeight', numberValue: v };
     }
 
     //% blockId=styleprop_text_textalign
     //% block="alignment %v"
     //% subcategory="Text styles"
-    export function stylePropTextAlign(v: StyTextAlign): StyleProperty {
+    export function stylePropTextAlign(v: StyTextAlign): string {
         let value: string;
         switch (v) {
             case StyTextAlign.inherit:
@@ -683,7 +672,7 @@ namespace Style {
     //% blockId=styleprop_text_textdecorationline
     //% block="decoration %v"
     //% subcategory="Text styles"
-    export function stylePropTextDecorationLine(v: StyTextDecorationLine): StyleProperty {
+    export function stylePropTextDecorationLine(v: StyTextDecorationLine): string {
         let value: string;
         switch (v) {
             case StyTextDecorationLine.none:

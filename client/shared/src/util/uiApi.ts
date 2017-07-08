@@ -36,7 +36,7 @@ export namespace pxsimui {
         direction: UIGroupDirection,
         flex: boolean,
         className: UIGroupClass,
-        style: pxsim.RefCollection,
+        style: string[],
         children: pxsim.RefAction): void {
         let childDirection: string;
         switch (direction) {
@@ -98,7 +98,7 @@ export namespace pxsimui {
         flex: boolean,
         className: UIGroupClass,
         horz: boolean,
-        style: pxsim.RefCollection,
+        style: string[],
         children: pxsim.RefAction): void {
 
         let groupClass: string;
@@ -145,7 +145,7 @@ export namespace pxsimui {
         id: string,
         flex: boolean,
         className: UIButtonClass,
-        style: pxsim.RefCollection,
+        style: string[],
         children: pxsim.RefAction,
         whenPressed: pxsim.RefAction): void {
 
@@ -199,7 +199,7 @@ export namespace pxsimui {
     export function textElementImpl(
         flex: boolean,
         className: UITextClass,
-        style: pxsim.RefCollection,
+        style: string[],
         value: string): void {
         let textClass: string;
         switch (className) {
@@ -248,7 +248,7 @@ export namespace pxsimui {
         id: string,
         flex: boolean,
         className: UITextInputClass,
-        style: pxsim.RefCollection,
+        style: string[],
         initialValue: string,
         whenTextChanges: pxsim.RefAction): void {
 
@@ -286,7 +286,7 @@ export namespace pxsimui {
         flex: boolean,
         width: number,
         height: number,
-        style: pxsim.RefCollection,
+        style: string[],
         url: string): void {
         CodegenRuntime.beginProps();
         genFlexProp(flex);
@@ -301,7 +301,7 @@ export namespace pxsimui {
 
     export function dividerElementImpl(
         className: UIDividerClass,
-        style: pxsim.RefCollection): void {
+        style: string[]): void {
         let dividerClass: string;
         switch (className) {
             case UIDividerClass.HorzTop:
@@ -345,11 +345,11 @@ export namespace pxsimui {
         }
     }
 
-    function genStyleProp(style: pxsim.RefCollection) {
+    function genStyleProp(style: string[]) {
         if (!style) return;
         let s: any = {};
-        for (let i = 0; i < style.getLength(); i++) {
-            let elem:pxsim.RefMap = style.getAt(i);
+        for (let i = 0; i < style.length; i++) {
+            let elem: StyleProperty = parseStylePropString(style[i]);
             if (elem.stringValue) {
                 s[elem.name] = elem.stringValue;
             } else if (elem.numberValue) {
@@ -359,6 +359,12 @@ export namespace pxsimui {
             }
         }
         CodegenRuntime.addProp('style', s);
+    }
+
+    function parseStylePropString(s: string): StyleProperty {
+        return JSON.parse(s);
+        // let strs = s.split('|');
+        // return {name:strs[0],}
     }
 }
 
