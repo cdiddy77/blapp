@@ -39,7 +39,166 @@ var pxsim;
         function updateUIImpl() {
         }
         UI.updateUIImpl = updateUIImpl;
+        //%
+        function iconElementImpl(category, name, iconType, size, style) {
+        }
+        UI.iconElementImpl = iconElementImpl;
     })(UI = pxsim.UI || (pxsim.UI = {}));
+})(pxsim || (pxsim = {}));
+(function (pxsim) {
+    var Style;
+    (function (Style) {
+        //%
+        function stylePropAlignContentImpl(v) {
+            return null;
+        }
+        Style.stylePropAlignContentImpl = stylePropAlignContentImpl;
+        //% 
+        function stylePropAlignItemsImpl(v) {
+            return null;
+        }
+        Style.stylePropAlignItemsImpl = stylePropAlignItemsImpl;
+        //% 
+        function stylePropAlignSelfImpl(v) {
+            return null;
+        }
+        Style.stylePropAlignSelfImpl = stylePropAlignSelfImpl;
+        //% 
+        function stylePropFlexDirectionImpl(v) {
+            return null;
+        }
+        Style.stylePropFlexDirectionImpl = stylePropFlexDirectionImpl;
+        //% 
+        function stylePropJustifyContentImpl(v) {
+            return null;
+        }
+        Style.stylePropJustifyContentImpl = stylePropJustifyContentImpl;
+        //% 
+        function stylePropFlexWrapImpl(v) {
+            return null;
+        }
+        Style.stylePropFlexWrapImpl = stylePropFlexWrapImpl;
+        //% 
+        function stylePropPositionImpl(v) {
+            return null;
+        }
+        Style.stylePropPositionImpl = stylePropPositionImpl;
+        //% 
+        function stylePropOffsetImpl(v, p) {
+            return null;
+        }
+        Style.stylePropOffsetImpl = stylePropOffsetImpl;
+        //% 
+        function stylePropAspectRatioImpl(v) {
+            return null;
+        }
+        Style.stylePropAspectRatioImpl = stylePropAspectRatioImpl;
+        //% 
+        function stylePropBackgroundColorImpl(v) {
+            return null;
+        }
+        Style.stylePropBackgroundColorImpl = stylePropBackgroundColorImpl;
+        //% 
+        function stylePropBorderColorImpl(p, v) {
+            return null;
+        }
+        Style.stylePropBorderColorImpl = stylePropBorderColorImpl;
+        //% 
+        function stylePropBorderRadiusImpl(p, v) {
+            return null;
+        }
+        Style.stylePropBorderRadiusImpl = stylePropBorderRadiusImpl;
+        //% 
+        function stylePropBorderWidthImpl(p, v) {
+            return null;
+        }
+        Style.stylePropBorderWidthImpl = stylePropBorderWidthImpl;
+        //% 
+        function stylePropBorderStyleImpl(v) {
+            return null;
+        }
+        Style.stylePropBorderStyleImpl = stylePropBorderStyleImpl;
+        //% 
+        function stylePropFlexValuesImpl(p, v) {
+            return null;
+        }
+        Style.stylePropFlexValuesImpl = stylePropFlexValuesImpl;
+        //% 
+        function stylePropSizeImpl(p, v) {
+            return null;
+        }
+        Style.stylePropSizeImpl = stylePropSizeImpl;
+        //% 
+        function stylePropMarginImpl(p, v) {
+            return null;
+        }
+        Style.stylePropMarginImpl = stylePropMarginImpl;
+        //% 
+        function stylePropPaddingImpl(p, v) {
+            return null;
+        }
+        Style.stylePropPaddingImpl = stylePropPaddingImpl;
+        //% 
+        function stylePropOverflowImpl(v) {
+            return null;
+        }
+        Style.stylePropOverflowImpl = stylePropOverflowImpl;
+        //% 
+        function stylePropOpacityImpl(v) {
+            return null;
+        }
+        Style.stylePropOpacityImpl = stylePropOpacityImpl;
+        //% 
+        function stylePropImageResizeModeImpl(v) {
+            return null;
+        }
+        Style.stylePropImageResizeModeImpl = stylePropImageResizeModeImpl;
+        //% 
+        function stylePropImageTintColorImpl(v) {
+            return null;
+        }
+        Style.stylePropImageTintColorImpl = stylePropImageTintColorImpl;
+        //% 
+        function stylePropTextColorImpl(v) {
+            return null;
+        }
+        Style.stylePropTextColorImpl = stylePropTextColorImpl;
+        //% 
+        function stylePropTextFontFamilyImpl(v) {
+            return null;
+        }
+        Style.stylePropTextFontFamilyImpl = stylePropTextFontFamilyImpl;
+        //% 
+        function stylePropTextFontSizeImpl(v) {
+            return null;
+        }
+        Style.stylePropTextFontSizeImpl = stylePropTextFontSizeImpl;
+        //% 
+        function stylePropTextFontStyleImpl(v) {
+            return null;
+        }
+        Style.stylePropTextFontStyleImpl = stylePropTextFontStyleImpl;
+        //% 
+        function stylePropTextFontWeightImpl(v) {
+            return null;
+        }
+        Style.stylePropTextFontWeightImpl = stylePropTextFontWeightImpl;
+        //% 
+        function stylePropTextLineHeightImpl(v) {
+            return null;
+        }
+        Style.stylePropTextLineHeightImpl = stylePropTextLineHeightImpl;
+        //% 
+        function stylePropTextAlignImpl(v) {
+            return null;
+        }
+        Style.stylePropTextAlignImpl = stylePropTextAlignImpl;
+        //% 
+        function stylePropTextDecorationLineImpl(v) {
+            return null;
+        }
+        Style.stylePropTextDecorationLineImpl = stylePropTextDecorationLineImpl;
+    })(Style = pxsim.Style || (pxsim.Style = {}));
 })(pxsim || (pxsim = {}));
 (function (pxsim) {
     var Data;
@@ -85,6 +244,27 @@ var pxsim;
         }
         Data.onSharedVariableChangeImpl = onSharedVariableChangeImpl;
     })(Data = pxsim.Data || (pxsim.Data = {}));
+})(pxsim || (pxsim = {}));
+(function (pxsim) {
+    var Time;
+    (function (Time) {
+        //%
+        function afterTimeImpl(ms, body) {
+        }
+        Time.afterTimeImpl = afterTimeImpl;
+        //%
+        function everyTimeImpl(ms, body) {
+        }
+        Time.everyTimeImpl = everyTimeImpl;
+        //%
+        function resetApplicationImpl() {
+        }
+        Time.resetApplicationImpl = resetApplicationImpl;
+        //%
+        function whenAppResetImpl(body) {
+        }
+        Time.whenAppResetImpl = whenAppResetImpl;
+    })(Time = pxsim.Time || (pxsim.Time = {}));
 })(pxsim || (pxsim = {}));
 /// <reference path="../node_modules/pxt-core/typings/globals/bluebird/index.d.ts"/>
 /// <reference path="../node_modules/pxt-core/built/pxtsim.d.ts"/>

@@ -1,5 +1,5 @@
 /// <reference path="../localtypings/blockly.d.ts" />
-import { iconData } from './IconData';
+import { iconData } from '../../../shared/src/util/IconData';
 
 export function initBlockDefinitions(): void {
     Blockly.BlockSvg.START_HAT = true;

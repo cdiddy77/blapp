@@ -27,7 +27,7 @@ namespace UI {
         direction: UIGroupDirection,
         flex: boolean,
         className: UIGroupClass,
-        style: StyleProperty[],
+        style: string[],
         children: Action): void {
         groupElementImpl(name, direction, flex, className, style, children);
     }
@@ -45,7 +45,7 @@ namespace UI {
         flex: boolean,
         className: UIGroupClass,
         horz: boolean,
-        style: StyleProperty[],
+        style: string[],
         children: Action): void {
         scrollerElementImpl(name, flex, className, horz, style, children);
     }
@@ -62,7 +62,7 @@ namespace UI {
         name: string,
         flex: boolean,
         className: UIButtonClass,
-        style: StyleProperty[],
+        style: string[],
         children: Action,
         whenPressed: Action): void {
         buttonElementImpl(name, flex, className, style, children, whenPressed);
@@ -70,17 +70,17 @@ namespace UI {
 
     /**
      * A block for making a text element
+     * @param value the text to display, eg:Lorem Ipsum
      */
     //% weight=80
     //% blockId=text_element
-    //% block="Text flex %flex|class %className|style %style=lists_create_empty|%value"
-    //% handlerStmt=true
+    //% block="Text flex %flex|class %className|%value|style %style=lists_create_empty"
     //% acceptArrays=true
     export function textElement(
         flex: boolean,
         className: UITextClass,
-        style: StyleProperty[],
-        value: string): void {
+        value: string,
+        style: string[]): void {
         textElementImpl(flex, className, style, value);
     }
 
@@ -102,7 +102,7 @@ namespace UI {
         name: string,
         flex: boolean,
         className: UITextInputClass,
-        style: StyleProperty[],
+        style: string[],
         initialValue: string,
         whenTextChanges: (args: WhenTextChangesArgs) => void): void {
 
@@ -115,17 +115,19 @@ namespace UI {
 
     /**
      * A block for making a image element
+     * @param width the width of the image, eg. 80
+     * @param height the height of the image, eg. 60
      */
     //% weight=60
     //% blockId=image_element
-    //% block="Image flex %flex|width %width|height %height|style %style=lists_create_empty|URL %url"
+    //% block="Image flex %flex|width %width|height %height|URL %url|style %style=lists_create_empty"
     //% acceptArrays=true
     export function imageElement(
         flex: boolean,
         width: number,
         height: number,
-        style: StyleProperty[],
-        url: string): void {
+        url: string,
+        style: string[]): void {
         imageElementImpl(flex, width, height, style, url);
     }
 
@@ -138,7 +140,7 @@ namespace UI {
     //% acceptArrays=true
     export function dividerElement(
         className: UIDividerClass,
-        style: StyleProperty[]): void {
+        style: string[]): void {
         dividerElementImpl(className, style);
     }
 
@@ -151,4 +153,197 @@ namespace UI {
     export function updateUI() {
         updateUIImpl();
     }
+
+    /**
+     * Action Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_action
+    //% block="Action Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function actionIcon(name: ActionIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('action', name, type, size, style);
+    }
+
+    /**
+     * Alert Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_alert
+    //% block="Alert Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function alert(name: AlertIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('alert', name, type, size, style);
+    }
+
+    /**
+     * A/V Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_av
+    //% block="A/V Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function avIcon(name: AvIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('av', name, type, size, style);
+    }
+
+    /**
+     * Communication Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_communication
+    //% block="Communication Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function communicationIcon(name: CommunicationIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('communication', name, type, size, style);
+    }
+
+    /**
+     * Content Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_content
+    //% block="Content Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function contentIcon(name: ContentIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('content', name, type, size, style);
+    }
+
+    /**
+     * Device Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_device
+    //% block="Device Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function deviceIcon(name: DeviceIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('device', name, type, size, style);
+    }
+
+    /**
+     * Editor Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_editor
+    //% block="Editor Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function editorIcon(name: EditorIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('editor', name, type, size, style);
+    }
+
+    /**
+     * File Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_file
+    //% block="File Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function fileIcon(name: FileIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('file', name, type, size, style);
+    }
+
+    /**
+     * Hardware Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_hardware
+    //% block="Hardware Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function hardwareIcon(name: HardwareIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('hardware', name, type, size, style);
+    }
+
+    /**
+     * Image Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_image
+    //% block="Image Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function imageIcon(name: ImageIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('image', name, type, size, style);
+    }
+
+    /**
+     * Maps Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_maps
+    //% block="Maps Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function mapsIcon(name: MapsIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('maps', name, type, size, style);
+    }
+
+    /**
+     * Navigation Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_navigation
+    //% block="Navigation Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function navigationIcon(name: NavigationIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('navigation', name, type, size, style);
+    }
+
+    /**
+     * Notification Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_notification
+    //% block="Notification Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function notificationIcon(name: NotificationIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('notification', name, type, size, style);
+    }
+
+    /**
+     * Places Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_places
+    //% block="Places Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function placesIcon(name: PlacesIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('places', name, type, size, style);
+    }
+
+    /**
+     * Social Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_social
+    //% block="Social Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function socialIcon(name: SocialIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('social', name, type, size, style);
+    }
+
+    /**
+     * Toggle Icon
+     * @param size the size of the icon, eg: 24
+     */
+    //% subcategory=Icons
+    //% blockId=icon_toggle
+    //% block="Toggle Icon %name|size %size|%type|style %style=lists_create_empty"
+    //% acceptArrays=true
+    export function toggleIcon(name: ToggleIconCategory, size: number, type: IconType, style: string[]) {
+        iconElementImpl('toggle', name, type, size, style);
+    }
+
 }

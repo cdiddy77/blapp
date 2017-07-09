@@ -9,7 +9,8 @@
         "sims.d.ts",
         "ui.ts",
         "data.ts",
-        "style.ts"
+        "style.ts",
+        "time.ts"
     ],
     "testFiles": [
         "test.ts"

@@ -24322,7 +24322,7 @@ module.exports={
         "spec": "1.3.2",
         "type": "version"
       },
-      "d:\\src\\cdiddy77\\pxt\\node_modules\\pouchdb"
+      "/Users/charles/dev/pxt/node_modules/pouchdb"
     ]
   ],
   "_from": "levelup@1.3.2",
@@ -24356,7 +24356,7 @@ module.exports={
   "_shasum": "b321d3071f0e75c2dfaf2f0fe8864e5b9a387bc9",
   "_shrinkwrap": null,
   "_spec": "levelup@1.3.2",
-  "_where": "d:\\src\\cdiddy77\\pxt\\node_modules\\pouchdb",
+  "_where": "/Users/charles/dev/pxt/node_modules/pouchdb",
   "browser": {
     "leveldown": false,
     "leveldown/package": false,

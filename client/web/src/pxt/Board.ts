@@ -2,6 +2,7 @@
 import * as uiApi from '../../../shared/src/util/uiApi';
 import * as dataApi from '../../../shared/src/util/dataApi';
 import * as styleApi from '../../../shared/src/util/styleApi';
+import * as timeApi from '../../../shared/src/util/timeApi';
 import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
 import { AppModel } from './AppModel';
 
@@ -11,6 +12,7 @@ var hackPxsim: any = pxsim;
 hackPxsim.UI = uiApi.pxsimui;
 hackPxsim.Data = dataApi.pxsimdata;
 hackPxsim.Style = styleApi.pxsimstyle;
+hackPxsim.Time = timeApi.pxsimtime;
 //
 // end of brutal hack
 
