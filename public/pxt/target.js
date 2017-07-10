@@ -42,6 +42,9 @@ var pxtTargetBundle = {
     "monacoToolbox": true,
     "invertedMenu": true,
     "blocklyOptions": {
+      "collapse": true,
+      "comments": true,
+      "disable": true,
       "trashcan": true,
       "grid": {
         "spacing": 45,
