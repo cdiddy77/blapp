@@ -13,11 +13,11 @@
     "logicBlocks": true,
     "variablesBlocks": true,
     "textBlocks": true,
-    "listsBlocks": true
+    "listsBlocks": true,
+    "functionBlocks": true
   },
   "simulator": {
-    "autoRun": true,
-    "functionblocks": true
+    "autoRun": true
   },
   "blocksprj": {
     "id": "blocksprj",

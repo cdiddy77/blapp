@@ -16,11 +16,11 @@
         "logicBlocks": true,
         "variablesBlocks": true,
         "textBlocks": true,
-        "listsBlocks": true
+        "listsBlocks": true,
+        "functionBlocks": true
     },
     "simulator": {
-        "autoRun": true,
-        "functionblocks": true
+        "autoRun": true
     },
     "appTheme": {
         "logoUrl": "http://sample.pxt.io/",
