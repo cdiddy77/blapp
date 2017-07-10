@@ -89,8 +89,21 @@ namespace Data {
     //% weight=30
     //% blockId=on_shared_change
     //% block="When shared %name|changes"
-    export function onSharedVariableChange(name: string, body: Action):void {
+    export function onSharedVariableChange(name: string, body: Action): void {
         onSharedVariableChangeImpl(name, body);
+    }
+
+    /**
+     * convert number to text
+     */
+    //% weight=20
+    //% blockId=convert_number_to_text
+    //% block="To text %value"
+    export function convertNumberToText(value: number): string {
+        if (value === undefined)
+            return null;
+        else
+            return value.toString();
     }
 
 }

@@ -186,11 +186,11 @@ namespace Style {
     //% block="size %p|%v"
     //% subcategory=Layout
     export function stylePropSize(p: StyPropSize, v: number): string {
-        return stylePropSize(p,v);
+        return stylePropSizeImpl(p,v);
     }
 
     //% blockId=styleprop_margin
-    //% block="border margin %p|%v"
+    //% block="margin %p|%v"
     //% subcategory=Box
     export function stylePropMargin(p: StyPropMargin, v: number): string {
         return stylePropMarginImpl(p,v);
