@@ -79,6 +79,7 @@ namespace Data {
     //% weight=50
     //% blockId=set_shared_list
     //% block="set shared list %name|to %v"
+    //% acceptArrays=true
     export function setSharedList(name: string, v: string[]): void {
         return setSharedListImpl(name, v);
     }
