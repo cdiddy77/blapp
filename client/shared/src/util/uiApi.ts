@@ -24,7 +24,7 @@ export namespace pxsimui {
             console.log('targetrenderproc called');
             CodegenRuntime.pushCont();
             CodegenRuntime.getCodegenHost().runFiberSync(body, (r: any) => {
-                console.log('it ran');
+                console.log('UI ran');
             });
             let cl = CodegenRuntime.popCont();
             return CodegenRuntime.createElement(

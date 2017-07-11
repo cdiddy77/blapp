@@ -504,9 +504,9 @@ var pxtTargetBundle = {
       ]
     },
     "files": {
+      "README.md": " ",
       "main.blocks": "<xml xmlns=\"http://www.w3.org/1999/xhtml\">\n</xml>",
-      "main.ts": " ",
-      "README.md": " "
+      "main.ts": " "
     }
   },
   "tsprj": {
@@ -523,8 +523,8 @@ var pxtTargetBundle = {
       ]
     },
     "files": {
-      "main.ts": " ",
-      "README.md": " "
+      "README.md": " ",
+      "main.ts": " "
     }
   },
   "bundledpkgs": {

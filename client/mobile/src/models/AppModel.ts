@@ -2,7 +2,7 @@
 import { AsyncStorage } from 'react-native';
 import { ModelBase } from './ModelBase';
 import { CodegenRuntime, CodegenHost } from '../../../shared/src/util/CodegenRuntime';
-import * as pxtexec from '../util/PxtExec';
+import * as pxtexec from '../../../shared/src/util/PxtExec';
 
 export class AppModel extends ModelBase implements CodegenHost {
     constructor() {
@@ -64,7 +64,10 @@ export class AppModel extends ModelBase implements CodegenHost {
         return pxtexec.pxsim.runtime.runFiberAsync(a, arg0, arg1, arg2);
     }
     runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void {
+        let savedYieldState = pxtexec.pxsim.runtime.yieldingDisabled;
+        pxtexec.pxsim.runtime.yieldingDisabled = true;
         pxtexec.pxsim.runtime.runFiberSync(a, resolve, arg0, arg1, arg2);
+        pxtexec.pxsim.runtime.yieldingDisabled = savedYieldState;
     }
     //
     ////////////////////////////////////////////////////////////////////////////

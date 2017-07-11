@@ -4113,6 +4113,7 @@ var pxsim;
             this.running = false;
             this.startTime = 0;
             this.globals = {};
+            this.yieldingDisabled = false;
             this.numDisplayUpdates = 0;
             U.assert(!!pxsim.initCurrentRuntime);
             var yieldMaxSteps = 100;
@@ -4141,20 +4142,22 @@ var pxsim;
             }
             function maybeYield(s, pc, r0) {
                 yieldSteps = yieldMaxSteps;
-                var now = Date.now();
-                if (now - lastYield >= 20) {
-                    lastYield = now;
-                    s.pc = pc;
-                    s.r0 = r0;
-                    var cont = function () {
-                        if (__this.dead)
-                            return;
-                        U.assert(s.pc == pc);
-                        return loop(s);
-                    };
-                    //U.nextTick(cont)
-                    setTimeout(cont, 5);
-                    return true;
+                if (!__this.yieldingDisabled) {
+                    var now = Date.now();
+                    if (now - lastYield >= 20) {
+                        lastYield = now;
+                        s.pc = pc;
+                        s.r0 = r0;
+                        var cont = function () {
+                            if (__this.dead)
+                                return;
+                            U.assert(s.pc == pc);
+                            return loop(s);
+                        };
+                        //U.nextTick(cont)
+                        setTimeout(cont, 5);
+                        return true;
+                    }
                 }
                 return false;
             }

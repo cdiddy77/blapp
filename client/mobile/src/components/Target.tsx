@@ -4,7 +4,7 @@ import { View, Text, Image } from 'react-native';
 import { AppModel } from '../models/AppModel';
 import { styles } from '../styles';
 import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
-import * as pxtExec from '../util/PxtExec';
+import * as pxtExec from '../../../shared/src/util/PxtExec';
 
 interface TargetProps {
     model: AppModel;
