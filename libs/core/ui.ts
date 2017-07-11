@@ -2,13 +2,14 @@
 /**
  * Basic functionalities.
  */
-//% color=#00BCD4 weight=100
+//% color=#935BA5 weight=100
 namespace UI {
     /**
      * The User Interface goes inside this
      * @param theme the general look of various UI elements, eg: UITheme.Calm
     **/
     //% weight=100
+    //% color=#935BA5
     //% blockId=user_interface
     //% block="UI theme %theme"
     export function userInterface(theme: UITheme, body: Action) {
@@ -18,8 +19,9 @@ namespace UI {
       * An element for grouping other elements
       */
     //% weight=90
+    //% color=#5B6DA5
     //% blockId=group_element
-    //% block="Group id %name|dir %direction|flex %flex|class %className|style %style=lists_create_empty"
+    //% block="GROUP id %name|dir %direction|flex %flex|class %className|style %style=lists_create_empty"
     //% handlerStmt=true
     //% acceptArrays=true
     export function groupElement(
@@ -36,8 +38,9 @@ namespace UI {
       * An element for grouping other elements in a scrollable region
       */
     //% weight=30
+    //% color=#80A55B
     //% blockId=scroller_element
-    //% block="Scroller id %name|flex %flex|class %className|horizontal? %horz|style %style=lists_create_empty"
+    //% block="SCROLLER id %name|flex %flex|class %className|horizontal? %horz|style %style=lists_create_empty"
     //% handlerStmt=true
     //% acceptArrays=true
     export function scrollerElement(
@@ -54,8 +57,9 @@ namespace UI {
      * A block for making a button
      */
     //% weight=70
+    //% color=#80A55B
     //% blockId=button_element
-    //% block="Button id %name|flex %flex|class %className|style %style=lists_create_empty"
+    //% block="BUTTON id %name|flex %flex|class %className|style %style=lists_create_empty"
     //% handlerStmt=true
     //% acceptArrays=true
     export function buttonElement(
@@ -73,8 +77,9 @@ namespace UI {
      * @param value the text to display, eg:Lorem Ipsum
      */
     //% weight=80
+    //% color=#805BA5
     //% blockId=text_element
-    //% block="Text flex %flex|class %className|%value|style %style=lists_create_empty"
+    //% block="TEXT flex %flex|class %className|%value|style %style=lists_create_empty"
     //% acceptArrays=true
     export function textElement(
         flex: boolean,
@@ -91,8 +96,9 @@ namespace UI {
      * A block for making a text input element
      */
     //% weight=50
+    //% color=#A55B93
     //% blockId=textinput_element
-    //% block="Text Input id %name|flex %flex|class %className|style %style=lists_create_empty|initial %initialValue| when text changes"
+    //% block="TEXT INPUT id %name|flex %flex|class %className|style %style=lists_create_empty|initial %initialValue| when text changes"
     //% handlerStmt=true
     //% mutate=objectdestructuring
     //% mutateText="new text"
@@ -119,8 +125,9 @@ namespace UI {
      * @param height the height of the image, eg. 60
      */
     //% weight=60
+    //% color=#5BA5A5
     //% blockId=image_element
-    //% block="Image flex %flex|width %width|height %height|URL %url|style %style=lists_create_empty"
+    //% block="IMAGE flex %flex|width %width|height %height|URL %url|style %style=lists_create_empty"
     //% acceptArrays=true
     export function imageElement(
         flex: boolean,
@@ -135,8 +142,9 @@ namespace UI {
      * A block for making a divider element
      */
     //% weight=40
+    //% color=#A55B5B
     //% blockId=divider_element
-    //% block="Divider class %className|style %style=lists_create_empty"
+    //% block="DIVIDER class %className|style %style=lists_create_empty"
     //% acceptArrays=true
     export function dividerElement(
         className: UIDividerClass,
@@ -159,6 +167,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_action
     //% block="Action Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -171,6 +180,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_alert
     //% block="Alert Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -183,6 +193,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_av
     //% block="A/V Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -195,6 +206,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_communication
     //% block="Communication Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -207,6 +219,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_content
     //% block="Content Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -219,6 +232,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_device
     //% block="Device Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -231,6 +245,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_editor
     //% block="Editor Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -243,6 +258,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_file
     //% block="File Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -255,6 +271,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_hardware
     //% block="Hardware Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -267,6 +284,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_image
     //% block="Image Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -279,6 +297,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_maps
     //% block="Maps Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -291,6 +310,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_navigation
     //% block="Navigation Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -303,6 +323,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_notification
     //% block="Notification Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -315,6 +336,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_places
     //% block="Places Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -327,6 +349,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_social
     //% block="Social Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
@@ -339,6 +362,7 @@ namespace UI {
      * @param size the size of the icon, eg: 24
      */
     //% subcategory=Icons
+    //% color=#93A55B
     //% blockId=icon_toggle
     //% block="Toggle Icon %name|size %size|%type|style %style=lists_create_empty"
     //% acceptArrays=true
