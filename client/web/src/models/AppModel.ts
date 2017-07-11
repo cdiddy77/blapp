@@ -37,7 +37,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
         CodegenRuntime.setCodegenHost(this);
     }
 
-  // CodegenHost interface ///////////////////////////////////////////////////
+    // CodegenHost interface ///////////////////////////////////////////////////
     //
     runFiberAsync(a: any, arg0?: any, arg1?: any, arg2?: any): Promise<any> {
         jsutil.notYetImplemented('runFiberAsync');
@@ -45,6 +45,10 @@ export class AppModel extends ModelWithEvents<AppModelData>
     }
     runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void {
         jsutil.notYetImplemented('runFiberSync');
+    }
+    createRefCollection(): any {
+        jsutil.notYetImplemented('createRefCollection');
+        return null;
     }
     //
     ////////////////////////////////////////////////////////////////////////////
@@ -62,7 +66,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
     }
     setPairingCode(code: string): void {
         this.setProperty('pairingCode', code);
-    }    
+    }
     //
     ///////////////////////////////////////////////////////
 

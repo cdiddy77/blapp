@@ -29,11 +29,21 @@ export class AppModel extends ModelWithEvents<AppModelData>
         // return pxtexec.pxsim.runtime.runFiberAsync(a, arg0, arg1, arg2);
     }
     runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void {
-        let savedYieldState = pxsim.runtime.yieldingDisabled;
-        pxsim.runtime.yieldingDisabled = true;
-        pxsim.runtime.runFiberSync(a, resolve, arg0, arg1, arg2);
-        pxsim.runtime.yieldingDisabled = savedYieldState;
-        // return pxtexec.pxsim.runtime.runFiberSync(a, resolve, arg0, arg1, arg2);
+        pxsim.runtime.errorHandler = (e) => {
+            console.log('runFiberSync Err:EXCEPTION', JSON.stringify(e));
+        }
+        try {
+            let savedYieldState = pxsim.runtime.yieldingDisabled;
+            pxsim.runtime.yieldingDisabled = true;
+            pxsim.runtime.runFiberSync(a, resolve, arg0, arg1, arg2);
+            pxsim.runtime.yieldingDisabled = savedYieldState;
+            // return pxtexec.pxsim.runtime.runFiberSync(a, resolve, arg0, arg1, arg2);
+        } catch (e) {
+            console.log('runFiberSync EXCEPTION', JSON.stringify(e));
+        }
+    }
+    createRefCollection(): any {
+        return new pxsim.RefCollection();
     }
     //
     ////////////////////////////////////////////////////////////////////////////

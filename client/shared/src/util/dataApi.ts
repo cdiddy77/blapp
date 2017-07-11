@@ -16,8 +16,14 @@ export namespace pxsimdata {
         return CodegenRuntime.getShareVar(name);
     }
 
-    export function getSharedListImpl(name: string): Array<string> {
-        return CodegenRuntime.getShareVar(name);
+    export function getSharedListImpl(name: string): pxsim.RefCollection {
+        // HACK: we are copying the entire list each time we move it back and forth, which is super-inefficient
+        let arr: string[] = CodegenRuntime.getShareVar(name);
+        let retval: pxsim.RefCollection = CodegenRuntime.getCodegenHost().createRefCollection();
+        for (let i = 0; i < arr.length; i++) {
+            retval.push(arr[i]);
+        }
+        return retval;
     }
 
     export function setSharedStringImpl(name: string, v: string): void {
@@ -32,8 +38,13 @@ export namespace pxsimdata {
         CodegenRuntime.setShareVar(name, v);
     }
 
-    export function setSharedListImpl(name: string, v: Array<string>): void {
-        CodegenRuntime.setShareVar(name, v);
+    export function setSharedListImpl(name: string, v: pxsim.RefCollection): void {
+        // HACK: we are copying the entire list each time we move it back and forth, which is super-inefficient
+        let arr: string[] = [];
+        for (let i = 0; i < v.getLength(); i++) {
+            arr.push(v.getAt(i));
+        }
+        CodegenRuntime.setShareVar(name, arr);
     }
 
     export function onSharedVariableChangeImpl(name: string, body: pxsim.RefAction): void {

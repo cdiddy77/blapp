@@ -31,6 +31,7 @@ import * as BlockThemes from '../util/BlockThemes';
 export interface CodegenHost {
     runFiberAsync(a: any, arg0?: any, arg1?: any, arg2?: any): Promise<any>;
     runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void;
+    createRefCollection():any;
 }
 
 export type EdgeKind = 'none' | 'left' | 'top' | 'right' | 'bottom';
