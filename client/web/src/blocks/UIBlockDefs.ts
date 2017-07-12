@@ -124,7 +124,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
         this.appendDummyInput()
             // .appendField(new Blockly.FieldImage("media/av/ic_web_white_48dp.png", 16, 16, "*"))
             .appendField(new Blockly.FieldTextInput(""), "NAME")
-            .appendField("Group")
+            .appendField("GROUP")
             // .appendField("child direction")
             .appendField(new Blockly.FieldDropdown([["row", "row"], ["column", "column"], ["reverse-row", "row-reverse"], ["reverse-column", "column-reverse"]]), "child direction")
             .appendField(new Blockly.FieldImage("/media/action/ic_open_with_white_48dp.png", 16, 16, "*"))
@@ -147,7 +147,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
         this.setInputsInline(true);
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
-        this.setColour(230);
+        this.setColour(225);
         this.setTooltip('container to put other UI elements into');
         this.setHelpUrl('https://www.youtube.com/watch?v=SUOJ1PODnKk&list=PLCRKPBgyt2IYvEp0Dw92HfSHb9zo25X4X&index=1');
         UIBlockConfig.blockDefInitHelper.call(this, 'friendly_group_element');
@@ -160,7 +160,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
         this.appendDummyInput()
             // .appendField(new Blockly.FieldImage("https://www.gstatic.com/codesite/ph/images/star_on.gif", 15, 15, "*"))
             .appendField(new Blockly.FieldTextInput(""), "NAME")
-            .appendField("Scroller")
+            .appendField("SCROLLER")
             .appendField(new Blockly.FieldImage("/media/action/ic_open_with_white_48dp.png", 16, 16, "*"))
             // .appendField("flex?")
             .appendField(new Blockly.FieldCheckbox("FALSE"), "isFlex")
@@ -181,7 +181,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
         // this.setInputsInline(false);
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
-        this.setColour(230);
+        this.setColour(90);
         this.setTooltip('');
         this.setHelpUrl('');
         UIBlockConfig.blockDefInitHelper.call(this, 'friendly_scroller_element');
@@ -193,7 +193,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
     viewBlockDef.init = function () {
         this.appendDummyInput()
             .appendField(new Blockly.FieldTextInput(""), "NAME")
-            .appendField("Button")
+            .appendField("BUTTON")
             .appendField(new Blockly.FieldImage("/media/action/ic_open_with_white_48dp.png", 16, 16, "*"))
             // .appendField("flex?")
             .appendField(new Blockly.FieldCheckbox("FALSE"), "isFlex")
@@ -217,7 +217,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
             .appendField("when pressed");
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
-        this.setColour(230);
+        this.setColour(135);
         this.setTooltip('create an element that can be clicked or touched to execute code');
         this.setHelpUrl('');
         UIBlockConfig.blockDefInitHelper.call(this, 'friendly_button_element');
@@ -229,7 +229,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
     viewBlockDef.init = function () {
         this.appendValueInput("text value")
             .setCheck(null)
-            .appendField("Text")
+            .appendField("TEXT")
             .appendField(new Blockly.FieldImage("/media/action/ic_open_with_white_48dp.png", 16, 16, "*"))
             // .appendField("flex?")
             .appendField(new Blockly.FieldCheckbox("FALSE"), "isFlex")
@@ -249,7 +249,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
         this.setInputsInline(false);
-        this.setColour(230);
+        this.setColour(270);
         this.setTooltip('create an element that can be clicked or touched to execute code');
         this.setHelpUrl('');
         UIBlockConfig.blockDefInitHelper.call(this, 'friendly_text_element');
@@ -261,7 +261,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
     viewBlockDef.init = function () {
         this.appendValueInput("URL")
             .setCheck("String")
-            .appendField("Image")
+            .appendField("IMAGE")
             .appendField(new Blockly.FieldImage("/media/action/ic_open_with_white_48dp.png", 16, 16, "*"))
             .appendField(new Blockly.FieldCheckbox("FALSE"), "isFlex")
             .appendField("width")
@@ -271,7 +271,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
             .appendField("URL");
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
-        this.setColour(285);
+        this.setColour(180);
         this.setTooltip('');
         this.setHelpUrl(''); 
         UIBlockConfig.blockDefInitHelper.call(this, 'friendly_image_element');
@@ -283,7 +283,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
     viewBlockDef.init = function () {
         this.appendDummyInput()
             .appendField(new Blockly.FieldTextInput(""), "NAME")
-            .appendField("Text Input")
+            .appendField("TEXT INPUT")
             .appendField(new Blockly.FieldImage("/media/action/ic_open_with_white_48dp.png", 16, 16, "*"))
             .appendField(new Blockly.FieldCheckbox("FALSE"), "isFlex")
             // this.appendDummyInput("storage")
@@ -304,7 +304,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
         // this.setInputsInline(true);
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
-        this.setColour(285);
+        this.setColour(315);
         this.setTooltip('');
         this.setHelpUrl('');
         UIBlockConfig.blockDefInitHelper.call(this, 'friendly_textinput_element');
@@ -315,7 +315,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
     viewBlockDef = UIBlockConfig.createUIBlockDef(UIBlockConfig.uiBlockDescriptors[defName]);
     viewBlockDef.init = function () {
         this.appendDummyInput()
-            .appendField("Divider")
+            .appendField("DIVIDER")
             .appendField("class")
             .appendField(new Blockly.FieldDropdown([
                 ["horizontal top", "horizontaltop"],
@@ -326,7 +326,7 @@ export function initAllUIBlockDefs(getStorageVarsProc: () => any[][]) {
             ]), "visual purpose");
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
-        this.setColour(285);
+        this.setColour(0);
         this.setTooltip('');
         this.setHelpUrl('');
         UIBlockConfig.blockDefInitHelper.call(this, 'friendly_divider_element');

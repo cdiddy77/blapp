@@ -57,7 +57,7 @@ class App extends React.Component<AppProps, AppState> {
             pairing code: {modelData.pairingCode}&nbsp;
                <button type='button' className='btn btn-link' onClick={() => this.props.model.resetPairingCode()}>New Pairing Code</button>
           </p>
-          <p>Block app builder prototype</p>
+          <p>PXTIFY BLAPP</p>
         </div>
         <div id='blocksArea' ref={(elem) => { this.blocksArea = elem; }}
           style={{

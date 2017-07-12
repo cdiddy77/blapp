@@ -1,5 +1,5 @@
 /// <reference path="../localtypings/blockly.d.ts" />
-import { iconData } from './IconData';
+import { iconData } from '../../../shared/src/util/IconData';
 
 export function initBlockDefinitions(): void {
     Blockly.BlockSvg.START_HAT = true;
@@ -297,7 +297,14 @@ export function initStyleBlockDefinitions(): void {
         init: function () {
             this.appendDummyInput()
                 .appendField("align content")
-                .appendField(new Blockly.FieldDropdown([["start", "flex-start"], ["end", "flex-end"], ["center", "center"], ["stretch", "stretch"], ["space between", "space-between"], ["space around", "space-around"]]), "VALUE");
+                .appendField(new Blockly.FieldDropdown([
+                    ["start", "flex-start"],
+                    ["end", "flex-end"],
+                    ["center", "center"],
+                    ["stretch", "stretch"],
+                    ["space between", "space-between"],
+                    ["space around", "space-around"]
+                ]), "VALUE");
             this.setPreviousStatement(true, "STYLEPROP");
             this.setNextStatement(true, "STYLEPROP");
             this.setColour(285);
@@ -310,7 +317,13 @@ export function initStyleBlockDefinitions(): void {
         init: function () {
             this.appendDummyInput()
                 .appendField("align items")
-                .appendField(new Blockly.FieldDropdown([["start", "flex-start"], ["end", "flex-end"], ["center", "center"], ["stretch", "stretch"], ["baseline", "baseline"]]), "VALUE");
+                .appendField(new Blockly.FieldDropdown([
+                    ["start", "flex-start"],
+                    ["end", "flex-end"],
+                    ["center", "center"],
+                    ["stretch", "stretch"],
+                    ["baseline", "baseline"]
+                ]), "VALUE");
             this.setPreviousStatement(true, "STYLEPROP");
             this.setNextStatement(true, "STYLEPROP");
             this.setColour(285);
@@ -323,7 +336,13 @@ export function initStyleBlockDefinitions(): void {
         init: function () {
             this.appendDummyInput()
                 .appendField("align self")
-                .appendField(new Blockly.FieldDropdown([["start", "flex-start"], ["end", "flex-end"], ["center", "center"], ["stretch", "stretch"], ["baseline", "baseline"]]), "VALUE");
+                .appendField(new Blockly.FieldDropdown([
+                    ["start", "flex-start"],
+                    ["end", "flex-end"],
+                    ["center", "center"],
+                    ["stretch", "stretch"],
+                    ["baseline", "baseline"]
+                ]), "VALUE");
             this.setPreviousStatement(true, "STYLEPROP");
             this.setNextStatement(true, "STYLEPROP");
             this.setColour(285);
@@ -336,7 +355,12 @@ export function initStyleBlockDefinitions(): void {
         init: function () {
             this.appendDummyInput()
                 .appendField("child direction")
-                .appendField(new Blockly.FieldDropdown([["row", "row"], ["reverse row", "row-reverse"], ["column", "column"], ["reverse column", "column-reverse"]]), "VALUE");
+                .appendField(new Blockly.FieldDropdown([
+                    ["row", "row"],
+                    ["reverse row", "row-reverse"],
+                    ["column", "column"],
+                    ["reverse column", "column-reverse"]
+                ]), "VALUE");
             this.setPreviousStatement(true, "STYLEPROP");
             this.setNextStatement(true, "STYLEPROP");
             this.setColour(285);
@@ -349,7 +373,13 @@ export function initStyleBlockDefinitions(): void {
         init: function () {
             this.appendDummyInput()
                 .appendField("justify content")
-                .appendField(new Blockly.FieldDropdown([["start", "flex-start"], ["end", "flex-end"], ["center", "center"], ["space between", "space-between"], ["space around", "space-around"]]), "VALUE");
+                .appendField(new Blockly.FieldDropdown([
+                    ["start", "flex-start"],
+                    ["end", "flex-end"],
+                    ["center", "center"],
+                    ["space between", "space-between"],
+                    ["space around", "space-around"]
+                ]), "VALUE");
             this.setPreviousStatement(true, "STYLEPROP");
             this.setNextStatement(true, "STYLEPROP");
             this.setColour(285);
@@ -362,7 +392,10 @@ export function initStyleBlockDefinitions(): void {
         init: function () {
             this.appendDummyInput()
                 .appendField("wrap content")
-                .appendField(new Blockly.FieldDropdown([["yes", "wrap"], ["no", "nowrap"]]), "VALUE");
+                .appendField(new Blockly.FieldDropdown([
+                    ["yes", "wrap"],
+                    ["no", "nowrap"]
+                ]), "VALUE");
             this.setPreviousStatement(true, "STYLEPROP");
             this.setNextStatement(true, "STYLEPROP");
             this.setColour(285);
@@ -375,7 +408,10 @@ export function initStyleBlockDefinitions(): void {
         init: function () {
             this.appendDummyInput()
                 .appendField("position")
-                .appendField(new Blockly.FieldDropdown([["absolute", "absolute"], ["relative", "relative"]]), "VALUE");
+                .appendField(new Blockly.FieldDropdown([
+                    ["absolute", "absolute"],
+                    ["relative", "relative"]
+                ]), "VALUE");
             this.setPreviousStatement(true, "STYLEPROP");
             this.setNextStatement(true, "STYLEPROP");
             this.setColour(285);
@@ -388,7 +424,13 @@ export function initStyleBlockDefinitions(): void {
         init: function () {
             this.appendDummyInput()
                 .appendField("offset")
-                .appendField(new Blockly.FieldDropdown([["bottom", "bottom"], ["left", "left"], ["right", "right"], ["top", "top"], ["z-index", "zIndex"]]), "NAME")
+                .appendField(new Blockly.FieldDropdown([
+                    ["bottom", "bottom"],
+                    ["left", "left"],
+                    ["right", "right"],
+                    ["top", "top"],
+                    ["z-index", "zIndex"]
+                ]), "NAME")
                 .appendField("value")
                 .appendField(new Blockly.FieldNumber(0), "VALUE");
             this.setPreviousStatement(true, "STYLEPROP");

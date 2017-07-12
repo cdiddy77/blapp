@@ -4,6 +4,7 @@ import { View, Text, Image } from 'react-native';
 import { AppModel } from '../models/AppModel';
 import { styles } from '../styles';
 import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
+import * as pxtExec from '../../../shared/src/util/PxtExec';
 
 interface TargetProps {
     model: AppModel;
@@ -12,6 +13,7 @@ interface TargetState {
     // renderProc: () => any;
     evalErrMsg: Error;
 }
+
 export class Target extends React.Component<TargetProps, TargetState>{
     constructor(props: TargetProps) {
         super(props);
@@ -60,6 +62,7 @@ export class Target extends React.Component<TargetProps, TargetState>{
         }
         else if (CodegenRuntime.getTargetRenderProc() != null) {
             try {
+                var pxsim:any = pxtExec.pxsim;
                 result = CodegenRuntime.getTargetRenderProc()();
                 return result;
             } catch (e) {

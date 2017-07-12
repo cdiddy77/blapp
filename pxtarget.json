@@ -1,0 +1,57 @@
+{
+    "id": "blapp",
+    "name": "Blapp PXT",
+    "title": "Blapp PXT Target",
+    "corepkg": "core",
+    "cloud": {
+        "workspace": false,
+        "packages": true
+    },
+    "bundleddirs": [
+        "libs/core"
+    ],
+    "runtime": {
+        "mathBlocks": true,
+        "loopsBlocks": true,
+        "logicBlocks": true,
+        "variablesBlocks": true,
+        "textBlocks": true,
+        "listsBlocks": true,
+        "functionBlocks": true
+    },
+    "simulator": {
+        "autoRun": true
+    },
+    "appTheme": {
+        "logoUrl": "http://sample.pxt.io/",
+        "homeUrl": "http://sample.pxt.io/",
+        "embedUrl": "http://sample.pxt.io/",
+        "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
+        "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
+        "docMenu": [
+            {
+                "name": "About",
+                "path": "/about"
+            },
+            {
+                "name": "Docs",
+                "path": "/docs"
+            }
+        ],
+        "coloredToolbox": true,
+        "monacoToolbox": true,
+        "invertedMenu": true,
+        "blocklyOptions": {
+            "collapse": true,
+            "comments": true,
+            "disable": true,
+            "trashcan": true,
+            "grid": {
+                "spacing": 45,
+                "length": 7,
+                "colour": "rgba(189, 195, 199, 0.30)",
+                "snap": true
+            }
+        }
+    }
+}

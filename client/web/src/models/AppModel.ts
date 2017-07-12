@@ -22,7 +22,8 @@ export interface AppModelData {
     statusMessage: string;
 }
 
-export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHost {
+export class AppModel extends ModelWithEvents<AppModelData>
+    implements CodegenHost, svcConn.ServiceConnectionHost {
 
     constructor() {
         super({
@@ -36,9 +37,36 @@ export class AppModel extends ModelWithEvents<AppModelData> implements CodegenHo
         CodegenRuntime.setCodegenHost(this);
     }
 
-    // CodegenHost implementation /////////////////////////
+    // CodegenHost interface ///////////////////////////////////////////////////
     //
+    runFiberAsync(a: any, arg0?: any, arg1?: any, arg2?: any): Promise<any> {
+        jsutil.notYetImplemented('runFiberAsync');
+        return null;
+    }
+    runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void {
+        jsutil.notYetImplemented('runFiberSync');
+    }
+    createRefCollection(): any {
+        jsutil.notYetImplemented('createRefCollection');
+        return null;
+    }
+    //
+    ////////////////////////////////////////////////////////////////////////////
 
+    // ServiceConnectionHost implementation ///////////////
+    //
+    onChange(cb: (prop: string) => void): void {
+        this.on('change', cb);
+    }
+    getCode(): string {
+        return this.data.code;
+    }
+    getLastEvalError(): Error {
+        return this.data.lastEvalError;
+    }
+    setPairingCode(code: string): void {
+        this.setProperty('pairingCode', code);
+    }
     //
     ///////////////////////////////////////////////////////
 
