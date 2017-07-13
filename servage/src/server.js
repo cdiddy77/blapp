@@ -10,7 +10,10 @@ var server = http.createServer(function (req, res) {
     var isApk = false;
     var pathName;
     if (urlObj.pathname == '/') {
-        pathName = 'index.html';
+        // console.log('got a /', JSON.stringify(urlObj));
+        // pathName = 'index.html';
+        res.writeHead(301, { Location: '/pxt/index.html' });
+        res.end();
     }
     else if (urlObj.pathname == '/downloadapk') {
         pathName = 'app-release.apk';
