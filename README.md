@@ -1,5 +1,11 @@
 # Getting Started
 
+## prereqs
+```
+Install node.js (http://www.nodejs.org) (Make sure node.exe is in your PATH, install should have done this for you)
+Install JDK (http://www.oracle.com/technetwork/java/javase/downloads/index.html)
+Install Android SDK Build tools 23.0.1 (for mobile client development/testing only: https://developer.android.com/studio/index.html)
+```
 ## first thing
 ```
 git clone https://github.com/cdiddy77/blapp.git
@@ -8,6 +14,11 @@ npm install
 cd client/mobile
 npm install
 cd ../..
+
+(If the first npm install fails with an error about not being able to find the python executable then run: "npm install --global --production windows-build-tools."
+then set your PYTHON env variable using: setx PYTHON "%USERPROFILE%\.windows-build-tools\python27\python.exe")
+
+(Also set your JAVA_HOME env var i.e. setx JAVA_HOME "c:\Program Files\Java\jdk1.8.0_131")
 ```
 
 ## to run development server:
