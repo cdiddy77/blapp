@@ -10,7 +10,13 @@ Install Android SDK Build tools 23.0.1 (for mobile client development/testing on
 ```
 git clone https://github.com/cdiddy77/pxt.git
 cd pxt
-follow instructions [here](https://github.com/cdiddy77/pxt#build)
+npm install -g jake
+npm install -g typings
+npm install
+typings install
+jake
+npm install -g pxt
+cd ..
 git clone https://github.com/cdiddy77/blapp.git
 cd blapp
 npm install
