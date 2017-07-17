@@ -8,12 +8,16 @@ Install Android SDK Build tools 23.0.1 (for mobile client development/testing on
 ```
 ## first thing
 ```
+git clone https://github.com/cdiddy77/pxt.git
+cd pxt
+follow instructions [here](https://github.com/cdiddy77/pxt#build)
 git clone https://github.com/cdiddy77/blapp.git
 cd blapp
 npm install
 cd client/mobile
 npm install
 cd ../..
+npm link ../pxt
 
 (If the first npm install fails with an error about not being able to find the python executable then run: "npm install --global --production windows-build-tools."
 then set your PYTHON env variable using: setx PYTHON "%USERPROFILE%\.windows-build-tools\python27\python.exe")
