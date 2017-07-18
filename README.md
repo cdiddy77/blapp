@@ -46,8 +46,8 @@ node server.js
 ## to run mobile client:
 ```
 cd client/mobile
-npm run {ios|android}
 npm run build -- --watch
+npm run {ios|android}
 ```
 ### in new shell:
 ```
