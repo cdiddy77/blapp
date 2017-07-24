@@ -95,4 +95,8 @@ export class AppModel extends ModelWithEvents<AppModelData>
             this.setProperty('lastEvalError', e);
         }
     }
+
+    resetPairingCode() {
+        svcConn.createNewSession();
+    }
 }
