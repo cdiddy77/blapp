@@ -287,6 +287,16 @@ namespace pxsim.Data {
     export function onSharedVariableChangeImpl(name: string, body: pxsim.RefAction): void {
 
     }
+
+    //%
+    export function joinImpl(arrayToBeJoined: any[], joinString: string): string {
+        return "";
+    }
+
+    //%
+    export function splitImpl(stringToSplit: string, splitValue: string): string[] {
+       return [];
+    }
 }
 
 namespace pxsim.Time {
@@ -318,8 +328,9 @@ namespace pxsim.Sensors {
          // leave this blank or return null if the block returns a value
     }    
 
-    export function listNearbyDevices(): void {
-        
+    //%
+    export function getNearbyDevicesImpl(): string[] {
+        return [];
     }
 }
 

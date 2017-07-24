@@ -100,11 +100,40 @@ namespace Data {
     //% weight=20
     //% blockId=convert_number_to_text
     //% block="To text %value"
+    //% subcategory="String Manipulation"
     export function convertNumberToText(value: number): string {
         if (value === undefined)
             return null;
         else
             return value.toString();
+    }
+
+    /**
+     * joins an array into a joined string
+     */
+    //% weight=20
+    //% blockId=data_array_join
+    //% block="Join %list |with %joinString"
+    //% subcategory="String Manipulation"
+    export function joinArray(list: any[], joinString: string = ""): string {
+        if (list === undefined || list.length == 0)
+            return "";
+        else
+            return joinImpl(list, joinString);
+    }
+
+    /**
+     * splits a string
+     */
+    //% weight=20
+    //% blockId=data_split_string
+    //% block="Split %value |with %splitValue"
+    //% subcategory="String Manipulation"
+    export function split(value: string, splitValue: string): string[] {
+        if (value === undefined || splitValue === undefined || splitValue.length == 0)
+            return null;
+        else
+            return splitImpl(value, splitValue);
     }
 
 }
