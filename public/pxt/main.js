@@ -24333,7 +24333,7 @@ module.exports={
   "_resolved": "https://registry.npmjs.org/levelup/-/levelup-1.3.2.tgz",
   "_shasum": "b321d3071f0e75c2dfaf2f0fe8864e5b9a387bc9",
   "_spec": "levelup@1.3.2",
-  "_where": "D:\\repos\\pxt\\node_modules\\pouchdb",
+  "_where": "C:\\Users\\thero\\hackathon2017\\pxt\\node_modules\\pouchdb",
   "browser": {
     "leveldown": false,
     "leveldown/package": false,

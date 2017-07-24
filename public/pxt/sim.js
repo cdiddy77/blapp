@@ -243,6 +243,16 @@ var pxsim;
         function onSharedVariableChangeImpl(name, body) {
         }
         Data.onSharedVariableChangeImpl = onSharedVariableChangeImpl;
+        //%
+        function joinImpl(arrayToBeJoined, joinString) {
+            return "";
+        }
+        Data.joinImpl = joinImpl;
+        //%
+        function splitImpl(stringToSplit, splitValue) {
+            return [];
+        }
+        Data.splitImpl = splitImpl;
     })(Data = pxsim.Data || (pxsim.Data = {}));
 })(pxsim || (pxsim = {}));
 (function (pxsim) {
@@ -274,9 +284,11 @@ var pxsim;
             // leave this blank or return null if the block returns a value
         }
         Sensors.fooImpl = fooImpl;
-        function listNearbyDevices() {
+        //%
+        function getNearbyDevicesImpl() {
+            return [];
         }
-        Sensors.listNearbyDevices = listNearbyDevices;
+        Sensors.getNearbyDevicesImpl = getNearbyDevicesImpl;
     })(Sensors = pxsim.Sensors || (pxsim.Sensors = {}));
 })(pxsim || (pxsim = {}));
 /// <reference path="../node_modules/pxt-core/typings/globals/bluebird/index.d.ts"/>

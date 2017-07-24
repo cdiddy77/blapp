@@ -200,6 +200,14 @@ declare namespace Data {
     //% shim=Data::onSharedVariableChangeImpl
     function onSharedVariableChangeImpl(name: string, body: () => void): void;
 
+    //%
+    //% shim=Data::joinImpl
+    function joinImpl(arrayToBeJoined: any[], joinString: string): string;
+
+    //%
+    //% shim=Data::splitImpl
+    function splitImpl(stringToSplit: string, splitValue: string): string[];
+
 }
 declare namespace Time {
     //%
@@ -223,6 +231,10 @@ declare namespace Sensors {
     //%
     //% shim=Sensors::fooImpl
     function fooImpl(arg: string): void;
+
+    //%
+    //% shim=Sensors::getNearbyDevicesImpl
+    function getNearbyDevicesImpl(): string[];
 
 }
 
