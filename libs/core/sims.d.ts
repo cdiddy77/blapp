@@ -219,5 +219,11 @@ declare namespace Time {
     function whenAppResetImpl(body: () => void): void;
 
 }
+declare namespace Sensors {
+    //%
+    //% shim=Sensors::fooImpl
+    function fooImpl(arg: string): void;
+
+}
 
 // Auto-generated. Do not edit. Really.

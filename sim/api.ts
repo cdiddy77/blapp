@@ -312,3 +312,14 @@ namespace pxsim.Time {
 
 }
 
+namespace pxsim.Sensors {
+    //%
+    export function fooImpl(arg:string):void {
+         // leave this blank or return null if the block returns a value
+    }    
+
+    export function listNearbyDevices(): void {
+        
+    }
+}
+
