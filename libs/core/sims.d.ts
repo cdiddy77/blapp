@@ -202,7 +202,7 @@ declare namespace Data {
 
     //%
     //% shim=Data::joinImpl
-    function joinImpl(arrayToBeJoined: any[], joinString: string): string;
+    function joinImpl(arrayToBeJoined: string[], joinString: string): string;
 
     //%
     //% shim=Data::splitImpl

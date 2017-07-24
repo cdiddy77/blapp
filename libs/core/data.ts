@@ -115,7 +115,7 @@ namespace Data {
     //% blockId=data_array_join
     //% block="Join %list |with %joinString"
     //% subcategory="String Manipulation"
-    export function joinArray(list: any[], joinString: string = ""): string {
+    export function joinArray(list: string[], joinString: string = ""): string {
         if (list === undefined || list.length == 0)
             return "";
         else

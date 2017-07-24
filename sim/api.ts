@@ -289,7 +289,7 @@ namespace pxsim.Data {
     }
 
     //%
-    export function joinImpl(arrayToBeJoined: any[], joinString: string): string {
+    export function joinImpl(arrayToBeJoined: string[], joinString: string): string {
         return "";
     }
 
