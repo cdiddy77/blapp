@@ -2,6 +2,7 @@
 
 ## prereqs
 ```
+Install git (https://git-scm.com/download/win)
 Install node.js (http://www.nodejs.org) (Make sure node.exe is in your PATH, install should have done this for you)
 Install JDK (http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 Install Android SDK Build tools 23.0.1 (for mobile client development/testing only: https://developer.android.com/studio/index.html)
