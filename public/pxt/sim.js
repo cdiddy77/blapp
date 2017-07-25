@@ -289,6 +289,15 @@ var pxsim;
             return [];
         }
         Sensors.getNearbyDevicesImpl = getNearbyDevicesImpl;
+        //%
+        function getBluetoothStatusImpl() {
+            return false;
+        }
+        Sensors.getBluetoothStatusImpl = getBluetoothStatusImpl;
+        //%
+        function toggleBlueToothStatusImpl() {
+        }
+        Sensors.toggleBlueToothStatusImpl = toggleBlueToothStatusImpl;
     })(Sensors = pxsim.Sensors || (pxsim.Sensors = {}));
 })(pxsim || (pxsim = {}));
 /// <reference path="../node_modules/pxt-core/typings/globals/bluebird/index.d.ts"/>

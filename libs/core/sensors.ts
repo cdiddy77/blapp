@@ -5,7 +5,7 @@ namespace Sensors {
    * @param arg help text for arg goes here
   **/
     //% weight=100
-    //% color=#935BA5
+    //% color=#7fff00
     //% blockId=sensors_foo
     //% block="Foo arg %arg"
     //% subcategory=Bluetooth
@@ -17,11 +17,35 @@ namespace Sensors {
    * Returns an array of all nearby bluetooth devices
     **/
     //% weight=100
-    //% color=#935BA5
+    //% color=#7fff00
     //% blockId=sensors_listNearbyDevices
     //% block="ListNearbyDevices"
     //% subcategory=Bluetooth
     export function getNearbyDevices(): string[] {
         return getNearbyDevicesImpl();
+    }
+
+    /**
+   * returns true or false depending on whether or not bluetooth is turned On or not
+    **/
+    //% weight=100
+    //% color=#7fff00
+    //% blockId=sensors_getBluetoothStatus
+    //% block="IsBluetoothTurnedOn"
+    //% subcategory=Bluetooth
+    export function getBluetoothStatus(): boolean {
+        return getBluetoothStatusImpl();
+    }
+
+        /**
+   * toggles BT status
+    **/
+    //% weight=100
+    //% color=#7fff00
+    //% blockId=sensors_toggleBlueToothStatus
+    //% block="ToggleBluetoothOnOrOff"
+    //% subcategory=Bluetooth
+    export function toggleBlueToothStatus(): void {
+        toggleBlueToothStatusImpl();
     }
 }

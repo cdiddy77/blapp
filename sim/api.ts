@@ -332,5 +332,15 @@ namespace pxsim.Sensors {
     export function getNearbyDevicesImpl(): string[] {
         return [];
     }
+
+    //%
+    export function getBluetoothStatusImpl(): boolean {
+        return false;
+    }
+
+    //%
+    export function toggleBlueToothStatusImpl(): void {
+
+    }
 }
 

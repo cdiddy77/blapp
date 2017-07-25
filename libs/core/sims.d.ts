@@ -236,6 +236,14 @@ declare namespace Sensors {
     //% shim=Sensors::getNearbyDevicesImpl
     function getNearbyDevicesImpl(): string[];
 
+    //%
+    //% shim=Sensors::getBluetoothStatusImpl
+    function getBluetoothStatusImpl(): boolean;
+
+    //%
+    //% shim=Sensors::toggleBlueToothStatusImpl
+    function toggleBlueToothStatusImpl(): void;
+
 }
 
 // Auto-generated. Do not edit. Really.

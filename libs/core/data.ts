@@ -99,7 +99,7 @@ namespace Data {
      */
     //% weight=20
     //% blockId=convert_number_to_text
-    //% block="To text %value"
+    //% block="Number To text %value"
     //% subcategory="String Manipulation"
     export function convertNumberToText(value: number): string {
         if (value === undefined)
