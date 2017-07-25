@@ -23,6 +23,9 @@ namespace UI {
     //% blockId=group_element
     //% block="GROUP id %name|dir %direction|flex %flex|class %className|style %style=lists_create_empty"
     //% handlerStmt=true
+    //% externallyLoadedBlock=true
+    //% name.fieldEditor="text" name.fieldOptions.onParentBlock=true name.fieldOptions.decompileLiterals=true
+    //% flex.fieldEditor="checkbox" flex.fieldOptions.onParentBlock=true flex.fieldOptions.decompileLiterals=true
     //% acceptArrays=true
     export function groupElement(
         name: string,
@@ -42,6 +45,10 @@ namespace UI {
     //% blockId=scroller_element
     //% block="SCROLLER id %name|flex %flex|class %className|horizontal? %horz|style %style=lists_create_empty"
     //% handlerStmt=true
+    //% externallyLoadedBlock=true
+    //% name.fieldEditor="text" name.fieldOptions.onParentBlock=true name.fieldOptions.decompileLiterals=true
+    //% flex.fieldEditor="checkbox" flex.fieldOptions.onParentBlock=true flex.fieldOptions.decompileLiterals=true
+    //% horz.fieldEditor="checkbox" horz.fieldOptions.onParentBlock=true horz.fieldOptions.decompileLiterals=true
     //% acceptArrays=true
     export function scrollerElement(
         name: string,
@@ -60,6 +67,9 @@ namespace UI {
     //% color=#80A55B
     //% blockId=button_element
     //% block="BUTTON id %name|flex %flex|class %className|style %style=lists_create_empty"
+    //% externallyLoadedBlock=true
+    //% name.fieldEditor="text" name.fieldOptions.onParentBlock=true name.fieldOptions.decompileLiterals=true
+    //% flex.fieldEditor="checkbox" flex.fieldOptions.onParentBlock=true flex.fieldOptions.decompileLiterals=true
     //% handlerStmt=true
     //% acceptArrays=true
     export function buttonElement(
@@ -80,6 +90,9 @@ namespace UI {
     //% color=#805BA5
     //% blockId=text_element
     //% block="TEXT flex %flex|class %className|%value|style %style=lists_create_empty"
+    //% externallyLoadedBlock=true
+    //% name.fieldEditor="text" name.fieldOptions.onParentBlock=true name.fieldOptions.decompileLiterals=true
+    //% flex.fieldEditor="checkbox" flex.fieldOptions.onParentBlock=true flex.fieldOptions.decompileLiterals=true
     //% acceptArrays=true
     export function textElement(
         flex: boolean,
