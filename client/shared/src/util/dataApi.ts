@@ -64,13 +64,14 @@ export namespace pxsimdata {
         }
     }
 
-    export function joinImpl(arrayToBeJoined: any[], joinString: string): string {
+    export function joinImpl(arrayToBeJoined: pxsim.RefCollection, joinString: string): string {
         console.log('joinImpl called');
 
         let s: string = "";
 
-        for(var v in arrayToBeJoined) {
-            s += v.toString() + joinString;
+        //for(var v in arrayToBeJoined.) {
+        for(var i: number = 0; i < arrayToBeJoined.getLength(); i++) {
+            s += arrayToBeJoined.getAt(i) + joinString;
         }
 
         return s;

@@ -13,6 +13,13 @@ export namespace pxsimsensors {
         // TODO: find nearby devices and return them as an array
         console.log('getNearbyDevicesImpl called');
 
-        return ["device1", "device2"];
+        //return ["device1", "device2"];
+        //return null;
+        let retVal = CodegenRuntime.getCodegenHost().createRefCollection();
+        //let retVal = new Array<string>();
+        retVal.push("device1");
+        retVal.push("device2");
+
+        return retVal;
     }
 }
