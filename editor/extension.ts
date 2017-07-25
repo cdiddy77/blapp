@@ -1,144 +1,44 @@
 /// <reference path="../node_modules/pxt-core/built/pxteditor.d.ts" />
 
-const groupDirectionFieldDef = {
-    "type": "field_dropdown",
-    "name": "direction",
-    "options": [
-        [
-        "column",
-        "UIGroupDirection.Column"
-        ],
-        [
-        "row",
-        "UIGroupDirection.Row"
-        ],
-        [
-        "reverse-column",
-        "UIGroupDirection.ReverseColumn"
-        ],
-        [
-        "reverse-row",
-        "UIGroupDirection.ReverseRow"
-        ]
-    ]
-};
+const groupDirectionOptions = [
+    ["column", "UIGroupDirection.Column"],
+    ["row", "UIGroupDirection.Row"],
+    ["reverse-column", "UIGroupDirection.ReverseColumn"],
+    ["reverse-row", "UIGroupDirection.ReverseRow"]
+];
 
-const groupClassFieldDef = {
-    "type": "field_dropdown",
-    "name": "className",
-    "options": [
-        [
-        "panel",
-        "UIGroupClass.Panel"
-        ],
-        [
-        "frame",
-        "UIGroupClass.Frame"
-        ],
-        [
-        "framed panel",
-        "UIGroupClass.Framepanel"
-        ],
-        [
-        "header",
-        "UIGroupClass.Header"
-        ],
-        [
-        "footer",
-        "UIGroupClass.Footer"
-        ],
-        [
-        "row",
-        "UIGroupClass.Row"
-        ],
-        [
-        "none",
-        "UIGroupClass.None"
-        ]
-    ]
-};
+const groupClassOptions= [
+    ["panel", "UIGroupClass.Panel"],
+    ["frame", "UIGroupClass.Frame"],
+    ["framed panel", "UIGroupClass.Framepanel"],
+    ["header", "UIGroupClass.Header"],
+    ["footer", "UIGroupClass.Footer"],
+    ["row", "UIGroupClass.Row"],
+    ["none", "UIGroupClass.None"]
+];
 
-const textClassFieldDef = {
-    "type": "field_dropdown",
-    "name": "className",
-    "options": [
-        [
-        "label",
-        "UITextClass.Label"
-        ],
-        [
-        "button",
-        "UITextClass.Button"
-        ],
-        [
-        "button (accented)",
-        "UITextClass.AccentButton"
-        ],
-        [
-        "menu",
-        "UITextClass.Menu"
-        ],
-        [
-        "caption",
-        "UITextClass.Caption"
-        ],
-        [
-        "body",
-        "UITextClass.Body"
-        ],
-        [
-        "subtitle",
-        "UITextClass.Subtitle"
-        ],
-        [
-        "title",
-        "UITextClass.Title"
-        ],
-        [
-        "headline",
-        "UITextClass.Headline"
-        ],
-        [
-        "(none)",
-        "UITextClass.None"
-        ],
-    ]
-};
+const textClassOptions: [string, string][] = [
+    ["label", "UITextClass.Label"],
+    ["button", "UITextClass.Button"],
+    ["button (accented)", "UITextClass.AccentButton"],
+    ["menu", "UITextClass.Menu"],
+    ["caption", "UITextClass.Caption"],
+    ["body", "UITextClass.Body"],
+    ["subtitle", "UITextClass.Subtitle"],
+    ["title", "UITextClass.Title"],
+    ["headline", "UITextClass.Headline"],
+    ["(none)", "UITextClass.None"],
+];
 
-const buttonClassFieldDef = {
-    "type": "field_dropdown",
-    "name": "className",
-    "options": [
-        [
-        "small",
-        "UIButtonClass.Small"
-        ],
-        [
-        "medium",
-        "UIButtonClass.Medium"
-        ],
-        [
-        "large",
-        "UIButtonClass.Large"
-        ],
-        [
-        "small (accented)",
-        "UIButtonClass.SmallAccent"
-        ],
-        [
-        "medium (accented)",
-        "UIButtonClass.MediumAccent"
-        ],
-        [
-        "large (accented)",
-        "UIButtonClass.LargeAccent"
-        ],
-        [
-        "(none)",
-        "UIButtonClass.None"
-        ],
-    ]
-};
+const buttonClassOptions: [string, string][]  = [
+    ["small", "UIButtonClass.Small"],
+    ["medium", "UIButtonClass.Medium"],
+    ["large", "UIButtonClass.Large"],
+    ["small (accented)", "UIButtonClass.SmallAccent"],
+    ["medium (accented)", "UIButtonClass.MediumAccent"],
+    ["large (accented)", "UIButtonClass.LargeAccent"],
+    ["(none)", "UIButtonClass.None"],
+];
 
 class UIBlockDef {
     private fields: any[] = [];
@@ -192,6 +92,14 @@ class UIBlockDef {
         }, label);
     }
 
+    dropdown(values: [string, string][]) {
+        return this.field({
+            "type": "field_dropdown",
+            "name": "direction",
+            "options": values
+        })
+    }
+
     color(color: string): this {
         this.colour = color;
         return this;
@@ -225,29 +133,29 @@ namespace pxt.editor {
                 .textField("name", "name")
                 .checkbox("flex", false, "flex")
                 .checkbox("horz", false, "horizontal")
-                .field(groupClassFieldDef)
+                .field(groupClassOptions)
                 .input("style", "Array", "style")
                 .handler("children", "children")
                 .toBlock(),
             new UIBlockDef("group_element", "#5B6DA5", "GROUP")
                 .textField("name", "name")
                 .checkbox("flex", false, "flex")
-                .field(groupDirectionFieldDef)
-                .field(groupClassFieldDef)
+                .field(groupDirectionOptions)
+                .field(groupClassOptions)
                 .input("style", "Array", "style")
                 .handler("children", "children")
                 .toBlock(),
             new UIBlockDef("button_element", "#80A55B", "BUTTON")
                 .textField("name", "name")
                 .checkbox("flex", false, "flex")
-                .field(buttonClassFieldDef)
+                .dropdown(buttonClassOptions)
                 .input("style", "Array", "style")
                 .handler("children", "children")
                 .handler("whenPressed", "when pressed")
                 .toBlock(),
             new UIBlockDef("text_element", "#805BA5", "TEXT")
                 .checkbox("flex", false, "flex")
-                .field(textClassFieldDef)
+                .dropdown(textClassOptions)
                 .input("value", "String", "style")
                 .input("style", "Array", "style")
                 .toBlock()]
@@ -255,3 +163,4 @@ namespace pxt.editor {
         return Promise.resolve<pxt.editor.ExtensionResult>(res);
     }
 }
+
