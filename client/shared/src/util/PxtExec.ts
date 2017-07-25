@@ -2,12 +2,14 @@ import * as uiApi from '../../../shared/src/util/uiApi';
 import * as dataApi from '../../../shared/src/util/dataApi';
 import * as styleApi from '../../../shared/src/util/styleApi';
 import * as timeApi from '../../../shared/src/util/timeApi';
+import * as sensorsApi from '../../../shared/src/util/sensorsApi';
 ///
 export namespace pxsim {
     export var UI = uiApi.pxsimui;
     export var Data = dataApi.pxsimdata;
     export var Style = styleApi.pxsimstyle;
     export var Time = timeApi.pxsimtime;
+    export var Sensors = sensorsApi.pxsimsensors;
 
     export interface SimulatorMessage {
         type: string;

@@ -200,6 +200,14 @@ declare namespace Data {
     //% shim=Data::onSharedVariableChangeImpl
     function onSharedVariableChangeImpl(name: string, body: () => void): void;
 
+    //%
+    //% shim=Data::joinImpl
+    function joinImpl(arrayToBeJoined: string[], joinString: string): string;
+
+    //%
+    //% shim=Data::splitImpl
+    function splitImpl(stringToSplit: string, splitValue: string): string[];
+
 }
 declare namespace Time {
     //%
@@ -217,6 +225,24 @@ declare namespace Time {
     //%
     //% shim=Time::whenAppResetImpl
     function whenAppResetImpl(body: () => void): void;
+
+}
+declare namespace Sensors {
+    //%
+    //% shim=Sensors::fooImpl
+    function fooImpl(arg: string): void;
+
+    //%
+    //% shim=Sensors::getNearbyDevicesImpl
+    function getNearbyDevicesImpl(): string[];
+
+    //%
+    //% shim=Sensors::getBluetoothStatusImpl
+    function getBluetoothStatusImpl(): boolean;
+
+    //%
+    //% shim=Sensors::toggleBlueToothStatusImpl
+    function toggleBlueToothStatusImpl(): void;
 
 }
 

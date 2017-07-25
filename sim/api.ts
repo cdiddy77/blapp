@@ -287,6 +287,16 @@ namespace pxsim.Data {
     export function onSharedVariableChangeImpl(name: string, body: pxsim.RefAction): void {
 
     }
+
+    //%
+    export function joinImpl(arrayToBeJoined: string[], joinString: string): string {
+        return "";
+    }
+
+    //%
+    export function splitImpl(stringToSplit: string, splitValue: string): string[] {
+       return [];
+    }
 }
 
 namespace pxsim.Time {
@@ -310,5 +320,27 @@ namespace pxsim.Time {
     export function whenAppResetImpl(body: pxsim.RefAction): void {
     }
 
+}
+
+namespace pxsim.Sensors {
+    //%
+    export function fooImpl(arg:string):void {
+         // leave this blank or return null if the block returns a value
+    }    
+
+    //%
+    export function getNearbyDevicesImpl(): string[] {
+        return [];
+    }
+
+    //%
+    export function getBluetoothStatusImpl(): boolean {
+        return false;
+    }
+
+    //%
+    export function toggleBlueToothStatusImpl(): void {
+
+    }
 }
 

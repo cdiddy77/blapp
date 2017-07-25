@@ -10,7 +10,8 @@
         "ui.ts",
         "data.ts",
         "style.ts",
-        "time.ts"
+        "time.ts",
+        "sensors.ts"
     ],
     "testFiles": [
         "test.ts"

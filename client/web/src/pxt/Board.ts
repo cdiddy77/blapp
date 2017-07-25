@@ -3,6 +3,7 @@ import * as uiApi from '../../../shared/src/util/uiApi';
 import * as dataApi from '../../../shared/src/util/dataApi';
 import * as styleApi from '../../../shared/src/util/styleApi';
 import * as timeApi from '../../../shared/src/util/timeApi';
+import * as sensorsApi from '../../../shared/src/util/sensorsApi';
 import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
 import { AppModel } from './AppModel';
 
@@ -13,6 +14,7 @@ hackPxsim.UI = uiApi.pxsimui;
 hackPxsim.Data = dataApi.pxsimdata;
 hackPxsim.Style = styleApi.pxsimstyle;
 hackPxsim.Time = timeApi.pxsimtime;
+hackPxsim.Sensors = sensorsApi.pxsimsensors;
 //
 // end of brutal hack
 

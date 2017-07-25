@@ -243,6 +243,16 @@ var pxsim;
         function onSharedVariableChangeImpl(name, body) {
         }
         Data.onSharedVariableChangeImpl = onSharedVariableChangeImpl;
+        //%
+        function joinImpl(arrayToBeJoined, joinString) {
+            return "";
+        }
+        Data.joinImpl = joinImpl;
+        //%
+        function splitImpl(stringToSplit, splitValue) {
+            return [];
+        }
+        Data.splitImpl = splitImpl;
     })(Data = pxsim.Data || (pxsim.Data = {}));
 })(pxsim || (pxsim = {}));
 (function (pxsim) {
@@ -265,6 +275,30 @@ var pxsim;
         }
         Time.whenAppResetImpl = whenAppResetImpl;
     })(Time = pxsim.Time || (pxsim.Time = {}));
+})(pxsim || (pxsim = {}));
+(function (pxsim) {
+    var Sensors;
+    (function (Sensors) {
+        //%
+        function fooImpl(arg) {
+            // leave this blank or return null if the block returns a value
+        }
+        Sensors.fooImpl = fooImpl;
+        //%
+        function getNearbyDevicesImpl() {
+            return [];
+        }
+        Sensors.getNearbyDevicesImpl = getNearbyDevicesImpl;
+        //%
+        function getBluetoothStatusImpl() {
+            return false;
+        }
+        Sensors.getBluetoothStatusImpl = getBluetoothStatusImpl;
+        //%
+        function toggleBlueToothStatusImpl() {
+        }
+        Sensors.toggleBlueToothStatusImpl = toggleBlueToothStatusImpl;
+    })(Sensors = pxsim.Sensors || (pxsim.Sensors = {}));
 })(pxsim || (pxsim = {}));
 /// <reference path="../node_modules/pxt-core/typings/globals/bluebird/index.d.ts"/>
 /// <reference path="../node_modules/pxt-core/built/pxtsim.d.ts"/>

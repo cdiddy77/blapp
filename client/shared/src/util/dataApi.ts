@@ -64,4 +64,44 @@ export namespace pxsimdata {
         }
     }
 
+    export function joinImpl(arrayToBeJoined: pxsim.RefCollection, joinString: string): string {
+        console.log('joinImpl called');
+
+        let s: string = "";
+
+        //for(var v in arrayToBeJoined.) {
+        for(var i: number = 0; i < arrayToBeJoined.getLength(); i++) {
+            s += arrayToBeJoined.getAt(i) + joinString;
+        }
+
+        return s;
+    }
+
+    export function splitImpl(stringToSplit: string, splitValue: string): string[] {
+        console.log('splitImpl called');
+
+        let a: string[] = [];
+        let index: number = -1;
+
+        do {
+            index = stringToSplit.indexOf(splitValue);
+
+            if (index > -1) {
+                a.push(stringToSplit.substr(0, index - 1));
+
+                var index2 = index + splitValue.length;
+
+                if (index2 >= stringToSplit.length)
+                    index2 = stringToSplit.length - 1;
+
+                stringToSplit = stringToSplit.substr(index2);
+            } else {
+                a.push(stringToSplit);
+            }
+            
+        } while(index > -1);
+
+        return a;
+    }
+
 }
