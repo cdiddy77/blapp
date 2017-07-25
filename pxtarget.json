@@ -41,6 +41,7 @@
         "coloredToolbox": true,
         "monacoToolbox": true,
         "invertedMenu": true,
+        "blocksOnly": true,
         "blocklyOptions": {
             "collapse": true,
             "comments": true,

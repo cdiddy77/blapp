@@ -52,7 +52,7 @@ export function resetConnection(appModel: AppModel) {
             console.log('error', err);
         });
         socket.on('simctrlmsg', (data: svcTypes.ControlMessage) => {
-            console.log('simctrlmsg', JSON.stringify(data));
+            console.log('simctrlmsg');//, JSON.stringify(data));
             if (data.type === 'code_change') {
                 appModel.setProperty('code', data.code);
             } else if (data.type === 'evalstatus_change') {
