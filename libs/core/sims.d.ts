@@ -177,8 +177,12 @@ declare namespace Data {
     function getSharedBooleanImpl(name: string): boolean;
 
     //%
-    //% shim=Data::getSharedListImpl
-    function getSharedListImpl(name: string): string[];
+    //% shim=Data::getSharedStringListImpl
+    function getSharedStringListImpl(name: string): string[];
+
+    //%
+    //% shim=Data::getSharedNumberListImpl
+    function getSharedNumberListImpl(name: string): number[];
 
     //%
     //% shim=Data::setSharedStringImpl
@@ -193,8 +197,12 @@ declare namespace Data {
     function setSharedBooleanImpl(name: string, v: boolean): void;
 
     //%
-    //% shim=Data::setSharedListImpl
-    function setSharedListImpl(name: string, v: string[]): void;
+    //% shim=Data::setSharedStringListImpl
+    function setSharedStringListImpl(name: string, v: string[]): void;
+
+    //%
+    //% shim=Data::setSharedNumberListImpl
+    function setSharedNumberListImpl(name: string, v: number[]): void;
 
     //%
     //% shim=Data::onSharedVariableChangeImpl

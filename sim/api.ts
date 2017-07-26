@@ -263,7 +263,12 @@ namespace pxsim.Data {
     }
 
     //%
-    export function getSharedListImpl(name: string): Array<string> {
+    export function getSharedStringListImpl(name: string): Array<string> {
+        return [];
+    }
+
+    //%
+    export function getSharedNumberListImpl(name: string): Array<number> {
         return [];
     }
 
@@ -280,7 +285,11 @@ namespace pxsim.Data {
     }
 
     //%
-    export function setSharedListImpl(name: string, v: Array<string>): void {
+    export function setSharedStringListImpl(name: string, v: Array<string>): void {
+    }
+
+    //%
+    export function setSharedNumberListImpl(name: string, v: Array<number>): void {
     }
 
     //%
