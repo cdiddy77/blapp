@@ -1866,6 +1866,9 @@ function initExtensionsAsync() {
                 pxt.blocks.registerFieldEditor(fi.selector, fi.editor, fi.validator);
             });
         }
+        if (res.blockDefinitions) {
+            res.blockDefinitions.forEach(function (b) { return pxt.blocks.registerBlockDefinition(b.id, b.init, b.compiler); });
+        }
         if (res.toolboxOptions) {
             if (res.toolboxOptions.blocklyXml) {
                 baseToolbox.overrideBaseToolbox(res.toolboxOptions.blocklyXml);

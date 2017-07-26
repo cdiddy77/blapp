@@ -2973,7 +2973,17 @@ var ts;
                                         defaultV = false;
                                     }
                                     else if (param.paramFieldEditorOptions && param.paramFieldEditorOptions['onParentBlock']) {
-                                        (r.fields || (r.fields = [])).push(getField(vName, e.getText()));
+                                        var f = (r.fields || (r.fields = []));
+                                        if (param.paramFieldEditor === "checkbox") {
+                                            f.push(getField(vName, e.getText() === "true" ? "TRUE" : "FALSE"));
+                                        }
+                                        else if (param.paramFieldEditor === "text") {
+                                            var txt = e.getText();
+                                            f.push(getField(vName, e.text));
+                                        }
+                                        else {
+                                            f.push(getField(vName, e.getText()));
+                                        }
                                         return;
                                     }
                                 }
@@ -3365,6 +3375,7 @@ var ts;
                                 return;
                             }
                             var paramInfo = api.parameters[instance_1 ? i - 1 : i];
+                            var inf = params[i];
                             if (paramInfo.isEnum) {
                                 if (e.kind === SK.PropertyAccessExpression) {
                                     var enumName = e.expression;
@@ -3375,9 +3386,13 @@ var ts;
                                 fail_1 = pxtc.Util.lf("Enum arguments may only be literal property access expressions");
                                 return;
                             }
-                            else if (isLiteralNode(e)) {
-                                var inf = params[i];
-                                if (inf.paramFieldEditor && (!inf.paramFieldEditorOptions || !inf.paramFieldEditorOptions["decompileLiterals"])) {
+                            else if (inf && inf.paramFieldEditor) {
+                                var isLiteral = isLiteralNode(e);
+                                if (isBuiltinFieldEditor(inf.paramFieldEditor) && !isLiteral) {
+                                    fail_1 = pxtc.Util.lf("Builtin field editors may only take literal arguments");
+                                    return;
+                                }
+                                else if (isLiteral && (!inf.paramFieldEditorOptions || !inf.paramFieldEditorOptions["decompileLiterals"])) {
                                     fail_1 = pxtc.Util.lf("Field editor does not support literal arguments");
                                 }
                             }
@@ -3663,6 +3678,9 @@ var ts;
                     }
                     return res;
                 });
+            }
+            function isBuiltinFieldEditor(type) {
+                return type === "checkbox" || type === "text";
             }
             function isFunctionExpression(node) {
                 return node.kind === SK.ArrowFunction || node.kind === SK.FunctionExpression;

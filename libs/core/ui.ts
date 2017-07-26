@@ -12,7 +12,7 @@ namespace UI {
     //% color=#935BA5
     //% blockId=user_interface
     //% block="UI theme %theme"
-    export function userInterface(theme: UITheme, body: Action) {
+    export function userInterface(theme: UITheme, body: () => void) {
         userInterfaceImpl(theme, body);
     }
     /**
@@ -74,8 +74,8 @@ namespace UI {
         flex: boolean,
         className: UIButtonClass,
         style: string[],
-        children: Action,
-        whenPressed: Action): void {
+        children: () => void,
+        whenPressed: () => void): void {
         buttonElementImpl(name, flex, className, style, children, whenPressed);
     }
 
@@ -111,7 +111,7 @@ namespace UI {
     //% handlerStmt=true
     //% mutate=objectdestructuring
     //% mutateText="new text"
-    //% mutateDefaults="text;text"
+    //% mutateDefaults="text"
     export function textInputElement(
         name: string,
         flex: boolean,
@@ -284,7 +284,7 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_image
     //% block="Image Icon %name|size %size|%type|style %style=lists_create_empty"
-   export function imageIcon(name: ImageIconCategory, size: number, type: IconType, style: string[]) {
+    export function imageIcon(name: ImageIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('image', name, type, size, style);
     }
 
@@ -332,7 +332,7 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_places
     //% block="Places Icon %name|size %size|%type|style %style=lists_create_empty"
-   export function placesIcon(name: PlacesIconCategory, size: number, type: IconType, style: string[]) {
+    export function placesIcon(name: PlacesIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('places', name, type, size, style);
     }
 
@@ -356,7 +356,7 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_toggle
     //% block="Toggle Icon %name|size %size|%type|style %style=lists_create_empty"
-   export function toggleIcon(name: ToggleIconCategory, size: number, type: IconType, style: string[]) {
+    export function toggleIcon(name: ToggleIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('toggle', name, type, size, style);
     }
 

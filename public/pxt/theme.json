@@ -29,6 +29,8 @@
       "snap": true
     }
   },
+  "sideDoc": "pxt/docs/tutorials/getting-started",
+  "extendEditor": true,
   "TOC": [
     {
       "name": "Blocks",

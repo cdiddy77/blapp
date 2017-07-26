@@ -164,26 +164,32 @@ var pxt;
             }
             var check = b.outputConnection.check_ && b.outputConnection.check_.length ? b.outputConnection.check_[0] : "T";
             if (check === "Array") {
-                // The only block that hits this case should be lists_create_with, so we
-                // can safely infer the type from the first input that has a return type
-                var tp = void 0;
-                if (b.inputList && b.inputList.length) {
-                    for (var _i = 0, _a = b.inputList; _i < _a.length; _i++) {
-                        var input = _a[_i];
-                        if (input.connection && input.connection.targetBlock()) {
-                            var t = find(returnType(e, input.connection.targetBlock()));
-                            if (t) {
-                                if (t.parentType) {
-                                    return t.parentType;
+                if (b.type === "lists_create_with") {
+                    // The only block that hits this case should be lists_create_with, so we
+                    // can safely infer the type from the first input that has a return type
+                    var tp = void 0;
+                    if (b.inputList && b.inputList.length) {
+                        for (var _i = 0, _a = b.inputList; _i < _a.length; _i++) {
+                            var input = _a[_i];
+                            if (input.connection && input.connection.targetBlock()) {
+                                var t = find(returnType(e, input.connection.targetBlock()));
+                                if (t) {
+                                    if (t.parentType) {
+                                        return t.parentType;
+                                    }
+                                    tp = ground(t.type + "[]");
+                                    genericLink(tp, t);
+                                    break;
                                 }
-                                tp = ground(t.type + "[]");
-                                genericLink(tp, t);
-                                break;
                             }
                         }
                     }
+                    return tp || ground("Array");
                 }
-                return tp || ground("Array");
+                else if (e.stdCallTable[b.type]) {
+                    var call = e.stdCallTable[b.type];
+                    return ground(call.returnType);
+                }
             }
             else if (check === "T") {
                 var func_1 = e.stdCallTable[b.type];
@@ -946,7 +952,18 @@ var pxt;
         function eventArgs(call) {
             return call.args.map(function (ar) { return ar.field; }).filter(function (ar) { return !!ar; });
         }
+        function getInstance(e) {
+            return {
+                compileExpression: function (block, comments) { return compileExpression(e, block, comments); },
+                compileStatement: function (block) { return compileStatementBlock(e, block); },
+                compileCodeBlock: function (firstBlock) { return compileStatements(e, firstBlock); },
+                escapeVarName: function (name) { return escapeVarName(name, e); }
+            };
+        }
         function compileCall(e, b, comments) {
+            if (blocks.registeredBlockCompilers[b.type]) {
+                return blocks.registeredBlockCompilers[b.type].compileBlock(b, comments, getInstance(e));
+            }
             var call = e.stdCallTable[b.type];
             if (call.imageLiteral)
                 return blocks.mkStmt(compileImage(e, b, call.imageLiteral, call.namespace, call.f, call.args.map(function (ar) { return compileArgument(e, b, ar, comments); })));
@@ -961,8 +978,15 @@ var pxt;
             if (lit)
                 return lit instanceof String ? blocks.H.mkStringLiteral(lit) : blocks.H.mkNumberLiteral(lit);
             var f = b.getFieldValue(p.field);
-            if (f != null)
+            if (f != null) {
+                if (p.fieldEditor === "checkbox") {
+                    return blocks.H.mkBooleanLiteral(f === "TRUE");
+                }
+                else if (p.fieldEditor === "text") {
+                    return blocks.H.mkStringLiteral(f);
+                }
                 return blocks.mkText(f);
+            }
             else {
                 attachPlaceholderIf(e, b, p.field);
                 var target = getInputTargetBlock(b, p.field);
@@ -1039,6 +1063,13 @@ var pxt;
             var argb = getInputTargetBlock(b, arg);
             if (argb)
                 return compileExpression(e, argb, comments);
+            var call = e.stdCallTable[b.type];
+            if (call) {
+                var stdArg = call.args.filter(function (a) { return a.field === arg; });
+                if (stdArg.length) {
+                    return compileArgument(e, b, stdArg[0], comments);
+                }
+            }
             return blocks.mkText(b.getFieldValue(arg));
         }
         function compileStartEvent(e, b) {
@@ -1234,8 +1265,14 @@ var pxt;
                     var fieldMap = pxt.blocks.parameterNames(fn);
                     var instance = fn.kind == pxtc.SymbolKind.Method || fn.kind == pxtc.SymbolKind.Property;
                     var args = (fn.parameters || []).map(function (p) {
-                        if (fieldMap[p.name] && fieldMap[p.name].name)
-                            return { field: fieldMap[p.name].name };
+                        if (fieldMap[p.name] && fieldMap[p.name].name) {
+                            var name_1 = fieldMap[p.name].name;
+                            var element = { field: name_1 };
+                            if (fn.attributes.paramFieldEditor && (fn.attributes.paramFieldEditor[name_1] === "checkbox" || fn.attributes.paramFieldEditor[name_1] === "text")) {
+                                element.fieldEditor = fn.attributes.paramFieldEditor[name_1];
+                            }
+                            return element;
+                        }
                         else
                             return null;
                     }).filter(function (a) { return !!a; });
@@ -1254,7 +1291,8 @@ var pxt;
                         imageLiteral: fn.attributes.imageLiteral,
                         hasHandler: fn.parameters && fn.parameters.some(function (p) { return (p.type == "() => void" || !!p.properties); }),
                         property: !fn.parameters,
-                        isIdentity: fn.attributes.shim == "TD_ID"
+                        isIdentity: fn.attributes.shim == "TD_ID",
+                        returnType: fn.retType
                     };
                 });
             }
@@ -1298,6 +1336,15 @@ var pxt;
                     if (declarations) {
                         for (var varName in declarations) {
                             trackLocalDeclaration(escapeVarName(varName, e), declarations[varName]);
+                        }
+                    }
+                }
+                else if (blocks.registeredBlockCompilers[b.type]) {
+                    var declarations = blocks.registeredBlockCompilers[b.type].getDeclaredVariables(b);
+                    if (declarations.length) {
+                        for (var _i = 0, declarations_1 = declarations; _i < declarations_1.length; _i++) {
+                            var _a = declarations_1[_i], name_2 = _a.name, type = _a.type;
+                            trackLocalDeclaration(escapeVarName(name_2, e), type);
                         }
                     }
                 }
@@ -1536,6 +1583,8 @@ var pxt;
     var blocks;
     (function (blocks) {
         var registeredFieldEditors = {};
+        blocks.registeredBlockDefinitions = {};
+        blocks.registeredBlockCompilers = {};
         function initFieldEditors() {
             // Initialize PXT custom editors
             var noteValidator = function (text) {
@@ -1574,6 +1623,15 @@ var pxt;
             return instance;
         }
         blocks.createFieldEditor = createFieldEditor;
+        function registerBlockDefinition(id, init, compiler) {
+            if (blocks.registeredBlockDefinitions[id] == undefined) {
+                blocks.registeredBlockDefinitions[id] = init;
+                if (compiler) {
+                    blocks.registeredBlockCompilers[id] = compiler;
+                }
+            }
+        }
+        blocks.registerBlockDefinition = registerBlockDefinition;
     })(blocks = pxt.blocks || (pxt.blocks = {}));
 })(pxt || (pxt = {}));
 ///<reference path='../localtypings/blockly.d.ts'/>
@@ -2478,7 +2536,14 @@ var pxt;
                 fn: fn,
                 block: {
                     codeCard: mkCard(fn, blockXml),
-                    init: function () { initBlock(this, info, fn, attrNames); }
+                    init: function () {
+                        if (fn.attributes.externallyLoadedBlock && blocks_6.registeredBlockDefinitions[id]) {
+                            blocks_6.registeredBlockDefinitions[id].call(this);
+                        }
+                        else {
+                            initBlock(this, info, fn, attrNames);
+                        }
+                    }
                 }
             };
             cachedBlocks[id] = cachedBlock;
@@ -3514,9 +3579,9 @@ var pxt;
                 customContextMenu: function (options) {
                     if (!this.isCollapsed()) {
                         var option = { enabled: true };
-                        var name_1 = this.getFieldValue('VAR');
-                        option.text = lf("Create 'get {0}'", name_1);
-                        var xmlField = goog.dom.createDom('field', null, name_1);
+                        var name_3 = this.getFieldValue('VAR');
+                        option.text = lf("Create 'get {0}'", name_3);
+                        var xmlField = goog.dom.createDom('field', null, name_3);
                         xmlField.setAttribute('name', 'VAR');
                         var xmlBlock = goog.dom.createDom('block', null, xmlField);
                         xmlBlock.setAttribute('type', 'variables_get');
@@ -4308,8 +4373,8 @@ var pxt;
                         // Look for the case where a procedure call was created (usually through
                         // paste) and there is no matching definition.  In this case, create
                         // an empty definition block with the correct signature.
-                        var name_2 = this.getProcedureCall();
-                        var def = Blockly.Procedures.getDefinition(name_2, this.workspace);
+                        var name_4 = this.getProcedureCall();
+                        var def = Blockly.Procedures.getDefinition(name_4, this.workspace);
                         if (def && (def.type != this.defType_ ||
                             JSON.stringify(def.arguments_) != JSON.stringify(this.arguments_))) {
                             // The signatures don't match.
@@ -4346,8 +4411,8 @@ var pxt;
                         // Look for the case where a procedure definition has been deleted,
                         // leaving this block (a procedure call) orphaned.  In this case, delete
                         // the orphan.
-                        var name_3 = this.getProcedureCall();
-                        var def = Blockly.Procedures.getDefinition(name_3, this.workspace);
+                        var name_5 = this.getProcedureCall();
+                        var def = Blockly.Procedures.getDefinition(name_5, this.workspace);
                         if (!def) {
                             Blockly.Events.setGroup(event.group);
                             this.dispose(true, false);
@@ -4467,7 +4532,7 @@ var pxt;
                 xmlList.push(button);
                 function populateProcedures(procedureList, templateName) {
                     for (var i = 0; i < procedureList.length; i++) {
-                        var name_4 = procedureList[i][0];
+                        var name_6 = procedureList[i][0];
                         var args = procedureList[i][1];
                         // <block type="procedures_callnoreturn" gap="16">
                         //   <field name="NAME">name</field>
@@ -4476,7 +4541,7 @@ var pxt;
                         block.setAttribute('type', templateName);
                         block.setAttribute('gap', '16');
                         block.setAttribute('colour', getNamespaceColor('functions'));
-                        var field = goog.dom.createDom('field', null, name_4);
+                        var field = goog.dom.createDom('field', null, name_6);
                         field.setAttribute('name', 'NAME');
                         block.appendChild(field);
                         xmlList.push(block);
@@ -4969,10 +5034,10 @@ var pxt;
                 }
                 this.currentlyVisible.forEach(function (param) {
                     if (_this.parameters.indexOf(param) === -1) {
-                        var name_5 = _this.block.getFieldValue(param);
+                        var name_7 = _this.block.getFieldValue(param);
                         // Persist renames
-                        if (name_5 !== param) {
-                            _this.parameterRenames[param] = name_5;
+                        if (name_7 !== param) {
+                            _this.parameterRenames[param] = name_7;
                         }
                         dummyInput.removeField(param);
                     }

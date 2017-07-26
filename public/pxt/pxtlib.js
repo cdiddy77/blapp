@@ -6567,7 +6567,7 @@ var ts;
         }
         pxtc.emptyExtInfo = emptyExtInfo;
         var numberAttributes = ["weight", "imageLiteral"];
-        var booleanAttributes = ["advanced"];
+        var booleanAttributes = ["advanced", "externallyLoadedBlock"];
         function parseCommentString(cmt) {
             var res = {
                 paramDefl: {},
@@ -8383,7 +8383,13 @@ var pxt;
         Cloud.downloadScriptFilesAsync = downloadScriptFilesAsync;
         function downloadMarkdownAsync(docid, locale, live) {
             docid = docid.replace(/^\//, "");
-            var url = "md/" + pxt.appTarget.id + "/" + docid + "?targetVersion=" + encodeURIComponent(pxt.webConfig.targetVersion);
+            var url;
+            if (pxt.webConfig.isStatic) {
+                url = "/" + docid + ".md?targetVersion=" + encodeURIComponent(pxt.webConfig.targetVersion);
+            }
+            else {
+                url = "md/" + pxt.appTarget.id + "/" + docid + "?targetVersion=" + encodeURIComponent(pxt.webConfig.targetVersion);
+            }
             if (locale != "en") {
                 url += "&lang=" + encodeURIComponent(Util.userLanguage());
                 if (live)
@@ -8401,6 +8407,14 @@ var pxt;
                     else
                         return resp.text;
                 });
+            else if (pxt.webConfig.isStatic) {
+                return Util.requestAsync({
+                    url: url,
+                    headers: { "Authorization": Cloud.localToken },
+                    method: "GET",
+                    allowHttpErrors: true
+                }).then(function (resp) { return resp.text; });
+            }
             else
                 return privateGetTextAsync(url);
         }

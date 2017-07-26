@@ -35,7 +35,7 @@
     },
     "files": {
       "README.md": " ",
-      "main.blocks": "<xml xmlns=\"http://www.w3.org/1999/xhtml\">\n</xml>",
+      "main.blocks": "<xml xmlns=\"http://www.w3.org/1999/xhtml\">\n<block type=\"pxt-on-start\"/>\n<block type=\"user_interface\"/>\n</xml>",
       "main.ts": " "
     }
   },

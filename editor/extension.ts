@@ -156,7 +156,7 @@ namespace pxt.editor {
             new UIBlockDef("text_element", "#805BA5", "TEXT")
                 .checkbox("flex", false, "flex")
                 .dropdown(textClassOptions)
-                .input("value", "String", "style")
+                .input("value", "String", "")
                 .input("style", "Array", "style")
                 .toBlock()]
         };
