@@ -126,4 +126,17 @@ namespace Data {
             return value.toString();
     }
 
+    /**
+     * Perform an operation for each value of a string
+     */
+    //% weight=25
+    //% blockId=for_each_string
+    //% block="for each string %array"
+    //% externallyLoadedBlock=true
+    //% blockNamespace=loops
+    export function forEachString(array: string[], cb: (value: string, index: number) => void) {
+        for (let i = 0; i < array.length; i++) {
+            cb(array[i], i);
+        }
+    }
 }
