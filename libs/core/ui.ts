@@ -23,7 +23,6 @@ namespace UI {
     //% blockId=group_element
     //% block="GROUP id %name|dir %direction|flex %flex|class %className|style %style=lists_create_empty"
     //% handlerStmt=true
-    //% acceptArrays=true
     export function groupElement(
         name: string,
         direction: UIGroupDirection,
@@ -42,7 +41,6 @@ namespace UI {
     //% blockId=scroller_element
     //% block="SCROLLER id %name|flex %flex|class %className|horizontal? %horz|style %style=lists_create_empty"
     //% handlerStmt=true
-    //% acceptArrays=true
     export function scrollerElement(
         name: string,
         flex: boolean,
@@ -61,7 +59,6 @@ namespace UI {
     //% blockId=button_element
     //% block="BUTTON id %name|flex %flex|class %className|style %style=lists_create_empty"
     //% handlerStmt=true
-    //% acceptArrays=true
     export function buttonElement(
         name: string,
         flex: boolean,
@@ -80,7 +77,6 @@ namespace UI {
     //% color=#805BA5
     //% blockId=text_element
     //% block="TEXT flex %flex|class %className|%value|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function textElement(
         flex: boolean,
         className: UITextClass,
@@ -103,7 +99,6 @@ namespace UI {
     //% mutate=objectdestructuring
     //% mutateText="new text"
     //% mutateDefaults="text;text"
-    //% acceptArrays=true
     export function textInputElement(
         name: string,
         flex: boolean,
@@ -128,7 +123,6 @@ namespace UI {
     //% color=#5BA5A5
     //% blockId=image_element
     //% block="IMAGE flex %flex|width %width|height %height|URL %url|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function imageElement(
         flex: boolean,
         width: number,
@@ -145,7 +139,6 @@ namespace UI {
     //% color=#A55B5B
     //% blockId=divider_element
     //% block="DIVIDER class %className|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function dividerElement(
         className: UIDividerClass,
         style: string[]): void {
@@ -170,7 +163,6 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_action
     //% block="Action Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function actionIcon(name: ActionIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('action', name, type, size, style);
     }
@@ -183,7 +175,6 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_alert
     //% block="Alert Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function alert(name: AlertIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('alert', name, type, size, style);
     }
@@ -196,7 +187,6 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_av
     //% block="A/V Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function avIcon(name: AvIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('av', name, type, size, style);
     }
@@ -209,7 +199,6 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_communication
     //% block="Communication Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function communicationIcon(name: CommunicationIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('communication', name, type, size, style);
     }
@@ -222,7 +211,6 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_content
     //% block="Content Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function contentIcon(name: ContentIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('content', name, type, size, style);
     }
@@ -235,7 +223,6 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_device
     //% block="Device Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function deviceIcon(name: DeviceIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('device', name, type, size, style);
     }
@@ -248,7 +235,6 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_editor
     //% block="Editor Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function editorIcon(name: EditorIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('editor', name, type, size, style);
     }
@@ -261,7 +247,6 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_file
     //% block="File Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function fileIcon(name: FileIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('file', name, type, size, style);
     }
@@ -274,7 +259,6 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_hardware
     //% block="Hardware Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function hardwareIcon(name: HardwareIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('hardware', name, type, size, style);
     }
@@ -287,8 +271,7 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_image
     //% block="Image Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
-    export function imageIcon(name: ImageIconCategory, size: number, type: IconType, style: string[]) {
+   export function imageIcon(name: ImageIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('image', name, type, size, style);
     }
 
@@ -300,7 +283,6 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_maps
     //% block="Maps Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function mapsIcon(name: MapsIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('maps', name, type, size, style);
     }
@@ -313,7 +295,6 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_navigation
     //% block="Navigation Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function navigationIcon(name: NavigationIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('navigation', name, type, size, style);
     }
@@ -326,7 +307,6 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_notification
     //% block="Notification Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function notificationIcon(name: NotificationIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('notification', name, type, size, style);
     }
@@ -339,8 +319,7 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_places
     //% block="Places Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
-    export function placesIcon(name: PlacesIconCategory, size: number, type: IconType, style: string[]) {
+   export function placesIcon(name: PlacesIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('places', name, type, size, style);
     }
 
@@ -352,7 +331,6 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_social
     //% block="Social Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
     export function socialIcon(name: SocialIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('social', name, type, size, style);
     }
@@ -365,8 +343,7 @@ namespace UI {
     //% color=#93A55B
     //% blockId=icon_toggle
     //% block="Toggle Icon %name|size %size|%type|style %style=lists_create_empty"
-    //% acceptArrays=true
-    export function toggleIcon(name: ToggleIconCategory, size: number, type: IconType, style: string[]) {
+   export function toggleIcon(name: ToggleIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('toggle', name, type, size, style);
     }
 

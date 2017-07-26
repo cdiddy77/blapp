@@ -16,9 +16,19 @@ export namespace pxsimdata {
         return CodegenRuntime.getShareVar(name);
     }
 
-    export function getSharedListImpl(name: string): pxsim.RefCollection {
+    export function getSharedStringListImpl(name: string): pxsim.RefCollection {
         // HACK: we are copying the entire list each time we move it back and forth, which is super-inefficient
         let arr: string[] = CodegenRuntime.getShareVar(name);
+        let retval: pxsim.RefCollection = CodegenRuntime.getCodegenHost().createRefCollection();
+        for (let i = 0; i < arr.length; i++) {
+            retval.push(arr[i]);
+        }
+        return retval;
+    }
+
+    export function getSharedNumberListImpl(name: string): pxsim.RefCollection {
+        // HACK: we are copying the entire list each time we move it back and forth, which is super-inefficient
+        let arr: number[] = CodegenRuntime.getShareVar(name);
         let retval: pxsim.RefCollection = CodegenRuntime.getCodegenHost().createRefCollection();
         for (let i = 0; i < arr.length; i++) {
             retval.push(arr[i]);
@@ -38,9 +48,18 @@ export namespace pxsimdata {
         CodegenRuntime.setShareVar(name, v);
     }
 
-    export function setSharedListImpl(name: string, v: pxsim.RefCollection): void {
+    export function setSharedStringListImpl(name: string, v: pxsim.RefCollection): void {
         // HACK: we are copying the entire list each time we move it back and forth, which is super-inefficient
         let arr: string[] = [];
+        for (let i = 0; i < v.getLength(); i++) {
+            arr.push(v.getAt(i));
+        }
+        CodegenRuntime.setShareVar(name, arr);
+    }
+
+    export function setSharedNumberListImpl(name: string, v: pxsim.RefCollection): void {
+        // HACK: we are copying the entire list each time we move it back and forth, which is super-inefficient
+        let arr: number[] = [];
         for (let i = 0; i < v.getLength(); i++) {
             arr.push(v.getAt(i));
         }

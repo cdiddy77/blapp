@@ -2572,6 +2572,7 @@ var ts;
                                 return getStatementBlock(node.expression, next, parent || node, asExpression, topLevel);
                             case SK.VariableStatement:
                                 return codeBlock(node.declarationList.declarations, next, false, parent || node);
+                            case SK.FunctionExpression:
                             case SK.ArrowFunction:
                                 return getArrowFunctionStatement(node, next);
                             case SK.BinaryExpression:
@@ -2916,6 +2917,7 @@ var ts;
                             return;
                         }
                         switch (e.kind) {
+                            case SK.FunctionExpression:
                             case SK.ArrowFunction:
                                 var m = getDestructuringMutation(e);
                                 if (m) {
@@ -3054,10 +3056,10 @@ var ts;
                         }
                     });
                     eventStatements.map(function (n) { return getStatementBlock(n, undefined, undefined, false, topLevel); }).forEach(emitStatementNode);
+                    var emitOnStart = topLevel && !options.snippetMode;
                     if (blockStatements.length) {
                         // wrap statement in "on start" if top level
                         var stmt = getStatementBlock(blockStatements.shift(), blockStatements, parent, false, topLevel);
-                        var emitOnStart = topLevel && !options.snippetMode;
                         if (emitOnStart) {
                             // Preserve any variable edeclarations that were never used
                             var current_1 = stmt;
@@ -3080,10 +3082,21 @@ var ts;
                                         }]
                                 };
                             }
+                            else {
+                                maybeEmitEmptyOnStart();
+                            }
                         }
                         return stmt;
                     }
+                    else if (emitOnStart) {
+                        maybeEmitEmptyOnStart();
+                    }
                     return undefined;
+                }
+                function maybeEmitEmptyOnStart() {
+                    if (options.alwaysEmitOnStart) {
+                        write("<block type=\"" + ts.pxtc.ON_START_TYPE + "\"></block>");
+                    }
                 }
                 /**
                  * Takes a series of comment ranges and converts them into string suitable for a
@@ -3115,7 +3128,7 @@ var ts;
                         var match = regex.exec(line);
                         if (match) {
                             var matched = match[1].trim();
-                            if (matched === pxtc.ON_START_COMMENT) {
+                            if (matched === pxtc.ON_START_COMMENT || matched === pxtc.HANDLER_COMMENT) {
                                 return;
                             }
                             if (matched) {
@@ -3172,6 +3185,7 @@ var ts;
                     case SK.PostfixUnaryExpression:
                     case SK.PrefixUnaryExpression:
                         return checkIncrementorExpression(node);
+                    case SK.FunctionExpression:
                     case SK.ArrowFunction:
                         return checkArrowFunction(node);
                     case SK.BinaryExpression:
@@ -3388,7 +3402,7 @@ var ts;
                         if (info.attrs.mutatePropertyEnum && argumentDifference === 2 && info.args.length >= 2) {
                             var arrayArg = info.args[info.args.length - 2];
                             var callbackArg = info.args[info.args.length - 1];
-                            if (arrayArg.kind === SK.ArrayLiteralExpression && callbackArg.kind === SK.ArrowFunction) {
+                            if (arrayArg.kind === SK.ArrayLiteralExpression && isFunctionExpression(callbackArg)) {
                                 var propNames_1 = [];
                                 // Make sure that all elements in the array literal are enum values
                                 var allLiterals = !arrayArg.elements.some(function (e) {
@@ -3589,7 +3603,7 @@ var ts;
             }
             function hasArrowFunction(info) {
                 var parameters = info.decl.parameters;
-                return info.args.some(function (arg, index) { return arg && arg.kind === SK.ArrowFunction; });
+                return info.args.some(function (arg, index) { return arg && isFunctionExpression(arg); });
             }
             function isLiteralNode(node) {
                 if (!node) {
@@ -3649,6 +3663,9 @@ var ts;
                     }
                     return res;
                 });
+            }
+            function isFunctionExpression(node) {
+                return node.kind === SK.ArrowFunction || node.kind === SK.FunctionExpression;
             }
         })(decompiler = pxtc.decompiler || (pxtc.decompiler = {}));
     })(pxtc = ts.pxtc || (ts.pxtc = {}));
@@ -8797,7 +8814,7 @@ var ts;
             var file = resp.ast.getSourceFile(fileName);
             var apis = pxtc.getApiInfo(resp.ast);
             var blocksInfo = pxtc.getBlocksInfo(apis);
-            var bresp = pxtc.decompiler.decompileToBlocks(blocksInfo, file, { snippetMode: false }, pxtc.decompiler.buildRenameMap(resp.ast, file));
+            var bresp = pxtc.decompiler.decompileToBlocks(blocksInfo, file, { snippetMode: false, alwaysEmitOnStart: opts.alwaysDecompileOnStart }, pxtc.decompiler.buildRenameMap(resp.ast, file));
             return bresp;
         }
         pxtc.decompile = decompile;
@@ -10764,6 +10781,8 @@ var ts;
                     jsdocStrings[si.qName] = si.attributes.jsDoc;
                 if (si.attributes.block)
                     locStrings[(si.qName + "|block")] = si.attributes.block;
+                if (si.attributes.group)
+                    locStrings[("{id:group}" + si.attributes.group)] = si.attributes.group;
                 if (si.parameters)
                     si.parameters.filter(function (pi) { return !!pi.description; }).forEach(function (pi) {
                         jsdocStrings[(si.qName + "|param|" + pi.name)] = pi.description;
@@ -11362,7 +11381,7 @@ var ts;
                             if (functionSignature) {
                                 return getFunctionString(functionSignature);
                             }
-                            return "() => {}";
+                            return "function () {}";
                     }
                     var type = checker ? checker.getTypeAtLocation(param) : undefined;
                     if (type) {
@@ -11371,7 +11390,7 @@ var ts;
                             if (sigs.length) {
                                 return getFunctionString(sigs[0]);
                             }
-                            return "() => {}";
+                            return "function () {}";
                         }
                     }
                     return "null";
@@ -11392,7 +11411,7 @@ var ts;
                         returnValue = "return false;";
                     var displayPartsStr = ts.displayPartsToString(displayParts);
                     functionArgument = displayPartsStr.substr(0, displayPartsStr.lastIndexOf(":"));
-                    return functionArgument + " => {\n    " + returnValue + "\n}";
+                    return "function " + functionArgument + " {\n    " + returnValue + "\n}";
                 }
             }
             service_1.getSnippet = getSnippet;

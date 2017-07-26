@@ -267,7 +267,7 @@ var ProjectView = (function (_super) {
                 this.setState({ embedSimView: false });
             return;
         }
-        if (this.isJavaScriptActive())
+        if (this.isJavaScriptActive() || (this.shouldTryDecompile && !this.state.embedSimView))
             this.textEditor.openBlocks();
         else if (this.isAnyEditeableJavaScriptOrPackageActive()) {
             this.saveFileAsync()
@@ -283,6 +283,7 @@ var ProjectView = (function (_super) {
         }
         else
             this.setFile(pkg.mainEditorPkg().files["main.blocks"]);
+        this.shouldTryDecompile = false;
     };
     ProjectView.prototype.openPreviousEditor = function () {
         if (this.prevEditorId == "monacoEditor") {
@@ -371,6 +372,7 @@ var ProjectView = (function (_super) {
         if (this.state.currFile == this.editorFile && !editorOverride)
             return;
         this.saveSettings();
+        var hc = this.state.highContrast;
         // save file before change
         this.saveFileAsync()
             .then(function () {
@@ -381,7 +383,7 @@ var ProjectView = (function (_super) {
             _this.allEditors.forEach(function (e) { return e.setVisible(e == _this.editor); });
             return previousEditor ? previousEditor.unloadFileAsync() : Promise.resolve();
         })
-            .then(function () { return _this.editor.loadFileAsync(_this.editorFile); })
+            .then(function () { return _this.editor.loadFileAsync(_this.editorFile, hc); })
             .then(function () {
             _this.saveFileAsync().done(); // make sure state is up to date
             _this.typecheck();
@@ -402,6 +404,9 @@ var ProjectView = (function (_super) {
     ProjectView.prototype.setFile = function (fn) {
         if (!fn)
             return;
+        if (fn.name === "main.ts") {
+            this.shouldTryDecompile = true;
+        }
         this.setState({
             currFile: fn,
             showBlocks: false,
@@ -568,6 +573,9 @@ var ProjectView = (function (_super) {
                 currFile: file,
                 sideDocsLoadUrl: ''
             });
+            if (file.name === "main.ts") {
+                _this.shouldTryDecompile = true;
+            }
             pkg.getEditorPkg(pkg.mainPkg).onupdate = function () {
                 _this.loadHeaderAsync(h, _this.state.filters).done();
             };
@@ -658,10 +666,14 @@ var ProjectView = (function (_super) {
     ProjectView.prototype.convertTouchDevelopToTypeScriptAsync = function (td) {
         return tdlegacy.td2tsAsync(td);
     };
-    ProjectView.prototype.importHex = function (data) {
+    ProjectView.prototype.importHex = function (data, createNewIfFailed) {
+        var _this = this;
+        if (createNewIfFailed === void 0) { createNewIfFailed = false; }
         var targetId = pxt.appTarget.id;
         if (!data || !data.meta) {
             core.warningNotification(lf("Sorry, we could not recognize this file."));
+            if (createNewIfFailed)
+                this.newProject();
             return;
         }
         var importer = this.hexFileImporters.filter(function (fi) { return fi.canImport(data); })[0];
@@ -673,11 +685,15 @@ var ProjectView = (function (_super) {
                 pxt.reportException(e, { importer: importer.id });
                 core.hideLoading();
                 core.errorNotification(lf("Oops, something went wrong when importing your project"));
+                if (createNewIfFailed)
+                    _this.newProject();
             });
         }
         else {
             core.warningNotification(lf("Sorry, we could not import this project."));
             pxt.tickEvent("warning.importfailed");
+            if (createNewIfFailed)
+                this.newProject();
         }
     };
     ProjectView.prototype.importProjectFile = function (file) {
@@ -893,13 +909,18 @@ var ProjectView = (function (_super) {
         var _this = this;
         if (!this.state.header)
             return;
+        this.setState({ isSaving: true });
         return (this.state.projectName !== lf("Untitled")
             ? Promise.resolve(true) : this.promptRenameProjectAsync())
             .then(function () { return _this.saveProjectNameAsync(); })
             .then(function () { return _this.saveFileAsync(); })
             .then(function () {
             if (!pxt.appTarget.compile.hasHex) {
-                _this.saveProjectToFileAsync().done();
+                _this.saveProjectToFileAsync()
+                    .finally(function () {
+                    _this.setState({ isSaving: false });
+                })
+                    .done();
             }
             else {
                 _this.compile(true);
@@ -916,7 +937,7 @@ var ProjectView = (function (_super) {
         }
         this.beforeCompile();
         var userContextWindow = undefined;
-        if (pxt.BrowserUtils.isBrowserDownloadInSameWindow())
+        if (!pxt.appTarget.compile.useModulator && pxt.BrowserUtils.isBrowserDownloadInSameWindow())
             userContextWindow = window.open("");
         pxt.tickEvent("compile");
         pxt.debug('compiling...');
@@ -944,9 +965,17 @@ var ProjectView = (function (_super) {
             resp.userContextWindow = userContextWindow;
             resp.downloadFileBaseName = pkg.genFileName("");
             resp.confirmAsync = core.confirmAsync;
+            if (saveOnly) {
+                return pxt.commands.saveOnlyAsync(resp);
+            }
             return pxt.commands.deployCoreAsync(resp)
                 .catch(function (e) {
-                core.warningNotification(lf("Upload failed, please try again."));
+                if (e.notifyUser) {
+                    core.warningNotification(e.message);
+                }
+                else {
+                    core.warningNotification(lf("Upload failed, please try again."));
+                }
                 pxt.reportException(e);
                 if (userContextWindow)
                     try {
@@ -963,7 +992,7 @@ var ProjectView = (function (_super) {
                 }
                 catch (e) { }
         }).finally(function () {
-            _this.setState({ compiling: false });
+            _this.setState({ compiling: false, isSaving: false });
             if (simRestart)
                 _this.runSimulator();
         })
@@ -988,13 +1017,13 @@ var ProjectView = (function (_super) {
         this.stopSimulator();
         this.startSimulator();
     };
-    ProjectView.prototype.toggleTrace = function () {
+    ProjectView.prototype.toggleTrace = function (intervalSpeed) {
         if (this.state.tracing) {
             this.editor.clearHighlightedStatements();
             simulator.setTraceInterval(0);
         }
         else {
-            simulator.setTraceInterval(simulator.SLOW_TRACE_INTERVAL);
+            simulator.setTraceInterval(intervalSpeed != undefined ? intervalSpeed : simulator.SLOW_TRACE_INTERVAL);
         }
         this.setState({ tracing: !this.state.tracing });
         this.restartSimulator();
@@ -1123,7 +1152,13 @@ var ProjectView = (function (_super) {
     ProjectView.prototype.importFileDialog = function () {
         var _this = this;
         var input;
-        var ext = pxt.appTarget.compile && pxt.appTarget.compile.hasHex ? ".hex" : ".mkcd";
+        var ext = ".mkcd";
+        if (pxt.appTarget.compile && pxt.appTarget.compile.hasHex) {
+            ext = ".hex";
+        }
+        if (pxt.appTarget.compile && pxt.appTarget.compile.useUF2) {
+            ext = ".uf2";
+        }
         core.confirmAsync({
             header: lf("Open {0} file", ext),
             onLoaded: function ($el) {
@@ -1243,7 +1278,7 @@ var ProjectView = (function (_super) {
         })
             .catch(function (e) {
             core.errorNotification(e.message);
-            return undefined;
+            throw e;
         });
     };
     ProjectView.prototype.updateHeaderName = function (name) {
@@ -1359,6 +1394,10 @@ var ProjectView = (function (_super) {
             return _this.createProjectAsync({
                 name: title
             });
+        })
+            .catch(function (e) {
+            core.hideLoading();
+            core.handleNetworkError(e);
         });
     };
     ProjectView.prototype.exitTutorial = function (keep) {
@@ -1400,6 +1439,9 @@ var ProjectView = (function (_super) {
         var hc = !this.state.highContrast;
         pxt.tickEvent("menu.highcontrast", { on: hc ? 1 : 0 });
         this.setState({ highContrast: hc }, function () { return _this.restartSimulator(); });
+        if (this.editor && this.editor.isReady) {
+            this.editor.setHighContrast(hc);
+        }
     };
     ProjectView.prototype.completeTutorial = function () {
         pxt.tickEvent("tutorial.complete");
@@ -1560,7 +1602,7 @@ function initLogin() {
     }
 }
 function initSerial() {
-    if (!pxt.appTarget.serial || !Cloud.isLocalHost() || !Cloud.localToken)
+    if (!pxt.appTarget.serial || !pxt.winrt.isWinRT() && (!Cloud.isLocalHost() || !Cloud.localToken))
         return;
     if (hidbridge.shouldUse()) {
         hidbridge.initAsync()
@@ -1834,6 +1876,7 @@ function initExtensionsAsync() {
         }
     });
 }
+pxt.winrt.captureInitialActivation();
 $(document).ready(function () {
     pxt.setupWebConfig(window.pxtConfig);
     var config = pxt.webConfig;
@@ -1859,7 +1902,10 @@ $(document).ready(function () {
     var hash = parseHash();
     appcache.init(hash);
     pxt.docs.requireMarked = function () { return require("marked"); };
-    var ih = function (hex) { return theEditor.importHex(hex); };
+    var importHex = function (hex, createNewIfFailed) {
+        if (createNewIfFailed === void 0) { createNewIfFailed = false; }
+        return theEditor.importHex(hex, createNewIfFailed);
+    };
     var hm = /^(https:\/\/[^/]+)/.exec(window.location.href);
     if (hm)
         Cloud.apiRoot = hm[1] + "/api/";
@@ -1902,13 +1948,16 @@ $(document).ready(function () {
         initSerial();
         initScreenshots();
         initHashchange();
+        return pxt.winrt.initAsync(importHex);
     })
-        .then(function () { return pxt.winrt.initAsync(ih); })
         .then(function () { return initExtensionsAsync(); })
         .then(function () {
         electron.init();
         if (hash.cmd && handleHash(hash))
             return Promise.resolve();
+        if (pxt.winrt.hasActivationProject) {
+            return pxt.winrt.loadActivationProject();
+        }
         // default handlers
         var ent = theEditor.settings.fileHistory.filter(function (e) { return !!workspace.getHeader(e.id); })[0];
         var hd = workspace.getHeaders()[0];
@@ -1919,7 +1968,8 @@ $(document).ready(function () {
         else
             theEditor.newProject();
         return Promise.resolve();
-    }).then(function () { return workspace.importLegacyScriptsAsync(); })
+    })
+        .then(function () { return workspace.importLegacyScriptsAsync(); })
         .done(function () { });
     document.addEventListener("visibilitychange", function (ev) {
         if (theEditor)
@@ -2202,8 +2252,10 @@ var Editor = (function (_super) {
             needsLayout = needsLayout || (b.type != ts.pxtc.ON_START_TYPE && tp.x == 0 && tp.y == 0);
         });
         if (needsLayout) {
-            // If the blocks file has no location info (e.g. it's from the decompiler), format the code
-            pxt.blocks.layout.flow(this.editor);
+            var metrics = this.editor.getMetrics();
+            // If the blocks file has no location info (e.g. it's from the decompiler), format the code.
+            // Only limit the width if the editor is in portrait
+            pxt.blocks.layout.flow(this.editor, metrics.viewWidth < metrics.viewHeight ? { maxWidth: metrics.viewWidth } : undefined);
         }
         else {
             // Otherwise translate the blocks so that they are positioned on the top left
@@ -2535,6 +2587,11 @@ var Editor = (function (_super) {
             this.filters = null;
         }
         this.currFile = file;
+        // Clear the search field if a value exists
+        var searchField = document.getElementById('blocklySearchInputField');
+        if (searchField && searchField.value) {
+            searchField.value = '';
+        }
         return Promise.resolve();
     };
     Editor.prototype.switchToTypeScript = function () {
@@ -2555,7 +2612,7 @@ var Editor = (function (_super) {
         var diags = tsfile.diagnostics.filter(function (d) { return d.category == ts.pxtc.DiagnosticCategory.Error; });
         var sourceMap = this.compilationResult.sourceMap;
         diags.filter(function (diag) { return diag.category == ts.pxtc.DiagnosticCategory.Error; }).forEach(function (diag) {
-            var bid = pxt.blocks.findBlockId(sourceMap, { start: diag.line, length: diag.endLine - diag.line });
+            var bid = pxt.blocks.findBlockId(sourceMap, { start: diag.line, length: 0 });
             if (bid) {
                 var b = _this.editor.getBlockById(bid);
                 if (b) {
@@ -3230,6 +3287,7 @@ function localhostDeployCoreAsync(resp) {
 }
 function initCommandsAsync() {
     pxt.commands.browserDownloadAsync = browserDownloadAsync;
+    pxt.commands.saveOnlyAsync = browserDownloadDeployCoreAsync;
     var forceHexDownload = /forceHexDownload/i.test(window.location.href);
     if (/webusb=1/i.test(window.location.href) && pxt.appTarget.compile.useUF2) {
         pxt.commands.deployCoreAsync = webusbDeployCoreAsync;
@@ -3243,6 +3301,15 @@ function initCommandsAsync() {
             pxt.commands.deployCoreAsync = pxt.winrt.driveDeployCoreAsync;
         }
         pxt.commands.browserDownloadAsync = pxt.winrt.browserDownloadAsync;
+        pxt.commands.saveOnlyAsync = function (resp) {
+            return pxt.winrt.saveOnlyAsync(resp)
+                .then(function (saved) {
+                if (saved) {
+                    core.infoNotification(lf("file saved!"));
+                }
+            })
+                .catch(function () { return core.errorNotification(lf("saving file failed...")); });
+        };
     }
     else if (hidbridge.shouldUse() && !forceHexDownload) {
         pxt.commands.deployCoreAsync = hidDeployCoreAsync;
@@ -3427,6 +3494,7 @@ function decompileAsync(fileName, blockInfo, oldWorkspace, blockFile) {
     return pkg.mainPkg.getCompileOptionsAsync(trg)
         .then(function (opts) {
         opts.ast = true;
+        opts.alwaysDecompileOnStart = pxt.appTarget.runtime && pxt.appTarget.runtime.onStartUnDeletable;
         return decompileCoreAsync(opts, fileName);
     })
         .then(function (resp) {
@@ -3876,7 +3944,7 @@ exports.confirmDelete = confirmDelete;
 function promptAsync(options) {
     if (!options.buttons)
         options.buttons = [];
-    var result = options.defaultValue;
+    var result = "";
     if (!options.hideAgree) {
         options.buttons.push({
             label: options.agreeLbl || lf("Go ahead!"),
@@ -3888,11 +3956,18 @@ function promptAsync(options) {
             }
         });
     }
-    options.htmlBody = "<div class=\"ui fluid icon input\">\n                            <input type=\"text\" id=\"promptDialogInput\" placeholder=\"" + options.defaultValue + "\">\n                        </div>";
+    options.htmlBody = "<div class=\"ui fluid icon input\">\n                            <input type=\"text\" id=\"promptDialogInput\" value=\"" + options.defaultValue + "\">\n                        </div>";
     options.onLoaded = function () {
         var dialogInput = document.getElementById('promptDialogInput');
         if (dialogInput) {
-            dialogInput.focus();
+            dialogInput.setSelectionRange(0, 9999);
+            dialogInput.onkeyup = function (e) {
+                var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
+                if (charCode === 13 || charCode === 32) {
+                    e.preventDefault();
+                    document.getElementsByClassName("approve positive").item(0).click();
+                }
+            };
         }
     };
     return dialogAsync(options)
@@ -4002,9 +4077,10 @@ mountVirtualApi("cloud-search", {
     isOffline: function () { return !Cloud.isOnline(); },
 });
 mountVirtualApi("gallery", {
-    getAsync: function (p) { return gallery.loadGalleryAsync(stripProtocol(p)).catch(core.handleNetworkError); },
-    expirationTime: function (p) { return 3600 * 1000; },
-    isOffline: function () { return !Cloud.isOnline(); }
+    getAsync: function (p) { return gallery.loadGalleryAsync(stripProtocol(p)).catch(function (e) {
+        return Promise.resolve(e);
+    }); },
+    expirationTime: function (p) { return 3600 * 1000; }
 });
 mountVirtualApi("td-cloud", {
     getAsync: function (p) {
@@ -4060,7 +4136,7 @@ function expired(ce) {
     return ce.data == null || (Date.now() - ce.lastRefresh) > ce.api.expirationTime(ce.path);
 }
 function shouldCache(ce) {
-    if (!ce.data)
+    if (!ce.data || ce.data instanceof Error)
         return false;
     return /^cloud:(me\/settings|ptr-pkg-)/.test(ce.path);
 }
@@ -4139,7 +4215,7 @@ function getCached(component, path) {
     var r = lookup(path);
     if (r.api.isSync)
         return r.api.getSync(r.path);
-    if (expired(r))
+    if (expired(r) || r.data instanceof Error)
         queue(r);
     return r.data;
 }
@@ -4445,7 +4521,7 @@ var EditorToolbar = (function (_super) {
     };
     EditorToolbar.prototype.render = function () {
         var _this = this;
-        var _a = this.props.parent.state, tutorialOptions = _a.tutorialOptions, hideEditorFloats = _a.hideEditorFloats, collapseEditorTools = _a.collapseEditorTools, projectName = _a.projectName, showParts = _a.showParts, compiling = _a.compiling, running = _a.running;
+        var _a = this.props.parent.state, tutorialOptions = _a.tutorialOptions, hideEditorFloats = _a.hideEditorFloats, collapseEditorTools = _a.collapseEditorTools, projectName = _a.projectName, showParts = _a.showParts, compiling = _a.compiling, isSaving = _a.isSaving, running = _a.running;
         var sandbox = pxt.shell.isSandboxMode();
         var readOnly = pxt.shell.isReadOnly();
         var tutorial = tutorialOptions ? tutorialOptions.tutorial : false;
@@ -4478,29 +4554,39 @@ var EditorToolbar = (function (_super) {
         var traceTooltip = tracing ? lf("Disable Slow-Mo") : lf("Slow-Mo");
         var downloadIcon = pxt.appTarget.appTheme.downloadIcon || "download";
         var downloadText = pxt.appTarget.appTheme.useUploadMessage ? lf("Upload") : lf("Download");
+        var downloadButtonClasses = "";
+        var saveButtonClasses = "";
+        if (isSaving) {
+            downloadButtonClasses = "disabled";
+            saveButtonClasses = "loading disabled";
+        }
+        else if (compileLoading) {
+            downloadButtonClasses = "loading disabled";
+            saveButtonClasses = "disabled";
+        }
         return React.createElement("div", {className: "ui equal width grid right aligned padded"}, React.createElement("div", {className: "column mobile only"}, collapsed ?
-            React.createElement("div", {className: "ui equal width grid"}, React.createElement("div", {className: "left aligned column"}, React.createElement("div", {className: "ui icon small buttons"}, React.createElement(sui.Button, {icon: "" + (collapsed ? 'toggle up' : 'toggle down'), class: "collapse-button " + (collapsed ? 'collapsed' : '') + " " + (hideEditorFloats ? 'disabled' : ''), title: collapseTooltip, onClick: function () { return _this.toggleCollapse('mobile'); }}), headless && run ? React.createElement(sui.Button, {class: "play-button " + (running ? "stop" : "play"), key: 'runmenubtn', icon: running ? "stop" : "play", title: runTooltip, onClick: function () { return _this.startStopSimulator('mobile'); }}) : undefined, headless && restart ? React.createElement(sui.Button, {key: 'restartbtn', class: "restart-button", icon: "refresh", title: restartTooltip, onClick: function () { return _this.restartSimulator('mobile'); }}) : undefined, headless && trace ? React.createElement(sui.Button, {key: 'tracebtn', class: "trace-button " + (tracing ? 'orange' : ''), icon: "xicon turtle", title: traceTooltip, onClick: function () { return _this.toggleTrace('mobile'); }}) : undefined, compileBtn ? React.createElement(sui.Button, {class: "primary download-button download-button-full " + (compileLoading ? 'loading' : ''), icon: downloadIcon, title: compileTooltip, onClick: function () { return _this.compile('mobile'); }}) : undefined)), React.createElement("div", {className: "right aligned column"}, !readOnly ?
-                React.createElement("div", {className: "ui icon small buttons"}, React.createElement(sui.Button, {icon: 'save', class: "editortools-btn save-editortools-btn", title: lf("Save"), onClick: function () { return _this.saveFile('mobile'); }}), showUndoRedo ? React.createElement(sui.Button, {icon: 'xicon undo', class: "editortools-btn undo-editortools-btn} " + (!hasUndo ? 'disabled' : ''), title: lf("Undo"), onClick: function () { return _this.undo('mobile'); }}) : undefined) : undefined), React.createElement("div", {className: "right aligned column"}, showZoomControls ?
+            React.createElement("div", {className: "ui equal width grid"}, React.createElement("div", {className: "left aligned column"}, React.createElement("div", {className: "ui icon small buttons"}, React.createElement(sui.Button, {icon: "" + (collapsed ? 'toggle up' : 'toggle down'), class: "collapse-button " + (collapsed ? 'collapsed' : '') + " " + (hideEditorFloats ? 'disabled' : ''), title: collapseTooltip, onClick: function () { return _this.toggleCollapse('mobile'); }}), headless && run ? React.createElement(sui.Button, {class: "play-button " + (running ? "stop" : "play"), key: 'runmenubtn', icon: running ? "stop" : "play", title: runTooltip, onClick: function () { return _this.startStopSimulator('mobile'); }}) : undefined, headless && restart ? React.createElement(sui.Button, {key: 'restartbtn', class: "restart-button", icon: "refresh", title: restartTooltip, onClick: function () { return _this.restartSimulator('mobile'); }}) : undefined, headless && trace ? React.createElement(sui.Button, {key: 'tracebtn', class: "trace-button " + (tracing ? 'orange' : ''), icon: "xicon turtle", title: traceTooltip, onClick: function () { return _this.toggleTrace('mobile'); }}) : undefined, compileBtn ? React.createElement(sui.Button, {class: "primary download-button download-button-full " + downloadButtonClasses, icon: downloadIcon, title: compileTooltip, onClick: function () { return _this.compile('mobile'); }}) : undefined)), React.createElement("div", {className: "right aligned column"}, !readOnly ?
+                React.createElement("div", {className: "ui icon small buttons"}, React.createElement(sui.Button, {icon: 'save', class: "editortools-btn save-editortools-btn " + saveButtonClasses, title: lf("Save"), onClick: function () { return _this.saveFile('mobile'); }}), showUndoRedo ? React.createElement(sui.Button, {icon: 'xicon undo', class: "editortools-btn undo-editortools-btn} " + (!hasUndo ? 'disabled' : ''), title: lf("Undo"), onClick: function () { return _this.undo('mobile'); }}) : undefined) : undefined), React.createElement("div", {className: "right aligned column"}, showZoomControls ?
                 React.createElement("div", {className: "ui icon small buttons"}, React.createElement(sui.Button, {icon: 'plus circle', class: "editortools-btn zoomin-editortools-btn", title: lf("Zoom In"), onClick: function () { return _this.zoomIn('mobile'); }}), React.createElement(sui.Button, {icon: 'minus circle', class: "editortools-btn zoomout-editortools-btn", title: lf("Zoom Out"), onClick: function () { return _this.zoomOut('mobile'); }})) : undefined)) :
             React.createElement("div", {className: "ui equal width grid"}, React.createElement("div", {className: "left aligned two wide column"}, React.createElement("div", {className: "ui vertical icon small buttons"}, run ? React.createElement(sui.Button, {class: "play-button " + (running ? "stop" : "play"), key: 'runmenubtn', icon: running ? "stop" : "play", title: runTooltip, onClick: function () { return _this.startStopSimulator('mobile'); }}) : undefined, restart ? React.createElement(sui.Button, {key: 'restartbtn', class: "restart-button", icon: "refresh", title: restartTooltip, onClick: function () { return _this.restartSimulator('mobile'); }}) : undefined), showCollapsed ?
                 React.createElement("div", {className: "row", style: { paddingTop: "1rem" }}, React.createElement("div", {className: "ui vertical icon small buttons"}, React.createElement(sui.Button, {icon: "" + (collapsed ? 'toggle up' : 'toggle down'), class: "collapse-button " + (collapsed ? 'collapsed' : ''), title: collapseTooltip, onClick: function () { return _this.toggleCollapse('mobile'); }}))) : undefined), React.createElement("div", {className: "three wide column"}), React.createElement("div", {className: "ui grid column"}, readOnly || !showUndoRedo ? undefined :
-                React.createElement("div", {className: "row"}, React.createElement("div", {className: "column"}, React.createElement("div", {className: "ui icon large buttons"}, React.createElement(sui.Button, {icon: 'xicon undo', class: "editortools-btn undo-editortools-btn} " + (!hasUndo ? 'disabled' : ''), title: lf("Undo"), onClick: function () { return _this.undo('mobile'); }})))), React.createElement("div", {className: "row", style: readOnly || !showUndoRedo ? undefined : { paddingTop: 0 }}, React.createElement("div", {className: "column"}, React.createElement("div", {className: "ui icon large buttons"}, trace ? React.createElement(sui.Button, {key: 'tracebtn', class: "trace-button " + (tracing ? 'orange' : ''), icon: "xicon turtle", title: traceTooltip, onClick: function () { return _this.toggleTrace('mobile'); }}) : undefined, compileBtn ? React.createElement(sui.Button, {class: "primary download-button download-button-full " + (compileLoading ? 'loading' : ''), icon: downloadIcon, title: compileTooltip, onClick: function () { return _this.compile('mobile'); }}) : undefined)))))), React.createElement("div", {className: "column tablet only"}, collapsed ?
+                React.createElement("div", {className: "row"}, React.createElement("div", {className: "column"}, React.createElement("div", {className: "ui icon large buttons"}, React.createElement(sui.Button, {icon: 'xicon undo', class: "editortools-btn undo-editortools-btn} " + (!hasUndo ? 'disabled' : ''), title: lf("Undo"), onClick: function () { return _this.undo('mobile'); }})))), React.createElement("div", {className: "row", style: readOnly || !showUndoRedo ? undefined : { paddingTop: 0 }}, React.createElement("div", {className: "column"}, React.createElement("div", {className: "ui icon large buttons"}, trace ? React.createElement(sui.Button, {key: 'tracebtn', class: "trace-button " + (tracing ? 'orange' : ''), icon: "xicon turtle", title: traceTooltip, onClick: function () { return _this.toggleTrace('mobile'); }}) : undefined, compileBtn ? React.createElement(sui.Button, {class: "primary download-button download-button-full " + downloadButtonClasses, icon: downloadIcon, title: compileTooltip, onClick: function () { return _this.compile('mobile'); }}) : undefined)))))), React.createElement("div", {className: "column tablet only"}, collapsed ?
             React.createElement("div", {className: "ui grid seven column"}, headless ?
-                React.createElement("div", {className: "left aligned six wide column"}, React.createElement("div", {className: "ui icon buttons"}, React.createElement(sui.Button, {icon: "" + (collapsed ? 'toggle up' : 'toggle down'), class: "collapse-button " + (collapsed ? 'collapsed' : '') + " " + (hideEditorFloats ? 'disabled' : ''), title: collapseTooltip, onClick: function () { return _this.toggleCollapse('tablet'); }}), run ? React.createElement(sui.Button, {role: "menuitem", class: "play-button " + (running ? "stop" : "play"), key: 'runmenubtn', icon: running ? "stop" : "play", title: runTooltip, onClick: function () { return _this.startStopSimulator('tablet'); }}) : undefined, restart ? React.createElement(sui.Button, {key: 'restartbtn', class: "restart-button", icon: "refresh", title: restartTooltip, onClick: function () { return _this.restartSimulator('tablet'); }}) : undefined, trace ? React.createElement(sui.Button, {key: 'tracebtn', class: "trace-button " + (tracing ? 'orange' : ''), icon: "xicon turtle", title: traceTooltip, onClick: function () { return _this.toggleTrace('tablet'); }}) : undefined, compileBtn ? React.createElement(sui.Button, {class: "primary download-button download-button-full " + (compileLoading ? 'loading' : ''), icon: downloadIcon, title: compileTooltip, onClick: function () { return _this.compile('tablet'); }}) : undefined)) :
-                React.createElement("div", {className: "left aligned six wide column"}, React.createElement("div", {className: "ui icon buttons"}, React.createElement(sui.Button, {icon: "" + (collapsed ? 'toggle up' : 'toggle down'), class: "collapse-button " + (collapsed ? 'collapsed' : '') + " " + (hideEditorFloats ? 'disabled' : ''), title: collapseTooltip, onClick: function () { return _this.toggleCollapse('tablet'); }}), compileBtn ? React.createElement(sui.Button, {class: "primary download-button download-button-full " + (compileLoading ? 'loading' : ''), icon: downloadIcon, text: downloadText, title: compileTooltip, onClick: function () { return _this.compile('tablet'); }}) : undefined)), React.createElement("div", {className: "column four wide"}, readOnly ? undefined :
-                React.createElement(sui.Button, {icon: 'save', class: "small editortools-btn save-editortools-btn", title: lf("Save"), onClick: function () { return _this.saveFile('tablet'); }})), React.createElement("div", {className: "column six wide right aligned"}, showUndoRedo ?
+                React.createElement("div", {className: "left aligned six wide column"}, React.createElement("div", {className: "ui icon buttons"}, React.createElement(sui.Button, {icon: "" + (collapsed ? 'toggle up' : 'toggle down'), class: "collapse-button " + (collapsed ? 'collapsed' : '') + " " + (hideEditorFloats ? 'disabled' : ''), title: collapseTooltip, onClick: function () { return _this.toggleCollapse('tablet'); }}), run ? React.createElement(sui.Button, {role: "menuitem", class: "play-button " + (running ? "stop" : "play"), key: 'runmenubtn', icon: running ? "stop" : "play", title: runTooltip, onClick: function () { return _this.startStopSimulator('tablet'); }}) : undefined, restart ? React.createElement(sui.Button, {key: 'restartbtn', class: "restart-button", icon: "refresh", title: restartTooltip, onClick: function () { return _this.restartSimulator('tablet'); }}) : undefined, trace ? React.createElement(sui.Button, {key: 'tracebtn', class: "trace-button " + (tracing ? 'orange' : ''), icon: "xicon turtle", title: traceTooltip, onClick: function () { return _this.toggleTrace('tablet'); }}) : undefined, compileBtn ? React.createElement(sui.Button, {class: "primary download-button download-button-full " + downloadButtonClasses, icon: downloadIcon, title: compileTooltip, onClick: function () { return _this.compile('tablet'); }}) : undefined)) :
+                React.createElement("div", {className: "left aligned six wide column"}, React.createElement("div", {className: "ui icon buttons"}, React.createElement(sui.Button, {icon: "" + (collapsed ? 'toggle up' : 'toggle down'), class: "collapse-button " + (collapsed ? 'collapsed' : '') + " " + (hideEditorFloats ? 'disabled' : ''), title: collapseTooltip, onClick: function () { return _this.toggleCollapse('tablet'); }}), compileBtn ? React.createElement(sui.Button, {class: "primary download-button download-button-full " + downloadButtonClasses, icon: downloadIcon, text: downloadText, title: compileTooltip, onClick: function () { return _this.compile('tablet'); }}) : undefined)), React.createElement("div", {className: "column four wide"}, readOnly ? undefined :
+                React.createElement(sui.Button, {icon: 'save', class: "small editortools-btn save-editortools-btn " + saveButtonClasses, title: lf("Save"), onClick: function () { return _this.saveFile('tablet'); }})), React.createElement("div", {className: "column six wide right aligned"}, showUndoRedo ?
                 React.createElement("div", {className: "ui icon small buttons"}, React.createElement(sui.Button, {icon: 'xicon undo', class: "editortools-btn undo-editortools-btn} " + (!hasUndo ? 'disabled' : ''), title: lf("Undo"), onClick: function () { return _this.undo('tablet'); }}), React.createElement(sui.Button, {icon: 'xicon redo', class: "editortools-btn redo-editortools-btn} " + (!hasRedo ? 'disabled' : ''), title: lf("Redo"), onClick: function () { return _this.redo('tablet'); }})) : undefined, showZoomControls ?
                 React.createElement("div", {className: "ui icon small buttons"}, React.createElement(sui.Button, {icon: 'plus circle', class: "editortools-btn zoomin-editortools-btn", title: lf("Zoom In"), onClick: function () { return _this.zoomIn('tablet'); }}), React.createElement(sui.Button, {icon: 'minus circle', class: "editortools-btn zoomout-editortools-btn", title: lf("Zoom Out"), onClick: function () { return _this.zoomOut('tablet'); }})) : undefined))
             : React.createElement("div", {className: "ui grid"}, React.createElement("div", {className: "left aligned two wide column"}, React.createElement("div", {className: "ui vertical icon small buttons"}, run ? React.createElement(sui.Button, {role: "menuitem", class: "play-button " + (running ? "stop" : "play"), key: 'runmenubtn', icon: running ? "stop" : "play", title: runTooltip, onClick: function () { return _this.startStopSimulator('tablet'); }}) : undefined, restart ? React.createElement(sui.Button, {key: 'restartbtn', class: "restart-button", icon: "refresh", title: restartTooltip, onClick: function () { return _this.restartSimulator('tablet'); }}) : undefined), showCollapsed ?
-                React.createElement("div", {className: "row", style: { paddingTop: "1rem" }}, React.createElement("div", {className: "ui vertical icon small buttons"}, React.createElement(sui.Button, {icon: "" + (collapsed ? 'toggle up' : 'toggle down'), class: "collapse-button " + (collapsed ? 'collapsed' : ''), title: collapseTooltip, onClick: function () { return _this.toggleCollapse('tablet'); }}))) : undefined), React.createElement("div", {className: "three wide column"}), React.createElement("div", {className: "five wide column"}, React.createElement("div", {className: "ui grid right aligned"}, compileBtn ? React.createElement("div", {className: "row"}, React.createElement("div", {className: "column"}, React.createElement(sui.Button, {role: "menuitem", class: "primary large fluid download-button download-button-full " + (compileLoading ? 'loading' : ''), icon: downloadIcon, text: downloadText, title: compileTooltip, onClick: function () { return _this.compile('tablet'); }}))) : undefined, showProjectRename ?
-                React.createElement("div", {className: "row", style: compileBtn ? { paddingTop: 0 } : {}}, React.createElement("div", {className: "column"}, React.createElement("div", {className: "ui item large right labeled fluid input projectname-input projectname-tablet", title: lf("Pick a name for your project")}, React.createElement("input", {id: "fileNameInput", type: "text", placeholder: lf("Pick a name..."), value: projectName || '', onChange: function (e) { return _this.saveProjectName(e.target.value, 'tablet'); }}), React.createElement(sui.Button, {icon: 'save', class: "large right attached editortools-btn save-editortools-btn", title: lf("Save"), onClick: function () { return _this.saveFile('tablet'); }})))) : undefined)), React.createElement("div", {className: "six wide column right aligned"}, React.createElement("div", {className: "ui grid right aligned"}, showUndoRedo || showZoomControls ?
+                React.createElement("div", {className: "row", style: { paddingTop: "1rem" }}, React.createElement("div", {className: "ui vertical icon small buttons"}, React.createElement(sui.Button, {icon: "" + (collapsed ? 'toggle up' : 'toggle down'), class: "collapse-button " + (collapsed ? 'collapsed' : ''), title: collapseTooltip, onClick: function () { return _this.toggleCollapse('tablet'); }}))) : undefined), React.createElement("div", {className: "three wide column"}), React.createElement("div", {className: "five wide column"}, React.createElement("div", {className: "ui grid right aligned"}, compileBtn ? React.createElement("div", {className: "row"}, React.createElement("div", {className: "column"}, React.createElement(sui.Button, {role: "menuitem", class: "primary large fluid download-button download-button-full " + downloadButtonClasses, icon: downloadIcon, text: downloadText, title: compileTooltip, onClick: function () { return _this.compile('tablet'); }}))) : undefined, showProjectRename ?
+                React.createElement("div", {className: "row", style: compileBtn ? { paddingTop: 0 } : {}}, React.createElement("div", {className: "column"}, React.createElement("div", {className: "ui item large right labeled fluid input projectname-input projectname-tablet", title: lf("Pick a name for your project")}, React.createElement("input", {id: "fileNameInput", type: "text", placeholder: lf("Pick a name..."), value: projectName || '', onChange: function (e) { return _this.saveProjectName(e.target.value, 'tablet'); }}), React.createElement(sui.Button, {icon: 'save', class: "large right attached editortools-btn save-editortools-btn " + saveButtonClasses, title: lf("Save"), onClick: function () { return _this.saveFile('tablet'); }})))) : undefined)), React.createElement("div", {className: "six wide column right aligned"}, React.createElement("div", {className: "ui grid right aligned"}, showUndoRedo || showZoomControls ?
                 React.createElement("div", {className: "row"}, React.createElement("div", {className: "column"}, showUndoRedo ?
                     React.createElement("div", {className: "ui icon large buttons"}, React.createElement(sui.Button, {icon: 'xicon undo', class: "editortools-btn undo-editortools-btn} " + (!hasUndo ? 'disabled' : ''), title: lf("Undo"), onClick: function () { return _this.undo(); }}), React.createElement(sui.Button, {icon: 'xicon redo', class: "editortools-btn redo-editortools-btn} " + (!hasRedo ? 'disabled' : ''), title: lf("Redo"), onClick: function () { return _this.redo(); }})) : undefined, showZoomControls ?
                     React.createElement("div", {className: "ui icon large buttons"}, React.createElement(sui.Button, {icon: 'plus circle', class: "editortools-btn zoomin-editortools-btn", title: lf("Zoom In"), onClick: function () { return _this.zoomIn(); }}), React.createElement(sui.Button, {icon: 'minus circle', class: "editortools-btn zoomout-editortools-btn", title: lf("Zoom Out"), onClick: function () { return _this.zoomOut(); }})) : undefined)) : undefined, trace ?
                 React.createElement("div", {className: "row", style: showUndoRedo || showZoomControls ? { paddingTop: 0 } : {}}, React.createElement("div", {className: "column"}, React.createElement(sui.Button, {key: 'tracebtn', class: "large trace-button " + (tracing ? 'orange' : ''), icon: "xicon turtle", title: traceTooltip, onClick: function () { return _this.toggleTrace('tablet'); }}))) : undefined)))), React.createElement("div", {className: "column computer only"}, React.createElement("div", {className: "ui grid equal width"}, React.createElement("div", {id: "downloadArea", className: "ui column items"}, headless ?
-            React.createElement("div", {className: "ui item"}, React.createElement("div", {className: "ui icon large buttons"}, showCollapsed ? React.createElement(sui.Button, {icon: "" + (collapseEditorTools ? 'toggle right' : 'toggle left'), class: "large collapse-button " + (collapsed ? 'collapsed' : ''), title: collapseTooltip, onClick: function () { return _this.toggleCollapse('computer'); }}) : undefined, run ? React.createElement(sui.Button, {role: "menuitem", class: "large play-button " + (running ? "stop" : "play"), key: 'runmenubtn', icon: running ? "stop" : "play", title: runTooltip, onClick: function () { return _this.startStopSimulator('computer'); }}) : undefined, restart ? React.createElement(sui.Button, {key: 'restartbtn', class: "large restart-button", icon: "refresh", title: restartTooltip, onClick: function () { return _this.restartSimulator('computer'); }}) : undefined, trace ? React.createElement(sui.Button, {key: 'tracebtn', class: "large trace-button " + (tracing ? 'orange' : ''), icon: "xicon turtle", title: traceTooltip, onClick: function () { return _this.toggleTrace('computer'); }}) : undefined, compileBtn ? React.createElement(sui.Button, {icon: downloadIcon, class: "primary large download-button " + (compileLoading ? 'loading' : ''), title: compileTooltip, onClick: function () { return _this.compile('computer'); }}) : undefined)) :
-            React.createElement("div", {className: "ui item"}, showCollapsed ? React.createElement(sui.Button, {icon: "" + (collapseEditorTools ? 'toggle right' : 'toggle left'), class: "large collapse-button " + (collapsed ? 'collapsed' : ''), title: collapseTooltip, onClick: function () { return _this.toggleCollapse('computer'); }}) : undefined, compileBtn ? React.createElement(sui.Button, {icon: downloadIcon, class: "primary huge fluid download-button " + (compileLoading ? 'loading' : ''), text: downloadText, title: compileTooltip, onClick: function () { return _this.compile('computer'); }}) : undefined)), showProjectRename ?
-            React.createElement("div", {className: "column left aligned"}, React.createElement("div", {className: "ui right labeled input projectname-input projectname-computer", title: lf("Pick a name for your project")}, React.createElement("input", {id: "fileNameInput", type: "text", placeholder: lf("Pick a name..."), value: projectName || '', onChange: function (e) { return _this.saveProjectName(e.target.value, 'computer'); }}), React.createElement(sui.Button, {icon: 'save', class: "small right attached editortools-btn save-editortools-btn", title: lf("Save"), onClick: function () { return _this.saveFile('computer'); }}))) : undefined, React.createElement("div", {className: "column right aligned"}, showUndoRedo ?
+            React.createElement("div", {className: "ui item"}, React.createElement("div", {className: "ui icon large buttons"}, showCollapsed ? React.createElement(sui.Button, {icon: "" + (collapseEditorTools ? 'toggle right' : 'toggle left'), class: "large collapse-button " + (collapsed ? 'collapsed' : ''), title: collapseTooltip, onClick: function () { return _this.toggleCollapse('computer'); }}) : undefined, run ? React.createElement(sui.Button, {role: "menuitem", class: "large play-button " + (running ? "stop" : "play"), key: 'runmenubtn', icon: running ? "stop" : "play", title: runTooltip, onClick: function () { return _this.startStopSimulator('computer'); }}) : undefined, restart ? React.createElement(sui.Button, {key: 'restartbtn', class: "large restart-button", icon: "refresh", title: restartTooltip, onClick: function () { return _this.restartSimulator('computer'); }}) : undefined, trace ? React.createElement(sui.Button, {key: 'tracebtn', class: "large trace-button " + (tracing ? 'orange' : ''), icon: "xicon turtle", title: traceTooltip, onClick: function () { return _this.toggleTrace('computer'); }}) : undefined, compileBtn ? React.createElement(sui.Button, {icon: downloadIcon, class: "primary large download-button " + downloadButtonClasses, title: compileTooltip, onClick: function () { return _this.compile('computer'); }}) : undefined)) :
+            React.createElement("div", {className: "ui item"}, showCollapsed ? React.createElement(sui.Button, {icon: "" + (collapseEditorTools ? 'toggle right' : 'toggle left'), class: "large collapse-button " + (collapsed ? 'collapsed' : ''), title: collapseTooltip, onClick: function () { return _this.toggleCollapse('computer'); }}) : undefined, compileBtn ? React.createElement(sui.Button, {icon: downloadIcon, class: "primary huge fluid download-button " + downloadButtonClasses, text: downloadText, title: compileTooltip, onClick: function () { return _this.compile('computer'); }}) : undefined)), showProjectRename ?
+            React.createElement("div", {className: "column left aligned"}, React.createElement("div", {className: "ui right labeled input projectname-input projectname-computer", title: lf("Pick a name for your project")}, React.createElement("input", {id: "fileNameInput", type: "text", placeholder: lf("Pick a name..."), value: projectName || '', onChange: function (e) { return _this.saveProjectName(e.target.value, 'computer'); }}), React.createElement(sui.Button, {icon: 'save', class: "small right attached editortools-btn save-editortools-btn " + saveButtonClasses, title: lf("Save"), onClick: function () { return _this.saveFile('computer'); }}))) : undefined, React.createElement("div", {className: "column right aligned"}, showUndoRedo ?
             React.createElement("div", {className: "ui icon small buttons"}, React.createElement(sui.Button, {icon: 'xicon undo', class: "editortools-btn undo-editortools-btn} " + (!hasUndo ? 'disabled' : ''), title: lf("Undo"), onClick: function () { return _this.undo('computer'); }}), React.createElement(sui.Button, {icon: 'xicon redo', class: "editortools-btn redo-editortools-btn} " + (!hasRedo ? 'disabled' : ''), title: lf("Redo"), onClick: function () { return _this.redo('computer'); }})) : undefined, showZoomControls ?
             React.createElement("div", {className: "ui icon small buttons"}, React.createElement(sui.Button, {icon: 'plus circle', class: "editortools-btn zoomin-editortools-btn", title: lf("Zoom In"), onClick: function () { return _this.zoomIn('computer'); }}), React.createElement(sui.Button, {icon: 'minus circle', class: "editortools-btn zoomout-editortools-btn", title: lf("Zoom Out"), onClick: function () { return _this.zoomOut('computer'); }})) : undefined))));
     };
@@ -5122,7 +5208,8 @@ function init() {
     }
 }
 function shouldUse() {
-    return pxt.appTarget.serial && pxt.appTarget.serial.useHF2 && Cloud.isLocalHost() && !!Cloud.localToken;
+    return pxt.appTarget.serial && pxt.appTarget.serial.useHF2 &&
+        (Cloud.isLocalHost() && !!Cloud.localToken || pxt.winrt.isWinRT());
 }
 exports.shouldUse = shouldUse;
 function mkBridgeAsync() {
@@ -5207,13 +5294,27 @@ function hf2Async() {
 }
 var initPromise;
 function initAsync() {
-    if (!initPromise)
+    var isFirstInit = false;
+    if (!initPromise) {
+        isFirstInit = true;
         initPromise = hf2Async()
             .catch(function (err) {
             initPromise = null;
             return Promise.reject(err);
         });
-    return initPromise;
+    }
+    var wrapper;
+    return initPromise
+        .then(function (w) {
+        wrapper = w;
+        if (pxt.winrt.isWinRT() && !isFirstInit) {
+            // For WinRT, disconnecting the device after flashing once puts the wrapper in a bad state.
+            // To workaround this, reconnect every time.
+            return wrapper.reconnectAsync();
+        }
+        return Promise.resolve();
+    })
+        .then(function () { return wrapper; });
 }
 exports.initAsync = initAsync;
 
@@ -5822,33 +5923,40 @@ var Editor = (function (_super) {
     Editor.prototype.display = function () {
         return (React.createElement("div", {className: 'full-abs', id: "monacoEditorArea"}, React.createElement("div", {id: 'monacoEditorToolbox', className: 'injectionDiv'}), React.createElement("div", {id: 'monacoEditorInner'})));
     };
-    Editor.prototype.defineEditorTheme = function () {
+    Editor.prototype.defineEditorTheme = function (hc) {
         var _this = this;
         var inverted = pxt.appTarget.appTheme.invertedMonaco;
         var invertedColorluminosityMultipler = 0.6;
         var rules = [];
-        this.getNamespaces().forEach(function (ns) {
-            var metaData = _this.getNamespaceAttrs(ns);
-            var blocks = snippets.isBuiltin(ns) ? snippets.getBuiltinCategory(ns).blocks : _this.nsMap[ns];
-            if (metaData.color && blocks) {
-                var hexcolor_1 = pxt.blocks.convertColour(metaData.color);
-                hexcolor_1 = (inverted ? Blockly.PXTUtils.fadeColour(hexcolor_1, invertedColorluminosityMultipler, true) : hexcolor_1).replace('#', '');
-                blocks.forEach(function (fn) {
-                    rules.push({ token: "identifier.ts " + fn.name, foreground: hexcolor_1 });
-                });
-                rules.push({ token: "identifier.ts " + ns, foreground: hexcolor_1 });
-            }
-        });
-        rules.push({ token: "identifier.ts if", foreground: '5B80A5', });
-        rules.push({ token: "identifier.ts else", foreground: '5B80A5', });
-        rules.push({ token: "identifier.ts while", foreground: '5BA55B', });
-        rules.push({ token: "identifier.ts for", foreground: '5BA55B', });
+        if (!hc) {
+            this.getNamespaces().forEach(function (ns) {
+                var metaData = _this.getNamespaceAttrs(ns);
+                var blocks = snippets.isBuiltin(ns) ? snippets.getBuiltinCategory(ns).blocks : _this.nsMap[ns];
+                if (metaData.color && blocks) {
+                    var hexcolor_1 = pxt.blocks.convertColour(metaData.color);
+                    hexcolor_1 = (inverted ? Blockly.PXTUtils.fadeColour(hexcolor_1, invertedColorluminosityMultipler, true) : hexcolor_1).replace('#', '');
+                    blocks.forEach(function (fn) {
+                        rules.push({ token: "identifier.ts " + fn.name, foreground: hexcolor_1 });
+                    });
+                    rules.push({ token: "identifier.ts " + ns, foreground: hexcolor_1 });
+                }
+            });
+            rules.push({ token: "identifier.ts if", foreground: '5B80A5', });
+            rules.push({ token: "identifier.ts else", foreground: '5B80A5', });
+            rules.push({ token: "identifier.ts while", foreground: '5BA55B', });
+            rules.push({ token: "identifier.ts for", foreground: '5BA55B', });
+        }
+        var colors = pxt.appTarget.appTheme.monacoColors || {};
         monaco.editor.defineTheme('pxtTheme', {
-            base: inverted ? 'vs-dark' : 'vs',
+            base: hc ? 'hc-black' : (inverted ? 'vs-dark' : 'vs'),
             inherit: true,
-            rules: rules
+            rules: rules,
+            colors: hc ? {} : colors
         });
-        this.editor.updateOptions({ theme: 'pxtTheme' });
+        monaco.editor.setTheme('pxtTheme');
+    };
+    Editor.prototype.setHighContrast = function (hc) {
+        this.defineEditorTheme(hc);
     };
     Editor.prototype.beforeCompile = function () {
         if (this.editor)
@@ -6016,7 +6124,8 @@ var Editor = (function (_super) {
                         identifier: { major: 0, minor: 0 },
                         range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
                         text: insertText,
-                        forceMoveMarkers: false
+                        forceMoveMarkers: true,
+                        isAutoWhitespaceEdit: true
                     }
                 ]);
                 _this.beforeCompile();
@@ -6035,12 +6144,12 @@ var Editor = (function (_super) {
     Editor.prototype.undo = function () {
         if (!this.editor)
             return;
-        this.editor.trigger('keyboard', monaco.editor.Handler.Undo, null);
+        this.editor.trigger('keyboard', 'undo', null);
     };
     Editor.prototype.redo = function () {
         if (!this.editor)
             return;
-        this.editor.trigger('keyboard', monaco.editor.Handler.Redo, null);
+        this.editor.trigger('keyboard', 'redo', null);
     };
     Editor.prototype.zoomIn = function () {
         if (!this.editor)
@@ -6192,7 +6301,7 @@ var Editor = (function (_super) {
                 if (!snippets.isBuiltin(ns)) {
                     var blocks_1 = monacoEditor.nsMap[ns].filter(function (block) { return !(block.attributes.blockHidden || block.attributes.deprecated); });
                     var categoryName = md.block ? md.block : undefined;
-                    el = monacoEditor.createCategoryElement(ns, md.color, md.icon, true, blocks_1, undefined, categoryName);
+                    el = monacoEditor.createCategoryElement(ns, md.color, md.icon, true, blocks_1, undefined, categoryName, md.groups, md.labelLineWidth);
                 }
                 else {
                     var cat = snippets.getBuiltinCategory(ns);
@@ -6206,7 +6315,8 @@ var Editor = (function (_super) {
                         blocks_2 = blocks_2.concat(monacoEditor.nsMap[ns.toLowerCase()].filter(function (block) { return !(block.attributes.blockHidden || block.attributes.deprecated); }));
                     el = monacoEditor.createCategoryElement(ns, md.color, md.icon, false, blocks_2, null, name_1);
                 }
-                group.appendChild(el);
+                if (el)
+                    group.appendChild(el);
             });
         }
     };
@@ -6226,19 +6336,19 @@ var Editor = (function (_super) {
         var _this = this;
         var namespaces = Object.keys(this.nsMap).filter(function (ns) { return !snippets.isBuiltin(ns) && !!_this.getNamespaceAttrs(ns); });
         var config = pxt.appTarget.runtime || {};
-        if (config.loopsBlocks)
+        if (config.loopsBlocks && !snippets.loops.removed)
             namespaces.push(snippets.loops.nameid);
-        if (config.logicBlocks)
+        if (config.logicBlocks && !snippets.logic.removed)
             namespaces.push(snippets.logic.nameid);
-        if (config.variablesBlocks)
+        if (config.variablesBlocks && !snippets.variables.removed)
             namespaces.push(snippets.variables.nameid);
-        if (config.mathBlocks)
+        if (config.mathBlocks && !snippets.maths.removed)
             namespaces.push(snippets.maths.nameid);
-        if (config.functionBlocks)
+        if (config.functionBlocks && !snippets.functions.removed)
             namespaces.push(snippets.functions.nameid);
-        if (config.textBlocks)
+        if (config.textBlocks && !snippets.text.removed)
             namespaces.push(snippets.text.nameid);
-        if (config.listsBlocks)
+        if (config.listsBlocks && !snippets.arrays.removed)
             namespaces.push(snippets.arrays.nameid);
         return namespaces;
     };
@@ -6254,14 +6364,14 @@ var Editor = (function (_super) {
         treeitem.setAttribute('role', 'treeitem');
         return treeitem;
     };
-    Editor.prototype.createCategoryElement = function (ns, metaColor, icon, injectIconClass, fns, onClick, category) {
+    Editor.prototype.createCategoryElement = function (ns, metaColor, icon, injectIconClass, fns, onClick, category, groups, labelLineWidth) {
         var _this = this;
         if (injectIconClass === void 0) { injectIconClass = true; }
         // Filter the toolbox
         var filters = this.parent.state.filters;
         var categoryState = filters ? (filters.namespaces && filters.namespaces[ns] != undefined ? filters.namespaces[ns] : filters.defaultState) : undefined;
         var hasChild = false;
-        if (filters) {
+        if (filters && categoryState !== undefined && fns) {
             Object.keys(fns).forEach(function (fn) {
                 var fnState = filters.fns && filters.fns[fn] != undefined ? filters.fns[fn] : (categoryState != undefined ? categoryState : filters.defaultState);
                 if (fnState == pxt.editor.FilterState.Disabled || fnState == pxt.editor.FilterState.Visible)
@@ -6319,121 +6429,67 @@ var Editor = (function (_super) {
             }
             else {
                 // Create a flyout and add the category methods in there
-                fns.sort(function (f1, f2) {
-                    // sort by fn weight
-                    var w2 = (f2.attributes.weight || 50) + (f2.attributes.advanced ? 0 : 1000);
-                    var w1 = (f1.attributes.weight || 50) + (f1.attributes.advanced ? 0 : 1000);
-                    return w2 - w1;
-                })
-                    .forEach(function (fn) {
-                    var monacoBlockDisabled = false;
-                    var fnState = filters ? (filters.fns && filters.fns[fn.name] != undefined ? filters.fns[fn.name] : (categoryState != undefined ? categoryState : filters.defaultState)) : undefined;
-                    monacoBlockDisabled = fnState == pxt.editor.FilterState.Disabled;
-                    if (fnState == pxt.editor.FilterState.Hidden)
-                        return;
-                    var monacoBlockArea = document.createElement('div');
-                    var monacoBlock = document.createElement('div');
-                    monacoBlock.className = 'monacoDraggableBlock';
-                    monacoBlock.style.fontSize = monacoEditor.parent.settings.editorFontSize + "px";
-                    monacoBlock.style.backgroundColor = monacoBlockDisabled ?
-                        "" + Blockly.PXTUtils.fadeColour(color || '#ddd', 0.8, false) :
-                        "" + color;
-                    monacoBlock.style.borderColor = "" + color;
-                    var snippet = fn.snippet;
-                    var comment = fn.attributes.jsDoc;
-                    var snippetPrefix = fn.noNamespace ? "" : ns;
-                    var element = fn;
-                    if (element.attributes.block) {
-                        if (element.attributes.defaultInstance) {
-                            snippetPrefix = element.attributes.defaultInstance;
-                        }
-                        else {
-                            var nsInfo_1 = _this.blockInfo.apis.byQName[element.namespace];
-                            if (nsInfo_1.kind === pxtc.SymbolKind.Class) {
-                                return;
-                            }
-                            else if (nsInfo_1.attributes.fixedInstances) {
-                                var instances = Util.values(_this.blockInfo.apis.byQName).filter(function (value) {
-                                    return value.kind === pxtc.SymbolKind.Variable &&
-                                        value.attributes.fixedInstance &&
-                                        value.retType === nsInfo_1.name;
-                                })
-                                    .sort(function (v1, v2) { return v1.name.localeCompare(v2.name); });
-                                if (instances.length) {
-                                    snippetPrefix = instances[0].namespace + "." + instances[0].name;
-                                }
-                            }
-                        }
+                // Add the heading label
+                if (!pxt.appTarget.appTheme.hideFlyoutHeadings && pxt.BrowserUtils.isMobile()) {
+                    var monacoHeadingLabel = document.createElement('div');
+                    monacoHeadingLabel.className = 'monacoFlyoutLabel monacoFlyoutHeading';
+                    var monacoHeadingIcon = document.createElement('span');
+                    var iconClass_1 = ("blocklyTreeIcon" + (icon ? (ns || icon).toLowerCase() : 'Default')).replace(/\s/g, '');
+                    monacoHeadingIcon.className = "monacoFlyoutHeadingIcon blocklyTreeIcon " + iconClass_1;
+                    monacoHeadingIcon.setAttribute('role', 'presentation');
+                    monacoHeadingIcon.style.display = 'inline-block';
+                    monacoHeadingIcon.style.color = "" + color;
+                    var monacoHeadingText = document.createElement('div');
+                    monacoHeadingText.className = "monacoFlyoutHeadingText";
+                    monacoHeadingText.style.display = 'inline-block';
+                    monacoHeadingText.style.fontSize = (monacoEditor.parent.settings.editorFontSize + 5) + "px";
+                    monacoHeadingText.textContent = category ? category : "" + Util.capitalize(ns);
+                    monacoHeadingLabel.appendChild(monacoHeadingIcon);
+                    monacoHeadingLabel.appendChild(monacoHeadingText);
+                    monacoFlyout.appendChild(monacoHeadingLabel);
+                }
+                // Organize and rearrange methods into groups
+                var blockGroups = {};
+                var sortedGroups_1 = [];
+                if (groups)
+                    sortedGroups_1 = groups;
+                // Organize the blocks into the different groups
+                for (var bi = 0; bi < fns.length; ++bi) {
+                    var blk = fns[bi];
+                    var group = blk.attributes.group || 'other';
+                    if (!blockGroups[group])
+                        blockGroups[group] = [];
+                    blockGroups[group].push(blk);
+                }
+                // Add any missing groups to the sorted groups list
+                Object.keys(blockGroups).sort().forEach(function (group) {
+                    if (sortedGroups_1.indexOf(group) == -1) {
+                        sortedGroups_1.push(group);
                     }
-                    var sigToken = document.createElement('span');
-                    if (!fn.snippetOnly) {
-                        sigToken.className = 'sig';
-                    }
-                    // completion is a bit busted but looks better
-                    sigToken.innerText = snippet
-                        .replace(/^[^(]*\(/, '(')
-                        .replace(/^\s*\{\{\}\}\n/gm, '')
-                        .replace(/\{\n\}/g, '{}')
-                        .replace(/(?:\{\{)|(?:\}\})/g, '');
-                    monacoBlock.title = comment;
-                    if (!monacoBlockDisabled) {
-                        monacoBlock.draggable = true;
-                        monacoBlock.onclick = function (ev2) {
-                            pxt.tickEvent("monaco.toolbox.itemclick");
-                            monacoEditor.resetFlyout(true);
-                            var model = monacoEditor.editor.getModel();
-                            var currPos = monacoEditor.editor.getPosition();
-                            var cursor = model.getOffsetAt(currPos);
-                            var insertText = snippetPrefix ? snippetPrefix + "." + snippet : snippet;
-                            insertText = (currPos.column > 1) ? '\n' + insertText :
-                                model.getWordUntilPosition(currPos) != undefined && model.getWordUntilPosition(currPos).word != '' ?
-                                    insertText + '\n' : insertText;
-                            if (insertText.indexOf('{{}}') > -1) {
-                                cursor += (insertText.indexOf('{{}}'));
-                                insertText = insertText.replace('{{}}', '');
-                            }
-                            else
-                                cursor += (insertText.length);
-                            insertText = insertText.replace(/(?:\{\{)|(?:\}\})/g, '');
-                            monacoEditor.editor.pushUndoStop();
-                            monacoEditor.editor.executeEdits("", [
-                                {
-                                    identifier: { major: 0, minor: 0 },
-                                    range: new monaco.Range(currPos.lineNumber, currPos.column, currPos.lineNumber, currPos.column),
-                                    text: insertText,
-                                    forceMoveMarkers: false
-                                }
-                            ]);
-                            monacoEditor.beforeCompile();
-                            monacoEditor.editor.pushUndoStop();
-                            var endPos = model.getPositionAt(cursor);
-                            monacoEditor.editor.setPosition(endPos);
-                            monacoEditor.editor.focus();
-                            //monacoEditor.editor.setSelection(new monaco.Range(currPos.lineNumber, currPos.column, endPos.lineNumber, endPos.column));
-                        };
-                        monacoBlock.ondragstart = function (ev2) {
-                            pxt.tickEvent("monaco.toolbox.itemdrag");
-                            var clone = monacoBlock.cloneNode(true);
-                            setTimeout(function () {
-                                monacoFlyout.style.transform = "translateX(-9999px)";
-                            });
-                            var insertText = snippetPrefix ? snippetPrefix + "." + snippet : snippet;
-                            ev2.dataTransfer.setData('text', insertText); // IE11 only supports text
-                        };
-                        monacoBlock.ondragend = function (ev2) {
-                            monacoFlyout.style.transform = "none";
-                            monacoEditor.resetFlyout(true);
-                        };
-                    }
-                    if (!fn.snippetOnly) {
-                        var methodToken = document.createElement('span');
-                        methodToken.innerText = fn.name;
-                        monacoBlock.appendChild(methodToken);
-                    }
-                    monacoBlock.appendChild(sigToken);
-                    monacoBlockArea.appendChild(monacoBlock);
-                    monacoFlyout.appendChild(monacoBlockArea);
                 });
+                // Add labels and insert the blocks into the flyout
+                for (var bg = 0; bg < sortedGroups_1.length; ++bg) {
+                    var group = sortedGroups_1[bg];
+                    // Add the group label
+                    if (group != 'other') {
+                        var groupLabel = document.createElement('div');
+                        groupLabel.className = 'monacoFlyoutLabel blocklyFlyoutGroup';
+                        var groupLabelText = document.createElement('div');
+                        groupLabelText.className = 'monacoFlyoutLabelText';
+                        groupLabelText.style.fontSize = monacoEditor.parent.settings.editorFontSize + "px";
+                        groupLabelText.textContent = pxt.Util.rlf("{id:group}" + group);
+                        groupLabel.appendChild(groupLabelText);
+                        monacoFlyout.appendChild(groupLabel);
+                        var groupLabelLine = document.createElement('hr');
+                        groupLabelLine.className = 'monacoFlyoutLabelLine';
+                        groupLabelLine.align = 'left';
+                        groupLabelLine.style.width = (labelLineWidth || groupLabelText.offsetWidth) + "px";
+                        groupLabel.appendChild(groupLabelLine);
+                    }
+                    // Add the blocks in that group
+                    if (blockGroups[group])
+                        _this.createMonacoBlocks(monacoEditor, monacoFlyout, ns, blockGroups[group], color, filters, categoryState);
+                }
             }
         };
         treerow.className = 'blocklyTreeRow';
@@ -6482,6 +6538,125 @@ var Editor = (function (_super) {
         label.innerText = category ? category : "" + Util.capitalize(ns);
         return treeitem;
     };
+    Editor.prototype.createMonacoBlocks = function (monacoEditor, monacoFlyout, ns, fns, color, filters, categoryState) {
+        var _this = this;
+        // Render the method blocks
+        fns.sort(function (f1, f2) {
+            // sort by fn weight
+            var w2 = (f2.attributes.weight || 50) + (f2.attributes.advanced ? 0 : 1000);
+            var w1 = (f1.attributes.weight || 50) + (f1.attributes.advanced ? 0 : 1000);
+            return w2 - w1;
+        })
+            .forEach(function (fn) {
+            var monacoBlockDisabled = false;
+            var fnState = filters ? (filters.fns && filters.fns[fn.name] != undefined ? filters.fns[fn.name] : (categoryState != undefined ? categoryState : filters.defaultState)) : undefined;
+            monacoBlockDisabled = fnState == pxt.editor.FilterState.Disabled;
+            if (fnState == pxt.editor.FilterState.Hidden)
+                return;
+            var monacoBlockArea = document.createElement('div');
+            var monacoBlock = document.createElement('div');
+            monacoBlock.className = 'monacoDraggableBlock';
+            monacoBlock.style.fontSize = monacoEditor.parent.settings.editorFontSize + "px";
+            monacoBlock.style.backgroundColor = monacoBlockDisabled ?
+                "" + Blockly.PXTUtils.fadeColour(color || '#ddd', 0.8, false) :
+                "" + color;
+            monacoBlock.style.borderColor = "" + color;
+            var snippet = fn.snippet;
+            var comment = fn.attributes.jsDoc;
+            var snippetPrefix = fn.noNamespace ? "" : ns;
+            var element = fn;
+            if (element.attributes.block) {
+                if (element.attributes.defaultInstance) {
+                    snippetPrefix = element.attributes.defaultInstance;
+                }
+                else {
+                    var nsInfo_1 = _this.blockInfo.apis.byQName[element.namespace];
+                    if (nsInfo_1.kind === pxtc.SymbolKind.Class) {
+                        return;
+                    }
+                    else if (nsInfo_1.attributes.fixedInstances) {
+                        var instances = Util.values(_this.blockInfo.apis.byQName).filter(function (value) {
+                            return value.kind === pxtc.SymbolKind.Variable &&
+                                value.attributes.fixedInstance &&
+                                value.retType === nsInfo_1.name;
+                        })
+                            .sort(function (v1, v2) { return v1.name.localeCompare(v2.name); });
+                        if (instances.length) {
+                            snippetPrefix = instances[0].namespace + "." + instances[0].name;
+                        }
+                    }
+                }
+            }
+            var sigToken = document.createElement('span');
+            if (!fn.snippetOnly) {
+                sigToken.className = 'sig';
+            }
+            // completion is a bit busted but looks better
+            sigToken.innerText = snippet
+                .replace(/^[^(]*\(/, '(')
+                .replace(/^\s*\{\{\}\}\n/gm, '')
+                .replace(/\{\n\}/g, '{}')
+                .replace(/(?:\{\{)|(?:\}\})/g, '');
+            monacoBlock.title = comment;
+            if (!monacoBlockDisabled) {
+                monacoBlock.draggable = true;
+                monacoBlock.onclick = function (ev2) {
+                    pxt.tickEvent("monaco.toolbox.itemclick");
+                    monacoEditor.resetFlyout(true);
+                    var model = monacoEditor.editor.getModel();
+                    var currPos = monacoEditor.editor.getPosition();
+                    var cursor = model.getOffsetAt(currPos);
+                    var insertText = snippetPrefix ? snippetPrefix + "." + snippet : snippet;
+                    insertText = (currPos.column > 1) ? '\n' + insertText :
+                        model.getWordUntilPosition(currPos) != undefined && model.getWordUntilPosition(currPos).word != '' ?
+                            insertText + '\n' : insertText;
+                    if (insertText.indexOf('{{}}') > -1) {
+                        cursor += (insertText.indexOf('{{}}'));
+                        insertText = insertText.replace('{{}}', '');
+                    }
+                    else
+                        cursor += (insertText.length);
+                    insertText = insertText.replace(/(?:\{\{)|(?:\}\})/g, '');
+                    monacoEditor.editor.pushUndoStop();
+                    monacoEditor.editor.executeEdits("", [
+                        {
+                            identifier: { major: 0, minor: 0 },
+                            range: new monaco.Range(currPos.lineNumber, currPos.column, currPos.lineNumber, currPos.column),
+                            text: insertText,
+                            forceMoveMarkers: false
+                        }
+                    ]);
+                    monacoEditor.beforeCompile();
+                    monacoEditor.editor.pushUndoStop();
+                    var endPos = model.getPositionAt(cursor);
+                    monacoEditor.editor.setPosition(endPos);
+                    monacoEditor.editor.focus();
+                    //monacoEditor.editor.setSelection(new monaco.Range(currPos.lineNumber, currPos.column, endPos.lineNumber, endPos.column));
+                };
+                monacoBlock.ondragstart = function (ev2) {
+                    pxt.tickEvent("monaco.toolbox.itemdrag");
+                    var clone = monacoBlock.cloneNode(true);
+                    setTimeout(function () {
+                        monacoFlyout.style.transform = "translateX(-9999px)";
+                    });
+                    var insertText = snippetPrefix ? snippetPrefix + "." + snippet : snippet;
+                    ev2.dataTransfer.setData('text', insertText); // IE11 only supports text
+                };
+                monacoBlock.ondragend = function (ev2) {
+                    monacoFlyout.style.transform = "none";
+                    monacoEditor.resetFlyout(true);
+                };
+            }
+            if (!fn.snippetOnly) {
+                var methodToken = document.createElement('span');
+                methodToken.innerText = fn.name;
+                monacoBlock.appendChild(methodToken);
+            }
+            monacoBlock.appendChild(sigToken);
+            monacoBlockArea.appendChild(monacoBlock);
+            monacoFlyout.appendChild(monacoBlockArea);
+        });
+    };
     Editor.prototype.getId = function () {
         return "monacoEditor";
     };
@@ -6501,7 +6676,7 @@ var Editor = (function (_super) {
         Util.assert(this.editor != undefined); // Guarded
         this.editor.setValue(content);
     };
-    Editor.prototype.loadFileAsync = function (file) {
+    Editor.prototype.loadFileAsync = function (file, hc) {
         var _this = this;
         var mode = "text";
         this.currSource = file.content;
@@ -6539,7 +6714,7 @@ var Editor = (function (_super) {
                 _this.editor.setModel(model);
             if (mode == "typescript") {
                 toolbox.innerHTML = '';
-                _this.beginLoadToolbox(file);
+                _this.beginLoadToolbox(file, hc);
             }
             // Set the current file
             _this.currFile = file;
@@ -6585,13 +6760,13 @@ var Editor = (function (_super) {
             editorArea.removeChild(loading);
         });
     };
-    Editor.prototype.beginLoadToolbox = function (file) {
+    Editor.prototype.beginLoadToolbox = function (file, hc) {
         var _this = this;
         compiler.getBlocksAsync().then(function (bi) {
             _this.blockInfo = bi;
             _this.nsMap = _this.partitionBlocks();
             pxt.vs.syncModels(pkg.mainPkg, _this.extraLibs, file.getName(), file.isReadonly());
-            _this.defineEditorTheme();
+            _this.defineEditorTheme(hc);
             _this.updateToolbox();
             _this.resize();
         });
@@ -6658,9 +6833,9 @@ var Editor = (function (_super) {
                     monacoErrors.push({
                         severity: monaco.Severity.Error,
                         message: message,
-                        startLineNumber: d.line,
+                        startLineNumber: d.line + 1,
                         startColumn: d.column,
-                        endLineNumber: d.endLine || endPos.lineNumber,
+                        endLineNumber: (d.endLine || endPos.lineNumber) + 1,
                         endColumn: d.endColumn || endPos.column
                     });
                 }
@@ -6835,7 +7010,7 @@ exports.maths = {
             snippet: "1 / 1",
             snippetOnly: true,
             attributes: {
-                jsDoc: lf("Returns the remainder of one number divided by another")
+                jsDoc: lf("Returns the quotient of one number divided by another")
             }
         },
         {
@@ -7087,7 +7262,7 @@ exports.functions = {
         advanced: true,
         callingConvention: ts.pxtc.ir.CallingConvention.Plain,
         color: pxt.blocks.blockColors["functions"].toString(),
-        icon: "function",
+        icon: "functions",
         paramDefl: {}
     }
 };
@@ -7127,27 +7302,60 @@ function overrideCategory(ns, def) {
         if (def.weight !== undefined) {
             cat.attributes.weight = def.weight;
         }
+        if (def.advanced !== undefined) {
+            cat.attributes.advanced = def.advanced;
+        }
+        if (def.removed !== undefined) {
+            cat.removed = def.removed;
+        }
         if (def.blocks) {
             var currentWeight_1 = 100;
-            cat.blocks = def.blocks.map(function (b, i) {
-                if (b.weight) {
-                    currentWeight_1 = b.weight;
-                }
-                else {
-                    currentWeight_1--;
-                }
-                return {
-                    name: b.name,
-                    snippet: b.snippet,
-                    snippetOnly: b.snippetOnly,
-                    attributes: {
-                        weight: currentWeight_1,
-                        advanced: b.advanced,
-                        jsDoc: b.jsDoc,
-                    },
-                    noNamespace: true
-                };
-            });
+            if (def.appendBlocks) {
+                currentWeight_1 = 50;
+                def.blocks.forEach(function (b, i) {
+                    if (b.weight) {
+                        currentWeight_1 = b.weight;
+                    }
+                    else {
+                        currentWeight_1--;
+                    }
+                    var blk = {
+                        name: b.name,
+                        snippet: b.snippet,
+                        snippetOnly: b.snippetOnly,
+                        attributes: {
+                            weight: currentWeight_1,
+                            advanced: b.advanced,
+                            jsDoc: b.jsDoc,
+                            group: b.group,
+                        },
+                        noNamespace: true
+                    };
+                    cat.blocks.push(blk);
+                });
+            }
+            else {
+                cat.blocks = def.blocks.map(function (b, i) {
+                    if (b.weight) {
+                        currentWeight_1 = b.weight;
+                    }
+                    else {
+                        currentWeight_1--;
+                    }
+                    return {
+                        name: b.name,
+                        snippet: b.snippet,
+                        snippetOnly: b.snippetOnly,
+                        attributes: {
+                            weight: currentWeight_1,
+                            advanced: b.advanced,
+                            jsDoc: b.jsDoc,
+                            group: b.group,
+                        },
+                        noNamespace: true
+                    };
+                });
+            }
         }
     }
 }
@@ -7159,6 +7367,7 @@ function overrideToolbox(def) {
     overrideCategory(exports.maths.nameid, def.maths);
     overrideCategory(exports.text.nameid, def.text);
     overrideCategory(exports.arrays.nameid, def.arrays);
+    overrideCategory(exports.functions.nameid, def.functions);
 }
 exports.overrideToolbox = overrideToolbox;
 
@@ -7589,6 +7798,7 @@ var data = require("./data");
 var sui = require("./sui");
 var pkg = require("./package");
 var core = require("./core");
+var compiler = require("./compiler");
 var codecard = require("./codecard");
 var gallery = require("./gallery");
 var MYSTUFF = "__mystuff";
@@ -7599,6 +7809,7 @@ var Projects = (function (_super) {
         this.prevGhData = [];
         this.prevUrlData = [];
         this.prevGalleries = {};
+        this.galleryFetchErrors = {};
         this.state = {
             visible: false,
             tab: MYSTUFF
@@ -7620,8 +7831,14 @@ var Projects = (function (_super) {
         if (this.state.tab != tab)
             return [];
         var res = this.getData("gallery:" + encodeURIComponent(path));
-        if (res)
-            this.prevGalleries[path] = Util.concat(res.map(function (g) { return g.cards; }));
+        if (res) {
+            if (res instanceof Error) {
+                this.galleryFetchErrors[tab] = true;
+            }
+            else {
+                this.prevGalleries[path] = Util.concat(res.map(function (g) { return g.cards; }));
+            }
+        }
         return this.prevGalleries[path] || [];
     };
     Projects.prototype.fetchUrlData = function () {
@@ -7670,6 +7887,7 @@ var Projects = (function (_super) {
         // lf("Tutorials")
         var headers = this.fetchLocalData();
         var urldata = this.fetchUrlData();
+        this.galleryFetchErrors = {};
         var gals = Util.mapMap(galleries, function (k) { return _this.fetchGallery(k, galleries[k]); });
         var chgHeader = function (hdr) {
             pxt.tickEvent("projects.header");
@@ -7683,6 +7901,9 @@ var Projects = (function (_super) {
                 case "example":
                     chgCode(scr);
                     break;
+                case "blocksExample":
+                    chgCode(scr, true);
+                    break;
                 case "tutorial":
                     _this.props.parent.startTutorial(scr.url);
                     break;
@@ -7694,13 +7915,25 @@ var Projects = (function (_super) {
                         _this.props.parent.newEmptyProject(scr.name.toLowerCase(), scr.url);
             }
         };
-        var chgCode = function (scr) {
+        var chgCode = function (scr, loadBlocks) {
             core.showLoading(lf("Loading..."));
             gallery.loadExampleAsync(scr.name.toLowerCase(), scr.url)
                 .done(function (opts) {
                 core.hideLoading();
-                if (opts)
-                    _this.props.parent.newProject(opts);
+                if (opts) {
+                    if (loadBlocks) {
+                        var ts_1 = opts.filesOverride["main.ts"];
+                        compiler.getBlocksAsync()
+                            .then(function (blocksInfo) { return compiler.decompileSnippetAsync(ts_1, blocksInfo); })
+                            .then(function (resp) {
+                            opts.filesOverride["main.blocks"] = resp;
+                            _this.props.parent.newProject(opts);
+                        });
+                    }
+                    else {
+                        _this.props.parent.newProject(opts);
+                    }
+                }
             });
         };
         var upd = function (v) {
@@ -7762,7 +7995,8 @@ var Projects = (function (_super) {
             { name: lf("This Month"), headers: headersThisMonth },
             { name: lf("Older"), headers: headersOlder },
         ];
-        var isLoading = tab != MYSTUFF && !gals[tab].length;
+        var hadFetchError = this.galleryFetchErrors[tab];
+        var isLoading = tab != MYSTUFF && !hadFetchError && !gals[tab].length;
         var tabClasses = sui.cx([
             isLoading ? 'loading' : '',
             'ui segment bottom attached tab active tabsegment'
@@ -7777,7 +8011,9 @@ var Projects = (function (_super) {
             })));
         }), React.createElement("div", {className: "group"}, React.createElement("div", {className: "ui cards"}, urldata.map(function (scr) {
             return React.createElement(codecard.CodeCardView, {name: scr.name, time: scr.time, header: '/' + scr.id, description: scr.description, key: 'cloud' + scr.id, onClick: function () { return installScript(scr); }, url: '/' + scr.id, color: "blue"});
-        })))) : undefined, tab != MYSTUFF ? React.createElement("div", {className: tabClasses}, React.createElement("div", {className: "ui cards centered"}, gals[tab].map(function (scr) { return React.createElement(codecard.CodeCardView, {key: tab + scr.name, name: scr.name, description: scr.description, url: scr.url, imageUrl: scr.imageUrl, youTubeId: scr.youTubeId, onClick: function () { return chgGallery(scr); }}); }))) : undefined, isEmpty() ?
+        })))) : undefined, tab != MYSTUFF ? React.createElement("div", {className: tabClasses}, hadFetchError ?
+            React.createElement("p", {className: "ui red inverted segment"}, lf("Oops! There was an error. Please ensure you are connected to the Internet and try again."))
+            : React.createElement("div", {className: "ui cards centered"}, gals[tab].map(function (scr) { return React.createElement(codecard.CodeCardView, {key: tab + scr.name, name: scr.name, description: scr.description, url: scr.url, imageUrl: scr.imageUrl, youTubeId: scr.youTubeId, onClick: function () { return chgGallery(scr); }}); }))) : undefined, isEmpty() ?
             React.createElement("div", {className: "ui items"}, React.createElement("div", {className: "ui item"}, lf("We couldn't find any projects matching '{0}'", this.state.searchFor)))
             : undefined));
     };
@@ -7785,7 +8021,7 @@ var Projects = (function (_super) {
 }(data.Component));
 exports.Projects = Projects;
 
-},{"./codecard":8,"./core":11,"./data":12,"./gallery":19,"./package":28,"./sui":37,"./workspace":41,"react":267,"react-dom":138}],30:[function(require,module,exports){
+},{"./codecard":8,"./compiler":9,"./core":11,"./data":12,"./gallery":19,"./package":28,"./sui":37,"./workspace":41,"react":267,"react-dom":138}],30:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -8069,7 +8305,17 @@ var ScriptSearch = (function (_super) {
         };
         var upd = function (v) {
             var str = ReactDOM.findDOMNode(_this.refs["searchInput"]).value;
-            _this.setState({ searchFor: str });
+            // Hidden way to navigate to /beta, useful for UWP app testing
+            if (str === "@/beta") {
+                var homeUrl = pxt.appTarget.appTheme.homeUrl;
+                if (!/\/$/.test(homeUrl)) {
+                    homeUrl += "/";
+                }
+                window.location.href = homeUrl + "beta";
+            }
+            else {
+                _this.setState({ searchFor: str });
+            }
         };
         var kupd = function (ev) {
             if (ev.keyCode == 13)
@@ -8198,7 +8444,7 @@ var ShareEditor = (function (_super) {
         this.setState({ visible: false });
     };
     ShareEditor.prototype.show = function (header) {
-        this.setState({ visible: true, mode: ShareMode.Screenshot, pubCurrent: header.pubCurrent });
+        this.setState({ visible: true, mode: ShareMode.Screenshot, pubCurrent: header.pubCurrent, sharingError: false });
     };
     ShareEditor.prototype.shouldComponentUpdate = function (nextProps, nextState, nextContext) {
         return this.state.visible != nextState.visible
@@ -8206,7 +8452,8 @@ var ShareEditor = (function (_super) {
             || this.state.mode != nextState.mode
             || this.state.pubCurrent != nextState.pubCurrent
             || this.state.screenshotId != nextState.screenshotId
-            || this.state.currentPubId != nextState.currentPubId;
+            || this.state.currentPubId != nextState.currentPubId
+            || this.state.sharingError != nextState.sharingError;
     };
     ShareEditor.prototype.renderCore = function () {
         var _this = this;
@@ -8216,6 +8463,7 @@ var ShareEditor = (function (_super) {
         var embedding = !!cloud.embedding;
         var header = this.props.parent.state.header;
         var advancedMenu = !!this.state.advancedMenu;
+        var showSocialIcons = !!pxt.appTarget.appTheme.socialOptions;
         var ready = false;
         var mode = this.state.mode;
         var url = '';
@@ -8293,8 +8541,14 @@ var ShareEditor = (function (_super) {
         }
         var publish = function () {
             pxt.tickEvent("menu.embed.publish");
-            _this.props.parent.anonymousPublishAsync().done(function () {
+            _this.setState({ sharingError: false });
+            _this.props.parent.anonymousPublishAsync()
+                .catch(function (e) {
+                _this.setState({ sharingError: true });
+            })
+                .done(function () {
                 _this.setState({ pubCurrent: true });
+                _this.forceUpdate();
             });
             _this.forceUpdate();
         };
@@ -8304,16 +8558,46 @@ var ShareEditor = (function (_super) {
             { mode: ShareMode.Cli, label: lf("Command line") }
         ];
         var action = !ready ? lf("Publish project") : undefined;
-        var actionLoading = this.props.parent.state.publishing;
+        var actionLoading = this.props.parent.state.publishing && !this.state.sharingError;
+        var fbUrl = '';
+        var twitterUrl = '';
+        if (showSocialIcons) {
+            var twitterText = lf("Check out what I made!");
+            var socialOptions = pxt.appTarget.appTheme.socialOptions;
+            if (socialOptions.twitterHandle && socialOptions.orgTwitterHandle) {
+                twitterText = lf("Check out what I made with @{0} and @{1}!", socialOptions.twitterHandle, socialOptions.orgTwitterHandle);
+            }
+            else if (socialOptions.twitterHandle) {
+                twitterText = lf("Check out what I made with @{0}!", socialOptions.twitterHandle);
+            }
+            else if (socialOptions.orgTwitterHandle) {
+                twitterText = lf("Check out what I made with @{0}!", socialOptions.orgTwitterHandle);
+            }
+            fbUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url);
+            twitterUrl = ("https://twitter.com/intent/tweet?url=" + encodeURIComponent(url)) +
+                ("&text=" + encodeURIComponent(twitterText)) +
+                (socialOptions.hashtags ? "&hashtags=" + encodeURIComponent(socialOptions.hashtags) : '');
+            (socialOptions.related ? "&related=" + encodeURIComponent(socialOptions.related) : '');
+        }
+        var showFbPopup = function () {
+            pxt.tickEvent('share.facebook');
+            sui.popupWindow(fbUrl, lf("Share on Facebook"), 600, 600);
+        };
+        var showTwtPopup = function () {
+            pxt.tickEvent('share.twitter');
+            sui.popupWindow(twitterUrl, lf("Share on Twitter"), 600, 600);
+        };
         return (React.createElement(sui.Modal, {open: this.state.visible, className: "sharedialog", header: lf("Share Project"), size: "small", onClose: function () { return _this.setState({ visible: false }); }, dimmer: true, action: action, actionClick: publish, actionLoading: actionLoading, closeIcon: true, closeOnDimmerClick: true, closeOnDocumentClick: true}, React.createElement("div", {className: "ui form"}, action ?
-            React.createElement("p", null, lf("You need to publish your project to share it or embed it in other web pages.") + " " +
-                lf("You acknowledge having consent to publish this project."))
-            : undefined, url && ready ? React.createElement("div", null, React.createElement("p", null, lf("Your project is ready! Use the address below to share your projects.")), React.createElement(sui.Input, {class: "mini", readOnly: true, lines: 1, value: url, copy: true}))
+            React.createElement("div", null, React.createElement("p", null, lf("You need to publish your project to share it or embed it in other web pages.") + " " +
+                lf("You acknowledge having consent to publish this project.")), this.state.sharingError ?
+                React.createElement("p", {className: "ui red inverted segment"}, lf("Oops! There was an error. Please ensure you are connected to the Internet and try again."))
+                : undefined)
+            : undefined, url && ready ? React.createElement("div", null, React.createElement("p", null, lf("Your project is ready! Use the address below to share your projects.")), React.createElement(sui.Input, {class: "mini", readOnly: true, lines: 1, value: url, copy: true, selectOnClick: true}), showSocialIcons ? React.createElement("div", {className: "social-icons"}, React.createElement("a", {className: "ui button large icon facebook", onClick: function (e) { showFbPopup(); e.preventDefault(); return false; }}, React.createElement("i", {className: "icon facebook"})), React.createElement("a", {className: "ui button large icon twitter", onClick: function (e) { showTwtPopup(); e.preventDefault(); return false; }}, React.createElement("i", {className: "icon twitter"}))) : undefined)
             : undefined, ready ? React.createElement("div", null, React.createElement("div", {className: "ui divider"}), React.createElement(sui.Button, {class: "labeled", icon: "chevron " + (advancedMenu ? "down" : "right"), text: lf("Embed"), onClick: function () { return _this.setState({ advancedMenu: !advancedMenu }); }}), advancedMenu ?
             React.createElement(sui.Menu, {pointing: true, secondary: true}, formats.map(function (f) {
                 return React.createElement(sui.MenuItem, {key: "tab" + f.label, active: mode == f.mode, name: f.label, onClick: function () { return _this.setState({ mode: f.mode }); }});
             })) : undefined, advancedMenu ?
-            React.createElement(sui.Field, null, React.createElement(sui.Input, {class: "mini", readOnly: true, lines: 4, value: embed, copy: ready, disabled: !ready})) : null) : undefined)));
+            React.createElement(sui.Field, null, React.createElement(sui.Input, {class: "mini", readOnly: true, lines: 4, value: embed, copy: ready, disabled: !ready, selectOnClick: true})) : null) : undefined)));
     };
     return ShareEditor;
 }(data.Component));
@@ -8399,6 +8683,9 @@ function init(root, cfg) {
             updateDebuggerButtons();
         },
         onStateChanged: function (state) {
+            if (state === pxsim.SimulatorState.Stopped) {
+                postSimEditorEvent("stopped");
+            }
             updateDebuggerButtons();
         },
         onSimulatorCommand: function (msg) {
@@ -8486,7 +8773,8 @@ function run(pkg, debug, res, mute, highContrast) {
         fnArgs: fnArgs,
         highContrast: highContrast,
         aspectRatio: parts.length ? pxt.appTarget.simulator.partsAspectRatio : pxt.appTarget.simulator.aspectRatio,
-        partDefinitions: pkg.computePartDefinitions(parts)
+        partDefinitions: pkg.computePartDefinitions(parts),
+        cdnUrl: pxt.webConfig.commitCdnUrl
     };
     postSimEditorEvent("started");
     exports.driver.run(js, opts);
@@ -8697,7 +8985,7 @@ var Editor = (function () {
     /*******************************
      loadFile
     *******************************/
-    Editor.prototype.loadFileAsync = function (file) {
+    Editor.prototype.loadFileAsync = function (file, hc) {
         this.currSource = file.content;
         this.setDiagnostics(file, this.snapshotState());
         return Promise.resolve();
@@ -8718,6 +9006,7 @@ var Editor = (function () {
         if (showCategories === void 0) { showCategories = pxt.blocks.CategoryMode.All; }
         return null;
     };
+    Editor.prototype.setHighContrast = function (hc) { };
     return Editor;
 }());
 exports.Editor = Editor;
@@ -8746,6 +9035,11 @@ function genericContent(props) {
         props.text ? (React.createElement("span", {key: 'textkey', className: 'ui text' + (props.textClass ? ' ' + props.textClass : '')}, props.text)) : null,
     ];
 }
+function popupWindow(url, title, width, height) {
+    return window.open(url, title, "resizable=no, copyhistory=no, " +
+        ("width=" + width + ", height=" + height + ", top=" + ((screen.height / 2) - (height / 2)) + ", left=" + ((screen.width / 2) - (width / 2))));
+}
+exports.popupWindow = popupWindow;
 var UiElement = (function (_super) {
     __extends(UiElement, _super);
     function UiElement() {
@@ -8881,11 +9175,13 @@ var Input = (function (_super) {
         var el = ReactDOM.findDOMNode(this);
         if (!p.lines || p.lines == 1) {
             var inp = el.getElementsByTagName("input")[0];
-            inp.select();
+            inp.focus();
+            inp.setSelectionRange(0, 9999);
         }
         else {
             var inp = el.getElementsByTagName("textarea")[0];
-            inp.select();
+            inp.focus();
+            inp.setSelectionRange(0, 9999);
         }
         try {
             var success = document.execCommand("copy");
@@ -8900,8 +9196,8 @@ var Input = (function (_super) {
         var copyBtn = p.copy && document.queryCommandSupported('copy')
             ? React.createElement(Button, {class: "ui right labeled primary icon button", text: lf("Copy"), icon: "copy", onClick: function () { return _this.copy(); }})
             : null;
-        return (React.createElement(Field, {label: p.label}, React.createElement("div", {className: "ui input" + (p.inputLabel ? " labelled" : "") + (p.copy ? " action fluid" : "") + (p.disabled ? " disabled" : "")}, p.inputLabel ? (React.createElement("div", {className: "ui label"}, p.inputLabel)) : "", !p.lines || p.lines == 1 ? React.createElement("input", {className: p.class || "", type: p.type || "text", placeholder: p.placeholder, value: p.value, readOnly: !!p.readOnly, onChange: function (v) { return p.onChange(v.target.value); }})
-            : React.createElement("textarea", {className: "ui input " + (p.class || "") + (p.inputLabel ? " labelled" : ""), rows: p.lines, placeholder: p.placeholder, value: p.value, readOnly: !!p.readOnly, onChange: function (v) { return p.onChange(v.target.value); }}), copyBtn)));
+        return (React.createElement(Field, {label: p.label}, React.createElement("div", {className: "ui input" + (p.inputLabel ? " labelled" : "") + (p.copy ? " action fluid" : "") + (p.disabled ? " disabled" : "")}, p.inputLabel ? (React.createElement("div", {className: "ui label"}, p.inputLabel)) : "", !p.lines || p.lines == 1 ? React.createElement("input", {className: p.class || "", type: p.type || "text", placeholder: p.placeholder, value: p.value, readOnly: !!p.readOnly, onClick: function (e) { return p.selectOnClick ? e.target.setSelectionRange(0, 9999) : undefined; }, onChange: function (v) { return p.onChange(v.target.value); }})
+            : React.createElement("textarea", {className: "ui input " + (p.class || "") + (p.inputLabel ? " labelled" : ""), rows: p.lines, placeholder: p.placeholder, value: p.value, readOnly: !!p.readOnly, onClick: function (e) { return p.selectOnClick ? e.target.setSelectionRange(0, 9999) : undefined; }, onChange: function (v) { return p.onChange(v.target.value); }}), copyBtn)));
     };
     return Input;
 }(data.Component));
@@ -9126,7 +9422,7 @@ var Modal = (function (_super) {
         var modalJSX = (React.createElement("div", {className: classes, style: { marginTop: marginTop }, ref: this.handleRef, role: "dialog", "aria-labelledby": this.id + 'title', "aria-describedby": this.id + 'desc'}, this.props.closeIcon ? React.createElement(Button, {icon: closeIconName, class: "huge clear right floated", onClick: function () { return _this.handleClose(null); }}) : undefined, this.props.helpUrl ?
             React.createElement("a", {className: "ui button huge icon clear right floated", href: this.props.helpUrl, target: "_docs"}, React.createElement("i", {className: "help icon"}))
             : undefined, this.props.header ? React.createElement("div", {id: this.id + 'title', className: "header " + (this.props.headerClass || "")}, this.props.header) : undefined, React.createElement("div", {id: this.id + 'desc', className: "content"}, children), this.props.action && this.props.actionClick ?
-            React.createElement("div", {className: "actions"}, React.createElement(Button, {text: this.props.action, class: "approve primary " + (this.props.actionLoading ? "loading" : ""), onClick: function () {
+            React.createElement("div", {className: "actions"}, React.createElement(Button, {text: this.props.action, class: "approve primary " + (this.props.actionLoading ? "loading disabled" : ""), onClick: function () {
                 _this.props.actionClick();
             }})) : undefined));
         var dimmerClasses = !dimmer
@@ -9268,7 +9564,7 @@ exports.td2tsAsync = td2tsAsync;
 
 },{"./compiler":9,"./package":28}],39:[function(require,module,exports){
 "use strict";
-var defaultToolboxString = "<xml id=\"blocklyToolboxDefinition\" style=\"display: none\">\n    <category name=\"Loops\" nameid=\"loops\" colour=\"#107c10\" category=\"50\" iconclass=\"blocklyTreeIconloops\" expandedclass=\"blocklyTreeIconloops\">\n        <block type=\"controls_repeat_ext\">\n            <value name=\"TIMES\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">4</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"device_while\">\n            <value name=\"COND\">\n                <shadow type=\"logic_boolean\"></shadow>\n            </value>\n        </block>\n        <block type=\"controls_simple_for\">\n            <value name=\"TO\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">4</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"controls_for_of\">\n            <value name=\"LIST\">\n                <shadow type=\"variables_get\">\n                    <field name=\"VAR\">list</field>\n                </shadow>\n            </value>\n        </block>\n    </category>\n    <category name=\"Logic\" nameid=\"logic\" colour=\"#006970\" category=\"49\" iconclass=\"blocklyTreeIconlogic\" expandedclass=\"blocklyTreeIconlogic\">\n        <block type=\"controls_if\" gap=\"8\">\n            <value name=\"IF0\">\n                <shadow type=\"logic_boolean\">\n                    <field name=\"BOOL\">TRUE</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"controls_if\" gap=\"8\">\n            <mutation else=\"1\"></mutation>\n            <value name=\"IF0\">\n                <shadow type=\"logic_boolean\">\n                    <field name=\"BOOL\">TRUE</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"logic_compare\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"logic_compare\">\n            <field name=\"OP\">LT</field>\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"logic_operation\" gap=\"8\"></block>\n        <block type=\"logic_operation\" gap=\"8\">\n            <field name=\"OP\">OR</field>\n        </block>\n        <block type=\"logic_negate\"></block>\n        <block type=\"logic_boolean\" gap=\"8\"></block>\n        <block type=\"logic_boolean\">\n            <field name=\"BOOL\">FALSE</field>\n        </block>\n    </category>\n    <category name=\"Variables\" nameid=\"variables\" colour=\"#A80000\" custom=\"VARIABLE\" category=\"48\" iconclass=\"blocklyTreeIconvariables\" expandedclass=\"blocklyTreeIconvariables\">\n    </category>\n    <category name=\"Math\" nameid=\"math\" colour=\"#712672\" category=\"47\" iconclass=\"blocklyTreeIconmath\" expandedclass=\"blocklyTreeIconmath\">\n        <block type=\"math_arithmetic\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"math_arithmetic\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <field name=\"OP\">MINUS</field>\n        </block>\n        <block type=\"math_arithmetic\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <field name=\"OP\">MULTIPLY</field>\n        </block>\n        <block type=\"math_arithmetic\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <field name=\"OP\">DIVIDE</field>\n        </block>\n        <block type=\"math_number\" gap=\"8\">\n            <field name=\"NUM\">0</field>\n        </block>\n        <category colour=\"#712672\" name=\"More\" nameid=\"more\" iconclass=\"blocklyTreeIconmore\" expandedclass=\"blocklyTreeIconmore\">\n            <block type=\"math_modulo\">\n                <value name=\"DIVIDEND\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"DIVISOR\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">1</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"math_op2\" gap=\"8\">\n                <value name=\"x\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"y\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"math_op2\" gap=\"8\">\n                <value name=\"x\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"y\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <field name=\"op\">max</field>\n            </block>\n            <block type=\"math_op3\">\n                <value name=\"x\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n            </block>\n        </category>\n    </category>\n        <category name=\"Functions\" nameid=\"functions\" colour=\"#005a9e\" custom=\"PROCEDURE\" category=\"46\" iconclass=\"blocklyTreeIconfunctions\" expandedclass=\"blocklyTreeIconfunctions\" advanced=\"true\">\n        </category>\n    <category colour=\"#66672C\" name=\"Arrays\" nameid=\"arrays\" category=\"45\" iconclass=\"blocklyTreeIconarrays\" expandedclass=\"blocklyTreeIconarrays\" advanced=\"true\">\n        <block type=\"lists_create_with\">\n            <mutation items=\"1\"></mutation>\n            <value name=\"ADD0\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"lists_create_with\">\n            <mutation items=\"2\"></mutation>\n            <value name=\"ADD0\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\"></field>\n                </shadow>\n            </value>\n            <value name=\"ADD1\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\"></field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"lists_length\"></block>\n        <block type=\"lists_index_get\">\n            <value name=\"LIST\">\n                <block type=\"variables_get\">\n                    <field name=\"VAR\">list</field>\n                </block>\n            </value>\n            <value name=\"INDEX\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"lists_index_set\">\n            <value name=\"LIST\">\n                <block type=\"variables_get\">\n                    <field name=\"VAR\">list</field>\n                </block>\n            </value>\n            <value name=\"INDEX\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n    </category>\n    <category colour=\"#996600\" name=\"Text\" nameid=\"text\" category=\"46\" iconclass=\"blocklyTreeIcontext\" expandedclass=\"blocklyTreeIcontext\" advanced=\"true\">\n        <block type=\"text\"></block>\n        <block type=\"text_length\">\n            <value name=\"VALUE\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\">abc</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"text_join\">\n            <mutation items=\"2\"></mutation>\n            <value name=\"ADD0\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\"></field>\n                </shadow>\n            </value>\n            <value name=\"ADD1\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\"></field>\n                </shadow>\n            </value>\n        </block>\n    </category>\n</xml>";
+var defaultToolboxString = "<xml id=\"blocklyToolboxDefinition\" style=\"display: none\">\n    <category name=\"Loops\" nameid=\"loops\" colour=\"#107c10\" category=\"50\" web-icon=\"\uF01E\" iconclass=\"blocklyTreeIconloops\" expandedclass=\"blocklyTreeIconloops\">\n        <block type=\"controls_repeat_ext\">\n            <value name=\"TIMES\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">4</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"device_while\">\n            <value name=\"COND\">\n                <shadow type=\"logic_boolean\"></shadow>\n            </value>\n        </block>\n        <block type=\"controls_simple_for\">\n            <value name=\"TO\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">4</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"controls_for_of\">\n            <value name=\"LIST\">\n                <shadow type=\"variables_get\">\n                    <field name=\"VAR\">list</field>\n                </shadow>\n            </value>\n        </block>\n    </category>\n    <category name=\"Logic\" nameid=\"logic\" colour=\"#006970\" category=\"49\" web-icon=\"\uF074\" iconclass=\"blocklyTreeIconlogic\" expandedclass=\"blocklyTreeIconlogic\">\n        <block type=\"controls_if\" gap=\"8\">\n            <value name=\"IF0\">\n                <shadow type=\"logic_boolean\">\n                    <field name=\"BOOL\">TRUE</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"controls_if\" gap=\"8\">\n            <mutation else=\"1\"></mutation>\n            <value name=\"IF0\">\n                <shadow type=\"logic_boolean\">\n                    <field name=\"BOOL\">TRUE</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"logic_compare\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"logic_compare\">\n            <field name=\"OP\">LT</field>\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"logic_operation\" gap=\"8\"></block>\n        <block type=\"logic_operation\" gap=\"8\">\n            <field name=\"OP\">OR</field>\n        </block>\n        <block type=\"logic_negate\"></block>\n        <block type=\"logic_boolean\" gap=\"8\"></block>\n        <block type=\"logic_boolean\">\n            <field name=\"BOOL\">FALSE</field>\n        </block>\n    </category>\n    <category name=\"Variables\" nameid=\"variables\" colour=\"#A80000\" custom=\"VARIABLE\" category=\"48\" iconclass=\"blocklyTreeIconvariables\" expandedclass=\"blocklyTreeIconvariables\">\n    </category>\n    <category name=\"Math\" nameid=\"math\" colour=\"#712672\" category=\"47\" web-icon=\"\uF1EC\" iconclass=\"blocklyTreeIconmath\" expandedclass=\"blocklyTreeIconmath\">\n        <block type=\"math_arithmetic\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"math_arithmetic\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <field name=\"OP\">MINUS</field>\n        </block>\n        <block type=\"math_arithmetic\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <field name=\"OP\">MULTIPLY</field>\n        </block>\n        <block type=\"math_arithmetic\" gap=\"8\">\n            <value name=\"A\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <value name=\"B\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n            <field name=\"OP\">DIVIDE</field>\n        </block>\n        <block type=\"math_number\" gap=\"8\">\n            <field name=\"NUM\">0</field>\n        </block>\n        <category colour=\"#712672\" name=\"More\" nameid=\"more\" iconclass=\"blocklyTreeIconmore\" expandedclass=\"blocklyTreeIconmore\">\n            <block type=\"math_modulo\">\n                <value name=\"DIVIDEND\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"DIVISOR\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">1</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"math_op2\" gap=\"8\">\n                <value name=\"x\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"y\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n            </block>\n            <block type=\"math_op2\" gap=\"8\">\n                <value name=\"x\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <value name=\"y\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n                <field name=\"op\">max</field>\n            </block>\n            <block type=\"math_op3\">\n                <value name=\"x\">\n                    <shadow type=\"math_number\">\n                        <field name=\"NUM\">0</field>\n                    </shadow>\n                </value>\n            </block>\n        </category>\n    </category>\n    <category name=\"Functions\" nameid=\"functions\" colour=\"#005a9e\" custom=\"PROCEDURE\" category=\"46\" iconclass=\"blocklyTreeIconfunctions\" expandedclass=\"blocklyTreeIconfunctions\" advanced=\"true\">\n    </category>\n    <category colour=\"#66672C\" name=\"Arrays\" nameid=\"arrays\" category=\"45\" web-icon=\"\uF0CB\" iconclass=\"blocklyTreeIconarrays\" expandedclass=\"blocklyTreeIconarrays\" advanced=\"true\">\n        <block type=\"lists_create_with\">\n            <mutation items=\"1\"></mutation>\n            <value name=\"ADD0\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"lists_create_with\">\n            <mutation items=\"2\"></mutation>\n            <value name=\"ADD0\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\"></field>\n                </shadow>\n            </value>\n            <value name=\"ADD1\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\"></field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"lists_length\"></block>\n        <block type=\"lists_index_get\">\n            <value name=\"LIST\">\n                <block type=\"variables_get\">\n                    <field name=\"VAR\">list</field>\n                </block>\n            </value>\n            <value name=\"INDEX\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"lists_index_set\">\n            <value name=\"LIST\">\n                <block type=\"variables_get\">\n                    <field name=\"VAR\">list</field>\n                </block>\n            </value>\n            <value name=\"INDEX\">\n                <shadow type=\"math_number\">\n                    <field name=\"NUM\">0</field>\n                </shadow>\n            </value>\n        </block>\n    </category>\n    <category colour=\"#996600\" name=\"Text\" nameid=\"text\" category=\"46\" web-icon=\"\uF035\" iconclass=\"blocklyTreeIcontext\" expandedclass=\"blocklyTreeIcontext\" advanced=\"true\">\n        <block type=\"text\"></block>\n        <block type=\"text_length\">\n            <value name=\"VALUE\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\">abc</field>\n                </shadow>\n            </value>\n        </block>\n        <block type=\"text_join\">\n            <mutation items=\"2\"></mutation>\n            <value name=\"ADD0\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\"></field>\n                </shadow>\n            </value>\n            <value name=\"ADD1\">\n                <shadow type=\"text\">\n                    <field name=\"TEXT\"></field>\n                </shadow>\n            </value>\n        </block>\n    </category>\n</xml>";
 var cachedToolboxDom;
 function getBaseToolboxDom() {
     if (!cachedToolboxDom) {
@@ -24322,7 +24618,7 @@ module.exports={
         "spec": "1.3.2",
         "type": "version"
       },
-      "d:\\src\\cdiddy77\\pxt\\node_modules\\pouchdb"
+      "/Users/charles/dev/pxt/node_modules/pouchdb"
     ]
   ],
   "_from": "levelup@1.3.2",
@@ -24356,7 +24652,7 @@ module.exports={
   "_shasum": "b321d3071f0e75c2dfaf2f0fe8864e5b9a387bc9",
   "_shrinkwrap": null,
   "_spec": "levelup@1.3.2",
-  "_where": "d:\\src\\cdiddy77\\pxt\\node_modules\\pouchdb",
+  "_where": "/Users/charles/dev/pxt/node_modules/pouchdb",
   "browser": {
     "leveldown": false,
     "leveldown/package": false,
