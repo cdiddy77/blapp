@@ -70,6 +70,17 @@ namespace pxsim.UI {
     }
 
     //%
+    export function videoElementImpl(
+        flex: boolean,
+        width: number,
+        height: number,
+        style: string[],
+        imageurl: string,
+        videourl: string): void {
+
+        }
+
+    //%
     export function dividerElementImpl(
         className: UIDividerClass,
         style: string[]): void {

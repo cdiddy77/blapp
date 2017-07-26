@@ -300,6 +300,25 @@ export namespace pxsimui {
             CodegenRuntime.createElement(CodegenRuntime.ImageBlockf, props));
     }
 
+    export function videoElementImpl(
+        flex: boolean,
+        width: number,
+        height: number,
+        style: pxsim.RefCollection,
+        imageurl: string,
+        videourl: string): void {
+        CodegenRuntime.beginProps();
+        genFlexProp(flex);
+        genStyleProp(style);
+        CodegenRuntime.addProp('width', width);
+        CodegenRuntime.addProp('height', height);
+        CodegenRuntime.addProp('imagesource', { uri: imageurl ? imageurl : '' });
+        CodegenRuntime.addProp('videosource', { uri: videourl ? videourl : '' });
+        let props = CodegenRuntime.getProps();
+        CodegenRuntime.pushElem(
+            CodegenRuntime.createElement(CodegenRuntime.VideoBlockf, props));
+    }
+        
     export function dividerElementImpl(
         className: UIDividerClass,
         style: pxsim.RefCollection): void {

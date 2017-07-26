@@ -21,6 +21,7 @@ import { ScrollerBlock } from '../components/ScrollerBlock';
 import { ButtonBlock } from '../components/ButtonBlock';
 import { TextBlock } from '../components/TextBlock';
 import { ImageBlock } from '../components/ImageBlock';
+import { VideoBlock } from '../components/VideoBlock';
 import { TextInputBlock } from '../components/TextInputBlock';
 import { DividerBlock } from '../components/DividerBlock';
 import { SpriteBlock } from '../components/SpriteBlock';
@@ -33,6 +34,8 @@ export interface CodegenHost {
     runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void;
     createRefCollection():any;
 }
+
+// have a stub 
 
 export type EdgeKind = 'none' | 'left' | 'top' | 'right' | 'bottom';
 export type EdgeKinds = 'none' | 'left' | 'top' | 'right' | 'bottom' | 'horizontal' | 'vertical' | 'any';
@@ -614,6 +617,7 @@ export namespace CodegenRuntime {
     export var ButtonBlockf = ButtonBlock;
     export var TextBlockf = TextBlock;
     export var ImageBlockf = ImageBlock;
+    export var VideoBlockf = VideoBlock;
     export var TextInputBlockf = TextInputBlock;
     export var DividerBlockf = DividerBlock;
 
