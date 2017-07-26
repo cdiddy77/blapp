@@ -17,12 +17,16 @@ export class AppModel extends ModelBase implements CodegenHost {
     constructor() {
         super();
         CodegenRuntime.setCodegenHost(this);
+        this.blueTooth.codeGenHost = this;
 
         // start bluetooth
-        BleManager.start({showAlert: false})
+        BleManager.start({showAlert: false, allowDuplicates: false})
         .then(() => {
             // Success code
             console.log('Module initialized');
+        })
+        .catch((e: any) => {
+            console.log('Error initializing BT: ' + e);
         });
 
         bleManagerEmitter.addListener('BleManagerDidUpdateState',
@@ -35,9 +39,7 @@ export class AppModel extends ModelBase implements CodegenHost {
         this.handleDiscoverPeripheral = this.handleDiscoverPeripheral.bind(this);
         this.handleStopScan = this.handleStopScan.bind(this);
         this.handleUpdateValueForCharacteristic = this.handleUpdateValueForCharacteristic.bind(this);
-        this.handleDisconnectedPeripheral = this.handleDisconnectedPeripheral.bind(this);
-
-        BleManager.start({showAlert: false, allowDuplicates: false});
+        this.handleDisconnectedPeripheral = this.handleDisconnectedPeripheral.bind(this);        
 
         this.handlerDiscover = bleManagerEmitter.addListener('BleManagerDiscoverPeripheral', this.handleDiscoverPeripheral );
         this.handlerStop = bleManagerEmitter.addListener('BleManagerStopScan', this.handleStopScan );
@@ -170,11 +172,7 @@ export class AppModel extends ModelBase implements CodegenHost {
             // start scanning for devices
             if (!this.scanning) {
                 BleManager.scan([], Math.floor(scanDurationMilliseconds / 1000), false)
-                .then((results: any) => {
-                    console.log('BleManger Scanning');
-
-                    this.scanning = true;
-                })
+                .then(this.codeGenHost.startScanning(this))
                 .catch((error: any) => {
                     console.log('scanForDevices: ' + error);
                 });
@@ -187,52 +185,73 @@ export class AppModel extends ModelBase implements CodegenHost {
         },
         connectToDevice(deviceName: string, callback: any): void {
             // TODO: finish implementing
+            console.log("connectToDevice");
             
             // find the existing device
             for(var i: number = 0; i < this.devices.length; i++) {
-                if (this.devices[i].name == deviceName) {
-                    BleManager.connect(this.devices[i].id).then(() => {
+                 if (this.devices[i].name == deviceName) {
+                     BleManager.connect(this.devices[i].id)
+                        .then(this.codeGenHost.handleConnected(this.codeGenHost, this.devices[i], callback))
+                        .catch((e: any) => {
+                            console.log('Connection error: ', e);
+                        });
+            //          BleManager.connect(this.devices[i].id).then((result: any) => {
 
-                        this.bluetooth.devices[i].connected = true;
-                        console.log('Connected to ' + this.bluetooth.devices[i]);
-                        /*
-                        this.setTimeout(() => {
-                          BleManager.retrieveServices(peripheral.id).then((peripheralData) => {
-                            console.log('Retrieved peripheral services', peripheralData);
-                            BleManager.readRSSI(peripheral.id).then((rssi) => {
-                              console.log('Retrieved actual RSSI value', rssi);
-                            });
-                          });
-                          // Specific to test my device
-                          BleManager.retrieveServices(peripheral.id).then((peripheralInfo) => {
-                            this.setTimeout(() => {
-                              BleManager.startNotification(peripheral.id, '00035B03-58E6-07DD-021A-08123A000300', '00035B03-58E6-07DD-021A-08123A000301').then(() => {
-                                console.log('Started notification on ' + peripheral.id);
-                                this.setTimeout(() => {
+            //              this.bluetooth.devices[i].connected = true;
+            //              console.log('Connected to ' + this.bluetooth.devices[i]);
+
+            // //             /*
+            // //             this.setTimeout(() => {
+            // //               BleManager.retrieveServices(peripheral.id).then((peripheralData) => {
+            // //                 console.log('Retrieved peripheral services', peripheralData);
+            // //                 BleManager.readRSSI(peripheral.id).then((rssi) => {
+            // //                   console.log('Retrieved actual RSSI value', rssi);
+            // //                 });
+            // //               });
+            // //               // Specific to test my device
+            // //               BleManager.retrieveServices(peripheral.id).then((peripheralInfo) => {
+            // //                 this.setTimeout(() => {
+            // //                   BleManager.startNotification(peripheral.id, '00035B03-58E6-07DD-021A-08123A000300', '00035B03-58E6-07DD-021A-08123A000301').then(() => {
+            // //                     console.log('Started notification on ' + peripheral.id);
+            // //                     this.setTimeout(() => {
                
-                                  let messages = [[0, 7, 2, 52, 2, 19, 181],[0, 7, 2, 103, 2, 47, 69],[0, 7, 2, 32, 2, 28, 181], [0, 7, 2, 120, 2, 39, 117]];
-                                  let message = messages[Math.floor(Math.random() * 3)];
-                                  //console.log(message);
-                                  BleManager.write(peripheral.id, '00035B03-58E6-07DD-021A-08123A000300', '00035B03-58E6-07DD-021A-08123A000301', message).then(() => {
-                                    console.log('Write confirmed');
-                                  });
-                                }, 500);
-                              }).catch((error) => {
-                                console.log('Notification error', error);
-                              });
-                            }, 200);
-                          });
-                        }, 900);*/
-                    }).catch((e: any) => {
-                        console.log('Connection error: ', e);
-                    });                    
-                }
-            }
+            // //                       let messages = [[0, 7, 2, 52, 2, 19, 181],[0, 7, 2, 103, 2, 47, 69],[0, 7, 2, 32, 2, 28, 181], [0, 7, 2, 120, 2, 39, 117]];
+            // //                       let message = messages[Math.floor(Math.random() * 3)];
+            // //                       //console.log(message);
+            // //                       BleManager.write(peripheral.id, '00035B03-58E6-07DD-021A-08123A000300', '00035B03-58E6-07DD-021A-08123A000301', message).then(() => {
+            // //                         console.log('Write confirmed');
+            // //                       });
+            // //                     }, 500);
+            // //                   }).catch((error) => {
+            // //                     console.log('Notification error', error);
+            // //                   });
+            // //                 }, 200);
+            // //               });
+            //         }, 900)
+            //         .catch((e: any) => {
+            //             console.log('Connection error: ', e);
+            //         });   
+                      
+                    // only connect to the first instance found
+                    return;
+                 }
+             }
         }
     }
 
     //
     ////////////////////////////////////////////////////////////////////////////
+    startScanning(caller: CodegenHost) {
+        console.log('BleManger Scanning');
+        caller.blueTooth.scanning = true;
+    }
+
+    handleConnected(caller: CodegenHost, connectedDevice: any, callback: pxsim.RefAction) {
+        console.log("connected to: " +  JSON.stringify(connectedDevice));
+
+        // call the callback indicating that connection is done
+        caller.runFiberSync(callback, (r) => {});
+    }
 
     handleDisconnectedPeripheral(data: any) {
 
@@ -267,13 +286,7 @@ export class AppModel extends ModelBase implements CodegenHost {
 
   
   handleDiscoverPeripheral(peripheral: any){
-    // var peripherals = this.state.peripherals;
-
-    // if (!peripherals.has(peripheral.id)){
     console.log('Found ble peripheral!', peripheral);
-    //   peripherals.set(peripheral.id, peripheral);
-    //   this.setState({ peripherals })
-    // }
 
     if (peripheral.name != null) {
         this.blueTooth.deviceNames.push(peripheral.name);
