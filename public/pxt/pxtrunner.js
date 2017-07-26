@@ -520,6 +520,14 @@ var pxt;
                                     blocksXml: '<xml xmlns="http://www.w3.org/1999/xhtml"><block type="device_while"></block></xml>'
                                 });
                                 break;
+                            case ts.SyntaxKind.ForOfStatement:
+                                addItem({
+                                    name: ns ? "Loops" : "for of",
+                                    url: "blocks/loops" + (ns ? "" : "/for-of"),
+                                    description: ns ? lf("Loops and repetition") : lf("Repeat code for each item in a list."),
+                                    blocksXml: '<xml xmlns="http://www.w3.org/1999/xhtml"><block type="controls_for_of"></block></xml>'
+                                });
+                                break;
                             case ts.SyntaxKind.ForStatement:
                                 var fs = stmt;
                                 // look for the 'repeat' loop style signature in the condition expression, explicitly: (let i = 0; i < X; i++)

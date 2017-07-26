@@ -104,6 +104,11 @@ var pxt;
                                 .then(function (img) { resp = img; });
                             break;
                         }
+                        case "toggletrace": {
+                            var togglemsg_1 = data;
+                            p = p.then(function () { return projectView.toggleTrace(togglemsg_1.intervalSpeed); });
+                            break;
+                        }
                     }
                 }
                 p.done(function () { return sendResponse(data, resp, true, undefined); }, function (err) { return sendResponse(data, resp, false, err); });
@@ -383,20 +388,26 @@ var pxt;
             var inverted = pxt.appTarget.appTheme.invertedMonaco;
             var editor = monaco.editor.create(element, {
                 model: null,
-                //ariaLabel: lf("JavaScript Editor"),
+                ariaLabel: pxt.Util.lf("JavaScript editor"),
                 fontFamily: "'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', 'monospace'",
                 scrollBeyondLastLine: false,
                 language: "typescript",
-                experimentalScreenReader: true,
                 mouseWheelZoom: true,
-                tabCompletion: true,
                 wordBasedSuggestions: true,
                 lineNumbersMinChars: 3,
                 formatOnPaste: true,
-                //automaticLayout: true,
+                minimap: {
+                    enabled: false
+                },
+                autoIndent: true,
+                dragAndDrop: true,
+                matchBrackets: true,
+                occurrencesHighlight: false,
                 mouseWheelScrollSensitivity: 0.5,
                 quickSuggestionsDelay: 200,
-                theme: inverted ? 'vs-dark' : 'vs'
+                theme: inverted ? 'vs-dark' : 'vs',
+                //accessibilitySupport: 'on',
+                accessibilityHelpUrl: "" //TODO: Add help url explaining how to use the editor with a screen reader
             });
             editor.layout();
             return editor;

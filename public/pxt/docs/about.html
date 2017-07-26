@@ -233,41 +233,6 @@
         </div>
     </div>
 
-
-    <div class="item" title="">
-        <a class="header " href=""></a>
-        <div class="menu">
-            
-    <div class="ui inverted accordion item visible" title="">
-        <div class=" title">
-            <i class="dropdown icon"></i>
-            <a class="header" href="/pxt/docs/packages.html">Packages</a>
-        </div>
-        <div class=" content">
-            
-    <a class="item " href="/pxt/docs/packages/build-your-own.html">Build your own</a>
-
-
-    <a class="item " href="/pxt/docs/packages/approval.html">Approval</a>
-
-
-    <a class="item " href="/pxt/docs/packages/versioning.html">Versioning</a>
-
-        </div>
-    </div>
-
-
-    <a class="item " href="/pxt/docs/cli.html">Command Line Interface</a>
-
-
-    <a class="item " href="/pxt/docs/code.html">Visual Studio Code support</a>
-
-
-    <a class="item " href="/pxt/docs/raspberry-pi.html">Coding on Raspberry Pi</a>
-
-        </div>
-    </div>
-
     <a href="/pxt/docs/.html" class="header item">
         Published by Microsoft
     </a>
@@ -467,41 +432,6 @@
         </div>
     </div>
 
-
-    <div class="item" title="">
-        <a class="header " href=""></a>
-        <div class="menu">
-            
-    <div class="ui inverted accordion item visible" title="">
-        <div class=" title">
-            <i class="dropdown icon"></i>
-            <a class="header" href="/pxt/docs/packages.html">Packages</a>
-        </div>
-        <div class=" content">
-            
-    <a class="item " href="/pxt/docs/packages/build-your-own.html">Build your own</a>
-
-
-    <a class="item " href="/pxt/docs/packages/approval.html">Approval</a>
-
-
-    <a class="item " href="/pxt/docs/packages/versioning.html">Versioning</a>
-
-        </div>
-    </div>
-
-
-    <a class="item " href="/pxt/docs/cli.html">Command Line Interface</a>
-
-
-    <a class="item " href="/pxt/docs/code.html">Visual Studio Code support</a>
-
-
-    <a class="item " href="/pxt/docs/raspberry-pi.html">Coding on Raspberry Pi</a>
-
-        </div>
-    </div>
-
         <a href="/pxt/docs/.html" class="header item">
             Published by Microsoft
         </a>
@@ -548,28 +478,29 @@
 
 
 <!-- include footer.html -->
-    <div class="ui inverted accent vertical footer segment hideprint">
-        <div class="ui center aligned container">
-            <div class="ui horizontal inverted small divided link list">
-                <a class="item" href="https://makecode.com/" title="Microsoft MakeCode">Powered by Microsoft MakeCode</a>
-                <!-- <a class="item" href="https://makecode.com/contact">Contact Us</a> -->
-                <a class="item" href="https://makecode.com/privacy">Privacy &amp; Cookies</a>
-                <a class="item" href="https://makecode.com/termsofuse">Terms Of Use</a>
-                <a class="item" href="https://makecode.com/trademarks">Trademarks</a>
-                <div class="item">© 2017 Microsoft</div>
-                <!-- we need to force the browser to load this font -->
-                <div style='font-family: Icons; color: #010101;' aria-hidden="true">.</div>
-            </div>
-            <a class="item" href="https://www.microsoft.com/"><img class="ui centered image" src="https://az851932.vo.msecnd.net/pub/pmapoirq" /></a>
+<footer class="ui inverted accent vertical footer segment hideprint">
+    <div class="ui center aligned container">
+        <div class="ui horizontal inverted small divided link list">
+            <a class="item" href="https://makecode.com/" title="Microsoft MakeCode">Powered by Microsoft MakeCode</a>
+            <!-- <a class="item" href="https://makecode.com/contact">Contact Us</a> -->
+            <a class="item" href="https://makecode.com/privacy">Privacy &amp; Cookies</a>
+            <a class="item" href="https://makecode.com/termsofuse">Terms Of Use</a>
+            <a class="item" href="https://makecode.com/trademarks">Trademarks</a>
+            <div class="item">© 2017 Microsoft</div>
+            <!-- we need to force the browser to load this font -->
+            <div style='font-family: Icons; color: #010101;' aria-hidden="true">.</div>
         </div>
+        <a class="item" href="https://www.microsoft.com/" aria-label="Visit the Microsoft website">
+            <img class="ui centered image" src="https://az851932.vo.msecnd.net/pub/pmapoirq" alt="Microsoft logo">
+        </a>
     </div>
-
+</footer>
 <!-- end include footer.html -->
 
 
 
 <!-- include macros.html -->
-<!-- macro button -->   
+<!-- macro button -->
 
 <!-- macro vimeo -->
 
@@ -610,6 +541,8 @@
 
 <!-- macro inner-dropdown -->
 
+<!-- macro nested-dropdown -->
+
 <!-- end include macros.html -->
 
 
@@ -636,8 +569,8 @@
             telemetryItem.properties["stage"] = (pxtConfig.relprefix || "/--").replace(/[^a-z]/ig, '')
             if (typeof window !== "undefined" && window.location && /[?&]electron=1/i.test(window.location.href))
                 telemetryItem.properties["electron"] = 1;
-            if (typeof window !== "undefined" && window.location && /uwp/i.test(window.location.href))
-                telemetryItem.properties["uwp"] = 1;
+            if (typeof Windows !== "undefined")
+                telemetryItem.properties["WindowsApp"] = 1;
         });
     });
     appInsights.trackPageView();

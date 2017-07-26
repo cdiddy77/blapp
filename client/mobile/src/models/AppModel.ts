@@ -41,7 +41,7 @@ export class AppModel extends ModelBase implements CodegenHost {
         // need to figure out a way to know whether we are pxt or not
         try {
             console.log('evaluating new code');
-            console.log(this.code);
+            //console.log(this.code);
             var pxsim: any = pxtexec.pxsim;
             pxtexec.executeCode(this.code);
             // eval(this.testCode());

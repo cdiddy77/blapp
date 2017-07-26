@@ -2990,7 +2990,7 @@ var pxsim;
         };
         RefCollection.prototype.pop = function () {
             var x = this.data.pop();
-            if (x != undefined) {
+            if (x == undefined) {
                 return 0;
             }
             return x;
@@ -4649,7 +4649,8 @@ var pxsim;
                 code: js,
                 partDefinitions: opts.partDefinitions,
                 mute: opts.mute,
-                highContrast: opts.highContrast
+                highContrast: opts.highContrast,
+                cdnUrl: opts.cdnUrl
             };
             this.applyAspectRatio();
             this.scheduleFrameCleanup();

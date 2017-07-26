@@ -6,7 +6,7 @@ namespace Data {
     /**
      * get the current value of a shared variable
      */
-    //% weight=50
+    //% weight=100
     //% blockId=get_shared_string
     //% block="shared string %name"
     export function getSharedString(name: string): string {
@@ -16,7 +16,7 @@ namespace Data {
     /**
      * get the current value of a shared variable
      */
-    //% weight=50
+    //% weight=90
     //% blockId=get_shared_number
     //% block="shared number %name"
     export function getSharedNumber(name: string): number {
@@ -26,7 +26,7 @@ namespace Data {
     /**
      * get the current value of a shared variable
      */
-    //% weight=50
+    //% weight=80
     //% blockId=get_shared_boolean
     //% block="shared true/false value %name"
     export function getSharedBoolean(name: string): boolean {
@@ -36,11 +36,21 @@ namespace Data {
     /**
      * get the current value of a shared variable
      */
-    //% weight=50
-    //% blockId=get_shared_list
-    //% block="shared list %name"
-    export function getSharedList(name: string): string[] {
-        return getSharedListImpl(name);
+    //% weight=70
+    //% blockId=get_shared_string_list
+    //% block="shared list of texts %name"
+    export function getSharedStringList(name: string): string[] {
+        return getSharedStringListImpl(name);
+    }
+
+  /**
+     * get the current value of a shared variable
+     */
+    //% weight=60
+    //% blockId=get_shared_number_list
+    //% block="shared list of numbers %name"
+    export function getSharedNumberList(name: string): number[] {
+        return getSharedNumberListImpl(name);
     }
 
     /**
@@ -56,7 +66,7 @@ namespace Data {
     /**
      * get the current value of a shared variable
      */
-    //% weight=50
+    //% weight=40
     //% blockId=set_shared_number
     //% block="set shared number %name|to %v"
     export function setSharedNumber(name: string, v: number): void {
@@ -66,7 +76,7 @@ namespace Data {
     /**
      * get the current value of a shared variable
      */
-    //% weight=50
+    //% weight=30
     //% blockId=set_shared_boolean
     //% block="set shared true/false value %name|to %v"
     export function setSharedBoolean(name: string, v: boolean): void {
@@ -76,28 +86,37 @@ namespace Data {
     /**
      * get the current value of a shared variable
      */
-    //% weight=50
-    //% blockId=set_shared_list
-    //% block="set shared list %name|to %v"
-    //% acceptArrays=true
-    export function setSharedList(name: string, v: string[]): void {
-        return setSharedListImpl(name, v);
+    //% weight=29
+    //% blockId=set_shared_string_list
+    //% block="set shared list of texts %name|to %v"
+    export function setSharedStringList(name: string, v: string[]): void {
+        return setSharedStringListImpl(name, v);
+    }
+
+   /**
+     * get the current value of a shared variable
+     */
+    //% weight=28
+    //% blockId=set_shared_number_list
+    //% block="set shared list of numbers %name|to %v"
+    export function setSharedNumberList(name: string, v: number[]): void {
+        return setSharedNumberListImpl(name, v);
     }
 
     /**
      * when the UI is updated, execute some code
     **/
-    //% weight=30
+    //% weight=27
     //% blockId=on_shared_change
     //% block="When shared %name|changes"
-    export function onSharedVariableChange(name: string, body: Action): void {
+    export function onSharedVariableChange(name: string, body: ()=>void): void {
         onSharedVariableChangeImpl(name, body);
     }
 
     /**
      * convert number to text
      */
-    //% weight=20
+    //% weight=26
     //% blockId=convert_number_to_text
     //% block="To text %value"
     export function convertNumberToText(value: number): string {
