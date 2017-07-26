@@ -329,18 +329,27 @@ namespace pxsim.Sensors {
     }    
 
     //%
-    export function getNearbyDevicesImpl(): string[] {
-        return [];
+    export function scanForNearbyDevicesImpl(scanDurationMilliseconds: number, callback: pxsim.RefAction): void {
     }
 
     //%
-    export function getBluetoothStatusImpl(): boolean {
-        return false;
+    export function getBlueToothStatusImpl(): string {
+        return "";
     }
 
     //%
     export function toggleBlueToothStatusImpl(): void {
+        // TODO: make this function support a callback as toggling the antenna
+        // on/off takes time and the bt lib suports statii: on/turning_on/off/turning_off
+    }
 
+    //%
+    export function getDeviceListImpl(): string[] {
+        return [];
+    }
+
+    //%
+    export function connectToDeviceImpl(deviceName: string, callback: pxsim.RefAction): void {
     }
 }
 

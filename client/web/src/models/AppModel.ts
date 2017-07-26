@@ -8,7 +8,7 @@ import * as UIBlockConfig from '../blocks/UIBlockConfig';
 import * as UIBlockDefs from '../blocks/UIBlockDefs';
 import * as UIMethodDefs from '../blocks/UIMethodDefs';
 import * as SpriteCanvasDefs from '../blocks/SpriteCanvasDefs';
-import { CodegenRuntime, CodegenHost } from '../../../shared/src/util/CodegenRuntime';
+import { CodegenRuntime, CodegenHost, BlueTooth } from '../../../shared/src/util/CodegenRuntime';
 import { SimplePromptModel } from './SimplePromptModel';
 import { InputFilePromptModel } from './InputFilePromptModel';
 import * as svcConn from '../util/ServiceConnection';
@@ -35,6 +35,8 @@ export class AppModel extends ModelWithEvents<AppModelData>
             statusMessage: null
         });
         CodegenRuntime.setCodegenHost(this);
+
+        this.blueTooth.codeGenHost = this;
     }
 
     // CodegenHost interface ///////////////////////////////////////////////////
@@ -50,6 +52,50 @@ export class AppModel extends ModelWithEvents<AppModelData>
         jsutil.notYetImplemented('createRefCollection');
         return null;
     }
+    
+    blueTooth: BlueTooth = {
+
+        btState: "off",
+        devices: [],
+        deviceNames: null,
+        codeGenHost: null,
+        scanning: false,
+        scanningCompleteCallback: null,
+
+        toggleBlueToothState: function toggleBlueToothState(): string {
+            this.btState = !this.btState;
+            return this.btState;
+        },
+        getBlueToothStatus: function getBlueToothStatus(): string {
+            return this.btState;
+        },
+        scanForDevices(scanDurationMilliseconds: number, callback: any): void {
+            console.log("scanForDevices - started scanning");
+
+            setTimeout(function(caller: any) {
+                
+                // "scan" for devices
+                // caller.devices = Array<string>();
+                // let numDevices: number = Math.floor((Math.random() * 5));
+                // for(var i: number = 0; i < numDevices; i++) {
+                //     caller.devices.push("device" + i);
+                // }
+
+                console.log("scanForDevices - completed scanning");
+
+                // call callback function
+                callback();
+
+            }, scanDurationMilliseconds, this);
+        },
+        getDeviceList(): any {
+            return this.devices;
+        },
+        connectToDevice(deviceName: string, callback: any): void {
+            // TODO: simulate
+        }
+    }
+
     //
     ////////////////////////////////////////////////////////////////////////////
 

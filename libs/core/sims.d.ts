@@ -233,16 +233,24 @@ declare namespace Sensors {
     function fooImpl(arg: string): void;
 
     //%
-    //% shim=Sensors::getNearbyDevicesImpl
-    function getNearbyDevicesImpl(): string[];
+    //% shim=Sensors::scanForNearbyDevicesImpl
+    function scanForNearbyDevicesImpl(scanDurationMilliseconds: number, callback: () => void): void;
 
     //%
-    //% shim=Sensors::getBluetoothStatusImpl
-    function getBluetoothStatusImpl(): boolean;
+    //% shim=Sensors::getBlueToothStatusImpl
+    function getBlueToothStatusImpl(): string;
 
     //%
     //% shim=Sensors::toggleBlueToothStatusImpl
     function toggleBlueToothStatusImpl(): void;
+
+    //%
+    //% shim=Sensors::getDeviceListImpl
+    function getDeviceListImpl(): string[];
+
+    //%
+    //% shim=Sensors::connectToDeviceImpl
+    function connectToDeviceImpl(deviceName: string, callback: () => void): void;
 
 }
 

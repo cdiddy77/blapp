@@ -1593,7 +1593,7 @@ var pxt;
                     url: '/blocks/arrays/length',
                     category: 'arrays',
                     block: {
-                        LISTS_LENGTH_TITLE: pxt.Util.lf("length of %1")
+                        LISTS_LENGTH_TITLE: pxt.Util.lf("length of array %1")
                     }
                 },
                 'lists_index_get': {
@@ -1677,7 +1677,7 @@ var pxt;
                     url: 'types/string/length',
                     category: 'text',
                     block: {
-                        TEXT_LENGTH_TITLE: pxt.Util.lf("length of %1")
+                        TEXT_LENGTH_TITLE: pxt.Util.lf("length of text %1")
                     }
                 },
                 'text_join': {
@@ -1762,6 +1762,11 @@ var pxt;
             return hasNavigator() && /arm/i.test(navigator.platform);
         }
         BrowserUtils.isARM = isARM;
+        // Detects if we are running inside the UWP runtime (Edge)
+        function isUwpEdge() {
+            return typeof window !== "undefined" && !!window.Windows;
+        }
+        BrowserUtils.isUwpEdge = isUwpEdge;
         /*
         Notes on browser detection
     
@@ -2080,6 +2085,7 @@ var pxt;
         // overriden by targets
         commands.deployCoreAsync = undefined;
         commands.browserDownloadAsync = undefined;
+        commands.saveOnlyAsync = undefined;
     })(commands = pxt.commands || (pxt.commands = {}));
 })(pxt || (pxt = {}));
 /// <reference path="../localtypings/pxtarget.d.ts"/>
@@ -2283,6 +2289,12 @@ var pxt;
                 var indexedInstanceIdx = -1;
                 // replace #if 0 .... #endif with newlines
                 src = src.replace(/^\s*#\s*if\s+0\s*$[^]*?^\s*#\s*endif\s*$/mg, function (f) { return f.replace(/[^\n]/g, ""); });
+                // special handling of C++ namespace that ends with Methods (e.g. FooMethods)
+                // such a namespace will be converted into a TypeScript interface
+                // this enables simple objects with methods to be defined. See, for example:
+                // https://github.com/Microsoft/pxt-microbit/blob/master/libs/core/buffer.cpp
+                // within that namespace, the first parameter of each function should have
+                // the type Foo
                 function interfaceName() {
                     var n = currNs.replace(/Methods$/, "");
                     if (n == currNs)
@@ -2355,18 +2367,21 @@ var pxt;
                 shimsDTS.setNs("");
                 src.split(/\r?\n/).forEach(function (ln) {
                     ++lineNo;
+                    // remove comments (NC = no comments)
                     var lnNC = ln.replace(/\/\/.*/, "").replace(/\/\*/, "");
                     if (inEnum && lnNC.indexOf("}") >= 0) {
                         inEnum = false;
                         enumsDTS.write("}");
                     }
                     if (inEnum) {
+                        // parse the enum case, with lots of optional stuff (?)
                         var mm = /^\s*(\w+)\s*(=\s*(.*?))?,?\s*$/.exec(lnNC);
                         if (mm) {
                             var nm = mm[1];
                             var v = mm[3];
                             var opt = "";
                             if (v) {
+                                // user-supplied value
                                 v = v.trim();
                                 var curr = U.lookup(enumVals, v);
                                 if (curr != null) {
@@ -2378,6 +2393,7 @@ var pxt;
                                     err("cannot determine value of " + lnNC);
                             }
                             else {
+                                // no user-supplied value
                                 enumVal++;
                                 v = enumVal + "";
                             }
@@ -2387,6 +2403,7 @@ var pxt;
                             enumsDTS.write(ln);
                         }
                     }
+                    // TODO: why do we allow class/struct here?
                     var enM = /^\s*enum\s+(|class\s+|struct\s+)(\w+)\s*({|$)/.exec(lnNC);
                     if (enM) {
                         inEnum = true;
@@ -2466,10 +2483,12 @@ var pxt;
                         }
                         return;
                     }
+                    // function definition
                     m = /^\s*(\w+)([\*\&]*\s+[\*\&]*)(\w+)\s*\(([^\(\)]*)\)\s*(;\s*$|\{|$)/.exec(ln);
                     if (currAttrs && m) {
                         indexedInstanceAttrs = null;
                         var parsedAttrs_1 = pxtc.parseCommentString(currAttrs);
+                        // top-level functions (outside of a namespace) are not permitted
                         if (!currNs)
                             err("missing namespace declaration");
                         var retTp = (m[1] + m[2]).replace(/\s+/g, "");
@@ -2855,6 +2874,10 @@ var pxt;
         }
         cpp.unpackSourceFromHexFileAsync = unpackSourceFromHexFileAsync;
         function unpackSourceFromHexAsync(dat) {
+            function error(e) {
+                pxt.debug(e);
+                return Promise.reject(new Error(e));
+            }
             var rawEmbed;
             var bin = pxt.appTarget.compile.useUF2 ? ts.pxtc.UF2.toBin(dat) : undefined;
             if (bin) {
@@ -2864,16 +2887,12 @@ var pxt;
                 var str = fromUTF8Bytes(dat);
                 rawEmbed = extractSource(str || "");
             }
-            if (!rawEmbed)
-                return undefined;
-            if (!rawEmbed.meta || !rawEmbed.text) {
-                pxt.debug("This .hex file doesn't contain source.");
-                return undefined;
+            if (!rawEmbed || !rawEmbed.meta || !rawEmbed.text) {
+                return error("This .hex file doesn't contain source.");
             }
             var hd = JSON.parse(rawEmbed.meta);
             if (!hd) {
-                pxt.debug("This .hex file is not valid.");
-                return undefined;
+                return error("This .hex file is not valid.");
             }
             else if (hd.compression == "LZMA") {
                 return pxt.lzmaDecompressAsync(rawEmbed.text)
@@ -2888,8 +2907,7 @@ var pxt;
                 });
             }
             else if (hd.compression) {
-                pxt.debug("Compression type " + hd.compression + " not supported.");
-                return undefined;
+                return error("Compression type " + hd.compression + " not supported.");
             }
             else {
                 return Promise.resolve({ source: fromUTF8Bytes(rawEmbed.text) });
@@ -3504,8 +3522,10 @@ var pxt;
                 if (m.subitems && m.subitems.length > 0) {
                     if (lev == 0)
                         templ = toc["top-dropdown"];
-                    else
+                    else if (lev == 1)
                         templ = toc["inner-dropdown"];
+                    else
+                        templ = toc["nested-dropdown"];
                     mparams["ITEMS"] = m.subitems.map(function (e) { return recTOC(e, lev + 1); }).join("\n");
                 }
                 else {
@@ -3522,7 +3542,7 @@ var pxt;
             var breadcrumbHtml = '';
             if (breadcrumb.length > 1) {
                 breadcrumbHtml = "\n            <div class=\"ui breadcrumb\">\n                " + breadcrumb.map(function (b, i) {
-                    return ("<a class=\"" + (i == breadcrumb.length - 1 ? "active" : "") + " section\" \n                        href=\"" + html2Quote(b.href) + "\">" + html2Quote(b.name) + "</a>");
+                    return ("<a class=\"" + (i == breadcrumb.length - 1 ? "active" : "") + " section\"\n                        href=\"" + html2Quote(b.href) + "\">" + html2Quote(b.name) + "</a>");
                 })
                     .join('<i class="right chevron icon divider"></i>') + "\n            </div>";
             }
@@ -6427,6 +6447,7 @@ var ts;
         pxtc.U = pxtc.Util;
         pxtc.ON_START_TYPE = "pxt-on-start";
         pxtc.ON_START_COMMENT = pxtc.U.lf("on start");
+        pxtc.HANDLER_COMMENT = pxtc.U.lf("code goes here");
         pxtc.TS_STATEMENT_TYPE = "typescript_statement";
         pxtc.TS_OUTPUT_TYPE = "typescript_expression";
         pxtc.BINARY_JS = "binary.js";
@@ -6546,7 +6567,7 @@ var ts;
         }
         pxtc.emptyExtInfo = emptyExtInfo;
         var numberAttributes = ["weight", "imageLiteral"];
-        var booleanAttributes = ["advanced"];
+        var booleanAttributes = ["advanced", "externallyLoadedBlock"];
         function parseCommentString(cmt) {
             var res = {
                 paramDefl: {},
@@ -6556,10 +6577,17 @@ var ts;
             var didSomething = true;
             while (didSomething) {
                 didSomething = false;
-                cmt = cmt.replace(/\/\/%[ \t]*([\w\.]+)(=(("[^"\n]+")|'([^'\n]+)'|([^\s]*)))?/, function (f, n, d0, d1, v0, v1, v2) {
+                cmt = cmt.replace(/\/\/%[ \t]*([\w\.]+)(=(("[^"\n]*")|'([^'\n]*)'|([^\s]*)))?/, function (f, n, d0, d1, v0, v1, v2) {
                     var v = v0 ? JSON.parse(v0) : (d0 ? (v0 || v1 || v2) : "true");
+                    if (!v)
+                        v = "";
                     if (pxtc.U.endsWith(n, ".defl")) {
-                        res.paramDefl[n.slice(0, n.length - 5)] = v;
+                        if (v.indexOf(" ") > -1) {
+                            res.paramDefl[n.slice(0, n.length - 5)] = "\"" + v + "\"";
+                        }
+                        else {
+                            res.paramDefl[n.slice(0, n.length - 5)] = v;
+                        }
                     }
                     else if (pxtc.U.endsWith(n, ".fieldEditor")) {
                         if (!res.paramFieldEditor)
@@ -6614,6 +6642,9 @@ var ts;
             if (res.trackArgs) {
                 res.trackArgs = res.trackArgs.split(/[ ,]+/).map(function (s) { return parseInt(s) || 0; });
             }
+            if (res.blockExternalInputs && !res.inlineInputMode) {
+                res.inlineInputMode = "external";
+            }
             res.paramHelp = {};
             res.jsDoc = "";
             cmt = cmt.replace(/\/\*\*([^]*?)\*\//g, function (full, doccmt) {
@@ -6622,8 +6653,20 @@ var ts;
                     res.paramHelp[name] = desc;
                     if (!res.paramDefl[name]) {
                         var m = /\beg\.?:\s*(.+)/.exec(desc);
-                        if (m) {
-                            res.paramDefl[name] = m[1].trim() ? m[1].split(/,\s*/).map(function (e) { return e.trim(); })[0] : undefined;
+                        if (m && m[1]) {
+                            var defaultValue = /(?:"([^"]*)")|(?:'([^']*)')|(?:([^\s,]+))/g.exec(m[1]);
+                            if (defaultValue) {
+                                var val = defaultValue[1] || defaultValue[2] || defaultValue[3];
+                                if (!val)
+                                    val = "";
+                                // If there are spaces in the value, it means the value was surrounded with quotes, so add them back
+                                if (val.indexOf(" ") > -1) {
+                                    res.paramDefl[name] = "\"" + val + "\"";
+                                }
+                                else {
+                                    res.paramDefl[name] = val;
+                                }
+                            }
                         }
                     }
                     return "";
@@ -6642,6 +6685,14 @@ var ts;
                 }
                 catch (e) {
                     res.subcategories = undefined;
+                }
+            }
+            if (res.groups) {
+                try {
+                    res.groups = JSON.parse(res.groups);
+                }
+                catch (e) {
+                    res.groups = undefined;
                 }
             }
             return res;
@@ -8332,7 +8383,13 @@ var pxt;
         Cloud.downloadScriptFilesAsync = downloadScriptFilesAsync;
         function downloadMarkdownAsync(docid, locale, live) {
             docid = docid.replace(/^\//, "");
-            var url = "md/" + pxt.appTarget.id + "/" + docid + "?targetVersion=" + encodeURIComponent(pxt.webConfig.targetVersion);
+            var url;
+            if (pxt.webConfig.isStatic) {
+                url = "/" + docid + ".md?targetVersion=" + encodeURIComponent(pxt.webConfig.targetVersion);
+            }
+            else {
+                url = "md/" + pxt.appTarget.id + "/" + docid + "?targetVersion=" + encodeURIComponent(pxt.webConfig.targetVersion);
+            }
             if (locale != "en") {
                 url += "&lang=" + encodeURIComponent(Util.userLanguage());
                 if (live)
@@ -8350,6 +8407,14 @@ var pxt;
                     else
                         return resp.text;
                 });
+            else if (pxt.webConfig.isStatic) {
+                return Util.requestAsync({
+                    url: url,
+                    headers: { "Authorization": Cloud.localToken },
+                    method: "GET",
+                    allowHttpErrors: true
+                }).then(function (resp) { return resp.text; });
+            }
             else
                 return privateGetTextAsync(url);
         }
@@ -8364,7 +8429,15 @@ var pxt;
         Cloud.privatePostAsync = privatePostAsync;
         function isLoggedIn() { return !!Cloud.accessToken; }
         Cloud.isLoggedIn = isLoggedIn;
-        function isOnline() { return _isOnline; }
+        function isNavigatorOnline() {
+            return navigator && navigator.onLine;
+        }
+        function isOnline() {
+            if (typeof navigator !== "undefined" && isNavigatorOnline()) {
+                _isOnline = true;
+            }
+            return _isOnline;
+        }
         Cloud.isOnline = isOnline;
         function getServiceUrl() {
             return Cloud.apiRoot.replace(/\/api\/$/, "");

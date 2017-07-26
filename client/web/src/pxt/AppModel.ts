@@ -1,7 +1,7 @@
 /// <reference path="../../../../node_modules/pxt-core/built/pxtsim.d.ts"/>
 import * as jsutil from '../../../shared/src/util/jsutil';
 import { ModelWithEvents } from '../models/ModelWithEvents';
-import { CodegenRuntime, CodegenHost } from '../../../shared/src/util/CodegenRuntime';
+import { CodegenRuntime, CodegenHost, BlueTooth } from '../../../shared/src/util/CodegenRuntime';
 import * as svcConn from '../util/ServiceConnection';
 // import * as pxtexec from '../../../shared/src/util/PxtExec';
 
@@ -20,6 +20,8 @@ export class AppModel extends ModelWithEvents<AppModelData>
             pairingCode: null
         });
         CodegenRuntime.setCodegenHost(this);
+
+        this.blueTooth.codeGenHost = this;
     }
 
     // CodegenHost interface ///////////////////////////////////////////////////
@@ -44,6 +46,51 @@ export class AppModel extends ModelWithEvents<AppModelData>
     }
     createRefCollection(): any {
         return new pxsim.RefCollection();
+    }
+
+    blueTooth: BlueTooth = {
+
+        btState: "off",
+        devices: [],
+        deviceNames: null,
+        codeGenHost: null,
+        scanning: false,
+        scanningCompleteCallback: null,
+
+        toggleBlueToothState: function toggleBlueToothState(): string {
+            this.btState = this.btState == "on" ? "off" : "on";
+            return this.btState;
+        },
+        getBlueToothStatus: function getBlueToothStatus(): string {
+            return this.btState;
+        },
+        scanForDevices(scanDurationMilliseconds: number, callback: any): void {
+            console.log("scanForDevices - started scanning");
+
+            setTimeout(function(caller: BlueTooth) {
+                
+                // "scan" for devices
+                caller.devices = [];
+                caller.deviceNames = caller.codeGenHost.createRefCollection();
+                let numDevices: number = Math.floor((Math.random() * 5));
+                for(var i: number = 0; i < numDevices; i++) {
+                    caller.deviceNames.push("device" + i);
+                }
+
+                console.log("scanForDevices - completed scanning");
+
+                // call callback function
+                caller.codeGenHost.runFiberAsync(callback);
+
+            }, scanDurationMilliseconds, this);
+        },
+        getDeviceList(): any {
+            return this.deviceNames;
+        },
+        connectToDevice(deviceName: string, callback: any): void {
+            // TODO: simulate
+            console.log("Attempting to connect to device: " + deviceName);
+        }
     }
     //
     ////////////////////////////////////////////////////////////////////////////

@@ -285,19 +285,29 @@ var pxsim;
         }
         Sensors.fooImpl = fooImpl;
         //%
-        function getNearbyDevicesImpl() {
-            return [];
+        function scanForNearbyDevicesImpl(scanDurationMilliseconds, callback) {
         }
-        Sensors.getNearbyDevicesImpl = getNearbyDevicesImpl;
+        Sensors.scanForNearbyDevicesImpl = scanForNearbyDevicesImpl;
         //%
-        function getBluetoothStatusImpl() {
-            return false;
+        function getBlueToothStatusImpl() {
+            return "";
         }
-        Sensors.getBluetoothStatusImpl = getBluetoothStatusImpl;
+        Sensors.getBlueToothStatusImpl = getBlueToothStatusImpl;
         //%
         function toggleBlueToothStatusImpl() {
+            // TODO: make this function support a callback as toggling the antenna
+            // on/off takes time and the bt lib suports statii: on/turning_on/off/turning_off
         }
         Sensors.toggleBlueToothStatusImpl = toggleBlueToothStatusImpl;
+        //%
+        function getDeviceListImpl() {
+            return [];
+        }
+        Sensors.getDeviceListImpl = getDeviceListImpl;
+        //%
+        function connectToDeviceImpl(deviceName, callback) {
+        }
+        Sensors.connectToDeviceImpl = connectToDeviceImpl;
     })(Sensors = pxsim.Sensors || (pxsim.Sensors = {}));
 })(pxsim || (pxsim = {}));
 /// <reference path="../node_modules/pxt-core/typings/globals/bluebird/index.d.ts"/>

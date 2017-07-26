@@ -28,10 +28,27 @@ import { CanvasBlock } from '../components/CanvasBlock';
 
 import * as BlockThemes from '../util/BlockThemes';
 
+
+export interface BlueTooth {
+    btState: string;
+    devices: any[];
+    deviceNames: pxsim.RefCollection;
+    codeGenHost: any;
+    scanning: boolean;
+    scanningCompleteCallback: pxsim.RefAction;
+
+    toggleBlueToothState(): string;
+    getBlueToothStatus(): string;   
+    scanForDevices(scanDurationMilliseconds: number, callback: pxsim.RefAction): void;
+    getDeviceList(): pxsim.RefCollection;
+    connectToDevice(deviceName: string, callback: pxsim.RefAction): void;
+}
+
 export interface CodegenHost {
     runFiberAsync(a: any, arg0?: any, arg1?: any, arg2?: any): Promise<any>;
     runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void;
     createRefCollection():any;
+    blueTooth: BlueTooth; 
 }
 
 export type EdgeKind = 'none' | 'left' | 'top' | 'right' | 'bottom';
