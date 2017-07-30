@@ -1,7 +1,7 @@
 {
   "id": "blapp",
-  "name": "Blapp PXT",
-  "title": "Blapp PXT Target",
+  "name": "MakeCode Apps",
+  "title": "MakeCode Apps Target",
   "corepkg": "core",
   "cloud": {
     "workspace": false,

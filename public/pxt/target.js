@@ -1,7 +1,7 @@
 var pxtTargetBundle = {
   "id": "blapp",
-  "name": "Blapp PXT",
-  "title": "Blapp PXT Target",
+  "name": "MakeCode Apps",
+  "title": "MakeCode Apps Target",
   "corepkg": "core",
   "cloud": {
     "workspace": false,
@@ -400,8 +400,8 @@ var pxtTargetBundle = {
       }
     ],
     "id": "blapp",
-    "title": "Blapp PXT Target",
-    "name": "Blapp PXT",
+    "title": "MakeCode Apps Target",
+    "name": "MakeCode Apps",
     "htmlDocIncludes": {},
     "locales": {
       "pl": {
