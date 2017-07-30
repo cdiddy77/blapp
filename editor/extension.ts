@@ -1,13 +1,13 @@
 /// <reference path="../node_modules/pxt-core/built/pxteditor.d.ts" />
 
-const groupDirectionOptions = [
+const groupDirectionOptions: [string, string][] = [
     ["column", "UIGroupDirection.Column"],
     ["row", "UIGroupDirection.Row"],
     ["reverse-column", "UIGroupDirection.ReverseColumn"],
     ["reverse-row", "UIGroupDirection.ReverseRow"]
 ];
 
-const groupClassOptions= [
+const groupClassOptions: [string, string][] = [
     ["panel", "UIGroupClass.Panel"],
     ["frame", "UIGroupClass.Frame"],
     ["framed panel", "UIGroupClass.Framepanel"],
@@ -30,7 +30,7 @@ const textClassOptions: [string, string][] = [
     ["(none)", "UITextClass.None"],
 ];
 
-const buttonClassOptions: [string, string][]  = [
+const buttonClassOptions: [string, string][] = [
     ["small", "UIButtonClass.Small"],
     ["medium", "UIButtonClass.Medium"],
     ["large", "UIButtonClass.Large"],
@@ -45,7 +45,7 @@ class UIBlockDef {
     private message: string = "";
     private currentArg = 1;
 
-    constructor (public type: string, private colour: string, private label: string) {
+    constructor(public type: string, private colour: string, private label: string) {
         this.message = label;
     }
 
@@ -92,12 +92,12 @@ class UIBlockDef {
         }, label);
     }
 
-    dropdown(values: [string, string][]) {
+    dropdown(name: string, values: [string, string][], label?: string) {
         return this.field({
             "type": "field_dropdown",
-            "name": "direction",
+            "name": name,
             "options": values
-        })
+        }, label);
     }
 
     color(color: string): this {
@@ -125,40 +125,40 @@ class UIBlockDef {
 
 
 namespace pxt.editor {
-    initExtensionsAsync = function(opts: pxt.editor.ExtensionOptions): Promise<pxt.editor.ExtensionResult> {
+    initExtensionsAsync = function (opts: pxt.editor.ExtensionOptions): Promise<pxt.editor.ExtensionResult> {
         pxt.debug('loading blapp target extensions...')
         const res: pxt.editor.ExtensionResult = {
             blockDefinitions: [
-            new UIBlockDef("scroller_element", "#80A55B", "SCROLLER")
-                .textField("name", "name")
-                .checkbox("flex", false, "flex")
-                .checkbox("horz", false, "horizontal")
-                .field(groupClassOptions)
-                .input("style", "Array", "style")
-                .handler("children", "children")
-                .toBlock(),
-            new UIBlockDef("group_element", "#5B6DA5", "GROUP")
-                .textField("name", "name")
-                .checkbox("flex", false, "flex")
-                .field(groupDirectionOptions)
-                .field(groupClassOptions)
-                .input("style", "Array", "style")
-                .handler("children", "children")
-                .toBlock(),
-            new UIBlockDef("button_element", "#80A55B", "BUTTON")
-                .textField("name", "name")
-                .checkbox("flex", false, "flex")
-                .dropdown(buttonClassOptions)
-                .input("style", "Array", "style")
-                .handler("children", "children")
-                .handler("whenPressed", "when pressed")
-                .toBlock(),
-            new UIBlockDef("text_element", "#805BA5", "TEXT")
-                .checkbox("flex", false, "flex")
-                .dropdown(textClassOptions)
-                .input("value", "String", "")
-                .input("style", "Array", "style")
-                .toBlock()]
+                new UIBlockDef("scroller_element", "#80A55B", "SCROLLER")
+                    .textField("name", "name")
+                    .checkbox("flex", false, "flex")
+                    .checkbox("horz", false, "horizontal")
+                    .dropdown("className", groupClassOptions)
+                    .input("style", "Array", "style")
+                    .handler("children", "children")
+                    .toBlock(),
+                new UIBlockDef("group_element", "#5B6DA5", "GROUP")
+                    .textField("name", "name")
+                    .dropdown("direction", groupDirectionOptions, "dir")
+                    .checkbox("flex", false, "flex")
+                    .dropdown("className", groupClassOptions)
+                    .input("style", "Array", "style")
+                    .handler("children", "children")
+                    .toBlock(),
+                new UIBlockDef("button_element", "#80A55B", "BUTTON")
+                    .textField("name", "name")
+                    .checkbox("flex", false, "flex")
+                    .dropdown("className", buttonClassOptions)
+                    .input("style", "Array", "style")
+                    .handler("children", "children")
+                    .handler("whenPressed", "when pressed")
+                    .toBlock(),
+                new UIBlockDef("text_element", "#805BA5", "TEXT")
+                    .checkbox("flex", false, "flex")
+                    .dropdown("className", textClassOptions)
+                    .input("value", "String", "")
+                    .input("style", "Array", "style")
+                    .toBlock()]
         };
         return Promise.resolve<pxt.editor.ExtensionResult>(res);
     }

@@ -81,12 +81,12 @@ var UIBlockDef = (function () {
             "text": defaultValue
         }, label);
     };
-    UIBlockDef.prototype.dropdown = function (values) {
+    UIBlockDef.prototype.dropdown = function (name, values, label) {
         return this.field({
             "type": "field_dropdown",
-            "name": "direction",
+            "name": name,
             "options": values
-        });
+        }, label);
     };
     UIBlockDef.prototype.color = function (color) {
         this.colour = color;
@@ -122,29 +122,29 @@ var pxt;
                         .textField("name", "name")
                         .checkbox("flex", false, "flex")
                         .checkbox("horz", false, "horizontal")
-                        .field(groupClassOptions)
+                        .dropdown("className", groupClassOptions)
                         .input("style", "Array", "style")
                         .handler("children", "children")
                         .toBlock(),
                     new UIBlockDef("group_element", "#5B6DA5", "GROUP")
                         .textField("name", "name")
+                        .dropdown("direction", groupDirectionOptions, "dir")
                         .checkbox("flex", false, "flex")
-                        .field(groupDirectionOptions)
-                        .field(groupClassOptions)
+                        .dropdown("className", groupClassOptions)
                         .input("style", "Array", "style")
                         .handler("children", "children")
                         .toBlock(),
                     new UIBlockDef("button_element", "#80A55B", "BUTTON")
                         .textField("name", "name")
                         .checkbox("flex", false, "flex")
-                        .dropdown(buttonClassOptions)
+                        .dropdown("className", buttonClassOptions)
                         .input("style", "Array", "style")
                         .handler("children", "children")
                         .handler("whenPressed", "when pressed")
                         .toBlock(),
                     new UIBlockDef("text_element", "#805BA5", "TEXT")
                         .checkbox("flex", false, "flex")
-                        .dropdown(textClassOptions)
+                        .dropdown("className", textClassOptions)
                         .input("value", "String", "")
                         .input("style", "Array", "style")
                         .toBlock()
