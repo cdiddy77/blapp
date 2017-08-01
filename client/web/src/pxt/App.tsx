@@ -23,17 +23,10 @@ export default class App extends React.Component<AppProps, AppState>{
         let modelData = this.props.model.data;
         return (
             <div id='appRoot'>
-                <div id='pairingCode'>Pairing code: {modelData.pairingCode}</div>
-                <TabbedArea activeIndex={1}>
-                    <TabPane display="Code">
-                        <div className='codeWrapper'>
-                            <pre className='codePre'>{modelData.code}</pre>
-                        </div>
-                    </TabPane>
-                    <TabPane display={modelData.lastEvalError ? 'Preview(ERR)' : 'Preview'}>
-                        <div className='previewWrapper'><Target model={this.props.model} /></div>
-                    </TabPane>
-                </TabbedArea>
+                <div id='pairingCode'>Pairing code: {modelData.pairingCode}&nbsp;&nbsp;&nbsp;
+                    <button type='button' className='btn btn-link' onClick={() => this.props.model.resetPairingCode()}>reset</button>
+                </div><br />&nbsp;
+                <div className='previewWrapper'><Target model={this.props.model} /></div>
             </div>
         );
     }

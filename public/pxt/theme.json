@@ -29,6 +29,8 @@
       "snap": true
     }
   },
+  "sideDoc": "pxt/docs/tutorials/getting-started",
+  "extendEditor": true,
   "TOC": [
     {
       "name": "Blocks",
@@ -374,8 +376,8 @@
     }
   ],
   "id": "blapp",
-  "title": "Blapp PXT Target",
-  "name": "Blapp PXT",
+  "title": "MakeCode Apps Target",
+  "name": "MakeCode Apps",
   "htmlDocIncludes": {},
   "locales": {
     "pl": {

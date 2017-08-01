@@ -1,8 +1,8 @@
 {
   "lang": "en",
   "dir": "ltr",
-  "name": "Blapp PXT",
-  "short_name": "Blapp PXT",
+  "name": "MakeCode Apps",
+  "short_name": "MakeCode Apps",
   "icons": [
     {
       "src": "/static/icons/android-chrome-36x36.png",

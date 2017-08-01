@@ -1,7 +1,7 @@
 {
   "id": "blapp",
-  "name": "Blapp PXT",
-  "title": "Blapp PXT Target",
+  "name": "MakeCode Apps",
+  "title": "MakeCode Apps Target",
   "corepkg": "core",
   "cloud": {
     "workspace": false,
@@ -34,9 +34,9 @@
       ]
     },
     "files": {
-      "main.blocks": "<xml xmlns=\"http://www.w3.org/1999/xhtml\">\n</xml>",
-      "main.ts": " ",
-      "README.md": " "
+      "README.md": " ",
+      "main.blocks": "<xml xmlns=\"http://www.w3.org/1999/xhtml\">\n<block type=\"pxt-on-start\"/>\n<block type=\"user_interface\"/>\n</xml>",
+      "main.ts": " "
     }
   },
   "tsprj": {
@@ -53,8 +53,8 @@
       ]
     },
     "files": {
-      "main.ts": " ",
-      "README.md": " "
+      "README.md": " ",
+      "main.ts": " "
     }
   },
   "compile": {
@@ -64,6 +64,6 @@
   },
   "versions": {
     "target": "0.1.0",
-    "pxt": "1.7.2"
+    "pxt": "1.7.17"
   }
 }

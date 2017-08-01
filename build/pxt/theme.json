@@ -29,6 +29,8 @@
       "snap": true
     }
   },
+  "sideDoc": "pxt/docs/tutorials/getting-started",
+  "extendEditor": true,
   "TOC": [
     {
       "name": "Blocks",
@@ -366,87 +368,16 @@
           "subitems": [],
           "path": "/streaming",
           "prevName": "Offline support",
-          "prevPath": "/offline",
-          "nextName": "Packages",
-          "nextPath": "/packages"
+          "prevPath": "/offline"
         }
       ],
       "prevName": "Boolean",
       "prevPath": "/types/boolean"
-    },
-    {
-      "name": "",
-      "subitems": [
-        {
-          "name": "Packages",
-          "subitems": [
-            {
-              "name": "Build your own",
-              "subitems": [],
-              "path": "/packages/build-your-own",
-              "prevName": "Packages",
-              "prevPath": "/packages",
-              "nextName": "Approval",
-              "nextPath": "/packages/approval"
-            },
-            {
-              "name": "Approval",
-              "subitems": [],
-              "path": "/packages/approval",
-              "prevName": "Build your own",
-              "prevPath": "/packages/build-your-own",
-              "nextName": "Versioning",
-              "nextPath": "/packages/versioning"
-            },
-            {
-              "name": "Versioning",
-              "subitems": [],
-              "path": "/packages/versioning",
-              "prevName": "Approval",
-              "prevPath": "/packages/approval",
-              "nextName": "Command Line Interface",
-              "nextPath": "/cli"
-            }
-          ],
-          "path": "/packages",
-          "prevName": "Streaming",
-          "prevPath": "/streaming",
-          "nextName": "Build your own",
-          "nextPath": "/packages/build-your-own"
-        },
-        {
-          "name": "Command Line Interface",
-          "subitems": [],
-          "path": "/cli",
-          "prevName": "Versioning",
-          "prevPath": "/packages/versioning",
-          "nextName": "Visual Studio Code support",
-          "nextPath": "/code"
-        },
-        {
-          "name": "Visual Studio Code support",
-          "subitems": [],
-          "path": "/code",
-          "prevName": "Command Line Interface",
-          "prevPath": "/cli",
-          "nextName": "Coding on Raspberry Pi",
-          "nextPath": "/raspberry-pi"
-        },
-        {
-          "name": "Coding on Raspberry Pi",
-          "subitems": [],
-          "path": "/raspberry-pi",
-          "prevName": "Visual Studio Code support",
-          "prevPath": "/code"
-        }
-      ],
-      "prevName": "Streaming",
-      "prevPath": "/streaming"
     }
   ],
   "id": "blapp",
-  "title": "Blapp PXT Target",
-  "name": "Blapp PXT",
+  "title": "MakeCode Apps Target",
+  "name": "MakeCode Apps",
   "htmlDocIncludes": {},
   "locales": {
     "pl": {

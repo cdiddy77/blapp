@@ -41,11 +41,15 @@ export class AppModel extends ModelBase implements CodegenHost {
         // need to figure out a way to know whether we are pxt or not
         try {
             console.log('evaluating new code');
-            //console.log(this.code);
-            var pxsim: any = pxtexec.pxsim;
-            pxtexec.executeCode(this.code);
-            // eval(this.testCode());
+            // console.log(this.code);
             this.setProperty('lastEvalError', null);
+            var pxsim: any = pxtexec.pxsim;
+            pxtexec.executeCode(this.code, (e) => {
+                console.log('execCode:errCB:', JSON.stringify(e));
+                this.setProperty('lastEvalError', e);
+            });
+            // eval(this.testCode());
+
         } catch (e) {
             this.setProperty('lastEvalError', e);
         }
@@ -66,8 +70,8 @@ export class AppModel extends ModelBase implements CodegenHost {
     }
     runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void {
         // HACK: this shouldn't be necessary and it doesn't actually prevent an RSOD (why??)
-        pxtexec.pxsim.runtime.errorHandler=(e)=>{
-            console.log('runFiberSync Err:EXCEPTION', JSON.stringify(e));            
+        pxtexec.pxsim.runtime.errorHandler = (e) => {
+            console.log('runFiberSync Err:EXCEPTION', JSON.stringify(e));
         }
         try {
             let savedYieldState = pxtexec.pxsim.runtime.yieldingDisabled;

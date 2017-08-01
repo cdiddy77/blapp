@@ -1,140 +1,40 @@
 /// <reference path="../node_modules/pxt-core/built/pxteditor.d.ts" />
-var groupDirectionFieldDef = {
-    "type": "field_dropdown",
-    "name": "direction",
-    "options": [
-        [
-            "column",
-            "UIGroupDirection.Column"
-        ],
-        [
-            "row",
-            "UIGroupDirection.Row"
-        ],
-        [
-            "reverse-column",
-            "UIGroupDirection.ReverseColumn"
-        ],
-        [
-            "reverse-row",
-            "UIGroupDirection.ReverseRow"
-        ]
-    ]
-};
-var groupClassFieldDef = {
-    "type": "field_dropdown",
-    "name": "className",
-    "options": [
-        [
-            "panel",
-            "UIGroupClass.Panel"
-        ],
-        [
-            "frame",
-            "UIGroupClass.Frame"
-        ],
-        [
-            "framed panel",
-            "UIGroupClass.Framepanel"
-        ],
-        [
-            "header",
-            "UIGroupClass.Header"
-        ],
-        [
-            "footer",
-            "UIGroupClass.Footer"
-        ],
-        [
-            "row",
-            "UIGroupClass.Row"
-        ],
-        [
-            "none",
-            "UIGroupClass.None"
-        ]
-    ]
-};
-var textClassFieldDef = {
-    "type": "field_dropdown",
-    "name": "className",
-    "options": [
-        [
-            "label",
-            "UITextClass.Label"
-        ],
-        [
-            "button",
-            "UITextClass.Button"
-        ],
-        [
-            "button (accented)",
-            "UITextClass.AccentButton"
-        ],
-        [
-            "menu",
-            "UITextClass.Menu"
-        ],
-        [
-            "caption",
-            "UITextClass.Caption"
-        ],
-        [
-            "body",
-            "UITextClass.Body"
-        ],
-        [
-            "subtitle",
-            "UITextClass.Subtitle"
-        ],
-        [
-            "title",
-            "UITextClass.Title"
-        ],
-        [
-            "headline",
-            "UITextClass.Headline"
-        ],
-        [
-            "(none)",
-            "UITextClass.None"
-        ],
-    ]
-};
-var buttonClassFieldDef = {
-    "type": "field_dropdown",
-    "name": "className",
-    "options": [
-        [
-            "small",
-            "UIButtonClass.Small"
-        ],
-        [
-            "medium",
-            "UIButtonClass.Medium"
-        ],
-        [
-            "large",
-            "UIButtonClass.Large"
-        ],
-        [
-            "small (accented)",
-            "UIButtonClass.SmallAccent"
-        ],
-        [
-            "medium (accented)",
-            "UIButtonClass.MediumAccent"
-        ],
-        [
-            "large (accented)",
-            "UIButtonClass.LargeAccent"
-        ],
-        [
-            "(none)",
-            "UIButtonClass.None"
-        ],
-    ]
-};
+var groupDirectionOptions = [
+    ["column", "UIGroupDirection.Column"],
+    ["row", "UIGroupDirection.Row"],
+    ["reverse-column", "UIGroupDirection.ReverseColumn"],
+    ["reverse-row", "UIGroupDirection.ReverseRow"]
+];
+var groupClassOptions = [
+    ["panel", "UIGroupClass.Panel"],
+    ["frame", "UIGroupClass.Frame"],
+    ["framed panel", "UIGroupClass.Framepanel"],
+    ["header", "UIGroupClass.Header"],
+    ["footer", "UIGroupClass.Footer"],
+    ["row", "UIGroupClass.Row"],
+    ["none", "UIGroupClass.None"]
+];
+var textClassOptions = [
+    ["label", "UITextClass.Label"],
+    ["button", "UITextClass.Button"],
+    ["button (accented)", "UITextClass.AccentButton"],
+    ["menu", "UITextClass.Menu"],
+    ["caption", "UITextClass.Caption"],
+    ["body", "UITextClass.Body"],
+    ["subtitle", "UITextClass.Subtitle"],
+    ["title", "UITextClass.Title"],
+    ["headline", "UITextClass.Headline"],
+    ["(none)", "UITextClass.None"],
+];
+var buttonClassOptions = [
+    ["small", "UIButtonClass.Small"],
+    ["medium", "UIButtonClass.Medium"],
+    ["large", "UIButtonClass.Large"],
+    ["small (accented)", "UIButtonClass.SmallAccent"],
+    ["medium (accented)", "UIButtonClass.MediumAccent"],
+    ["large (accented)", "UIButtonClass.LargeAccent"],
+    ["(none)", "UIButtonClass.None"],
+];
 var UIBlockDef = (function () {
     function UIBlockDef(type, colour, label) {
         this.type = type;
@@ -181,6 +81,13 @@ var UIBlockDef = (function () {
             "text": defaultValue
         }, label);
     };
+    UIBlockDef.prototype.dropdown = function (name, values, label) {
+        return this.field({
+            "type": "field_dropdown",
+            "name": name,
+            "options": values
+        }, label);
+    };
     UIBlockDef.prototype.color = function (color) {
         this.colour = color;
         return this;
@@ -212,33 +119,33 @@ var pxt;
             var res = {
                 blockDefinitions: [
                     new UIBlockDef("scroller_element", "#80A55B", "SCROLLER")
-                        .textField("name", "name")
+                        .textField("name", "")
                         .checkbox("flex", false, "flex")
                         .checkbox("horz", false, "horizontal")
-                        .field(groupClassFieldDef)
+                        .dropdown("className", groupClassOptions)
                         .input("style", "Array", "style")
                         .handler("children", "children")
                         .toBlock(),
                     new UIBlockDef("group_element", "#5B6DA5", "GROUP")
-                        .textField("name", "name")
+                        .textField("name", "")
+                        .dropdown("direction", groupDirectionOptions, "dir")
                         .checkbox("flex", false, "flex")
-                        .field(groupDirectionFieldDef)
-                        .field(groupClassFieldDef)
+                        .dropdown("className", groupClassOptions)
                         .input("style", "Array", "style")
                         .handler("children", "children")
                         .toBlock(),
                     new UIBlockDef("button_element", "#80A55B", "BUTTON")
-                        .textField("name", "name")
+                        .textField("name", "")
                         .checkbox("flex", false, "flex")
-                        .field(buttonClassFieldDef)
+                        .dropdown("className", buttonClassOptions)
                         .input("style", "Array", "style")
                         .handler("children", "children")
                         .handler("whenPressed", "when pressed")
                         .toBlock(),
                     new UIBlockDef("text_element", "#805BA5", "TEXT")
                         .checkbox("flex", false, "flex")
-                        .field(textClassFieldDef)
-                        .input("value", "String", "style")
+                        .dropdown("className", textClassOptions)
+                        .input("value", "String", "")
                         .input("style", "Array", "style")
                         .toBlock()
                 ]

@@ -89,7 +89,7 @@ function initPairing(appModel: AppModel) {
             if (data.executeCode) {
                 appModel.setProperty('code', data.executeCode);
             }
-            console.log('joinSessionResponse', data);
+            console.log('joinSessionResponse');//, data);
             pairingCode = data.pairingCode;
             // comment
         });

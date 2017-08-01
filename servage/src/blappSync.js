@@ -52,7 +52,7 @@ function init(server) {
                 console.log("did not find sid " + sid);
             }
             socket.emit('joinSessionResponse', sessionResponse);
-            console.log('sending joinSessionResponse', sessionResponse);
+            console.log('sending joinSessionResponse'); //, sessionResponse);
         });
         socket.on('simctrlmsg', function (sid, data) {
             console.log('simctrlmsg', sid, data.type);

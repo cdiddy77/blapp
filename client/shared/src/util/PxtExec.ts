@@ -1017,22 +1017,22 @@ export namespace pxsim {
                     while (!!p) {
                         __this.currFrame = p;
                         __this.currFrame.overwrittenPC = false;
-                        p = p.fn(p)
-                        __this.maybeUpdateDisplay()
+                        p = p.fn(p);
+                        __this.maybeUpdateDisplay();
                         if (__this.currFrame.overwrittenPC)
-                            p = __this.currFrame
+                            p = __this.currFrame;
                     }
                 } catch (e) {
                     if (__this.errorHandler)
                         __this.errorHandler(e)
                     else {
-                        console.error("Simulator crashed, no error handler", e.stack)
-                        let msg = getBreakpointMsg(p, p.lastBrkId)
-                        msg.exceptionMessage = e.message
-                        msg.exceptionStack = e.stack
-                        Runtime.postMessage(msg)
+                        console.error("Simulator crashed, no error handler", e.message); //, e.stack);
+                        let msg = getBreakpointMsg(p, p.lastBrkId);
+                        msg.exceptionMessage = e.message;
+                        msg.exceptionStack = e.stack;
+                        Runtime.postMessage(msg);
                         if (__this.postError)
-                            __this.postError(e)
+                            __this.postError(e);
                     }
                 }
             }
@@ -1125,8 +1125,13 @@ export namespace pxsim {
             }
 
             // tslint:disable-next-line
-            eval(code)
 
+            // This line is necessary for running Android release. Otherwise, 
+            // after we run eval(), entryPoint is null
+            entryPoint = null;
+            
+            eval(code);
+            
             this.run = (cb) => topCall(entryPoint, cb)
             this.getResume = () => {
                 if (!currResume) oops("noresume")
@@ -1447,7 +1452,7 @@ export namespace pxsim {
         export function substr(s: string, start: number, length?: number) {
             // HACK : 
             if (!s || !s.substr) {
-                console.log('not a string',s);
+                console.log('not a string', s);
                 return initString('');
             }
             return initString(s.substr(start, length));
@@ -1730,10 +1735,10 @@ export namespace pxsim {
     ////////////////////////////////////////////////////////////////////////////////////
 
 }
-export function executeCode(code: string) {
+export function executeCode(code: string, errCB: (e: any) => void) {
 
     let runtime = new pxsim.Runtime(code);
-
+    runtime.postError = errCB;
     runtime.run((v) => {
         console.log('runtime ran');
     });

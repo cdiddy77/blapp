@@ -193,6 +193,9 @@ export namespace pxsimui {
             console.log('button:it ran');
         });
         let cl = CodegenRuntime.popCont();
+        if(!cl || cl.length==0){
+            cl.push(CodegenRuntime.createElement(CodegenRuntime.TextBlockf,{visualPurpose:'button'},['(no children)']))
+        }
         CodegenRuntime.pushElem(
             CodegenRuntime.createElement(CodegenRuntime.ButtonBlockf, props, cl));
     }
@@ -341,7 +344,7 @@ export namespace pxsimui {
         size: number,
         style: pxsim.RefCollection) {
         let name = iconData[category][id];
-        let url = `http://theblapp.azurewebsites.net/media/${category}/ic_${name}_${iconType == IconType.dark ? 'black' : 'white'}_48dp.png`;
+        let url = `https://theblapp.azurewebsites.net/media/${category}/ic_${name}_${iconType == IconType.dark ? 'black' : 'white'}_48dp.png`;
         console.log('iconElementImpl', url);
         CodegenRuntime.beginProps();
 
@@ -365,18 +368,22 @@ export namespace pxsimui {
     }
 
     function genStyleProp(style: pxsim.RefCollection, width?: number, height?: number) {
-        if (!style) return;
+        if (!style && !width && !height) {
+            return;
+        }
         let s: any = {};
         if (width)
             s.width = width;
         if (height)
             s.height = height;
-        for (let i = 0; i < style.getLength(); i++) {
-            let stext = style.getAt(i);
-            if (stext && stext != '') {
-                let elem: any = parseStylePropString(stext);
-                if (elem) {
-                    s = Object.assign(s, elem);
+        if (style) {
+            for (let i = 0; i < style.getLength(); i++) {
+                let stext = style.getAt(i);
+                if (stext && stext != '') {
+                    let elem: any = parseStylePropString(stext);
+                    if (elem) {
+                        s = Object.assign(s, elem);
+                    }
                 }
             }
         }

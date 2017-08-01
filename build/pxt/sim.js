@@ -219,10 +219,15 @@ var pxsim;
         }
         Data.getSharedBooleanImpl = getSharedBooleanImpl;
         //%
-        function getSharedListImpl(name) {
+        function getSharedStringListImpl(name) {
             return [];
         }
-        Data.getSharedListImpl = getSharedListImpl;
+        Data.getSharedStringListImpl = getSharedStringListImpl;
+        //%
+        function getSharedNumberListImpl(name) {
+            return [];
+        }
+        Data.getSharedNumberListImpl = getSharedNumberListImpl;
         //%
         function setSharedStringImpl(name, v) {
         }
@@ -236,9 +241,13 @@ var pxsim;
         }
         Data.setSharedBooleanImpl = setSharedBooleanImpl;
         //%
-        function setSharedListImpl(name, v) {
+        function setSharedStringListImpl(name, v) {
         }
-        Data.setSharedListImpl = setSharedListImpl;
+        Data.setSharedStringListImpl = setSharedStringListImpl;
+        //%
+        function setSharedNumberListImpl(name, v) {
+        }
+        Data.setSharedNumberListImpl = setSharedNumberListImpl;
         //%
         function onSharedVariableChangeImpl(name, body) {
         }
