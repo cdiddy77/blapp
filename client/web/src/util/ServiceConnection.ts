@@ -67,7 +67,7 @@ export function init(host: ServiceConnectionHost) {
         } else {
             setPairingCode(data.pairingCode, host);
         }
-        console.log('joinSessionResponse', data);
+        console.log('joinSessionResponse');//, data);
     });
     socket.on('disconnect', () => {
         console.log('disconnect');
@@ -79,8 +79,8 @@ export function init(host: ServiceConnectionHost) {
         console.log('simctrlmsg');
     });
     socket.on('shareVarUpdated', (data: svcTypes.ShareVarUpdatedMessage) => {
-        CodegenRuntime.handleUpdateSharevarDiags(data.clientTime,data.serverTime);
-        CodegenRuntime.onVarUpdated(data.name,data.value);
+        CodegenRuntime.handleUpdateSharevarDiags(data.clientTime, data.serverTime);
+        CodegenRuntime.onVarUpdated(data.name, data.value);
     });
 }
 

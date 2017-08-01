@@ -53,7 +53,7 @@ export function init(server: any) {
                 console.log(`did not find sid ${sid}`);
             }
             socket.emit('joinSessionResponse', sessionResponse);
-            console.log('sending joinSessionResponse', sessionResponse);
+            console.log('sending joinSessionResponse'); //, sessionResponse);
         });
         socket.on('simctrlmsg', (sid: string, data: svcTypes.ControlMessage) => {
             console.log('simctrlmsg', sid, data.type);
