@@ -194,7 +194,7 @@ export namespace pxsimui {
         });
         let cl = CodegenRuntime.popCont();
         if(!cl || cl.length==0){
-            cl.push(CodegenRuntime.createElement(CodegenRuntime.TextBlockf,{className:'button'},['(no children)']))
+            cl.push(CodegenRuntime.createElement(CodegenRuntime.TextBlockf,{visualPurpose:'button'},['(no children)']))
         }
         CodegenRuntime.pushElem(
             CodegenRuntime.createElement(CodegenRuntime.ButtonBlockf, props, cl));
