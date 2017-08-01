@@ -130,7 +130,7 @@ namespace pxt.editor {
         const res: pxt.editor.ExtensionResult = {
             blockDefinitions: [
                 new UIBlockDef("scroller_element", "#80A55B", "SCROLLER")
-                    .textField("name", "name")
+                    .textField("name", "")
                     .checkbox("flex", false, "flex")
                     .checkbox("horz", false, "horizontal")
                     .dropdown("className", groupClassOptions)
@@ -138,7 +138,7 @@ namespace pxt.editor {
                     .handler("children", "children")
                     .toBlock(),
                 new UIBlockDef("group_element", "#5B6DA5", "GROUP")
-                    .textField("name", "name")
+                    .textField("name", "")
                     .dropdown("direction", groupDirectionOptions, "dir")
                     .checkbox("flex", false, "flex")
                     .dropdown("className", groupClassOptions)
@@ -146,7 +146,7 @@ namespace pxt.editor {
                     .handler("children", "children")
                     .toBlock(),
                 new UIBlockDef("button_element", "#80A55B", "BUTTON")
-                    .textField("name", "name")
+                    .textField("name", "")
                     .checkbox("flex", false, "flex")
                     .dropdown("className", buttonClassOptions)
                     .input("style", "Array", "style")

@@ -386,9 +386,9 @@ var pxt;
                                 var call_1 = e.stdCallTable[b.type];
                                 call_1.args.forEach(function (p, i) {
                                     var isInstance = call_1.isExtensionMethod && i === 0;
-                                    if (p.field && !b.getFieldValue(p.field)) {
+                                    if (p.field && b.getFieldValue(p.field) === null) {
                                         var i_1 = b.inputList.filter(function (i) { return i.name == p.field; })[0];
-                                        if (i_1.connection && i_1.connection.check_) {
+                                        if (i_1 && i_1.connection && i_1.connection.check_) {
                                             if (isInstance && connectionCheck(i_1) === "Array") {
                                                 var gen = handleGenericType(b, p.field);
                                                 if (gen) {
