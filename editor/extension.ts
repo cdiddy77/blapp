@@ -92,6 +92,14 @@ class UIBlockDef {
         }, label);
     }
 
+    variableField(name: string, defaultValue: string, label?: string) {
+        return this.field(    {
+            "type": "field_variable",
+            "name": name,
+            "variable": defaultValue
+        }, label)
+    }
+
     dropdown(name: string, values: [string, string][], label?: string) {
         return this.field({
             "type": "field_dropdown",
@@ -105,7 +113,7 @@ class UIBlockDef {
         return this;
     }
 
-    toBlock() {
+    toBlock(compiler?: pxt.blocks.BlockCompiler) {
         const that = this;
         return {
             id: that.type,
@@ -118,7 +126,8 @@ class UIBlockDef {
                     "nextStatement": null,
                     "colour": that.colour
                 });
-            }
+            },
+            compiler
         }
     }
 }
@@ -158,9 +167,45 @@ namespace pxt.editor {
                     .dropdown("className", textClassOptions)
                     .input("value", "String", "")
                     .input("style", "Array", "style")
-                    .toBlock()]
+                    .toBlock(),
+              new UIBlockDef("for_each_string", "#107c10", "for each string ")
+                  .variableField("cbValue", "value")
+                  .variableField("cbIndex", "index")
+                  .input("array", "Array", "in")
+                  .handler("", "do")
+                  .toBlock(new ForEachCompiler())]
         };
         return Promise.resolve<pxt.editor.ExtensionResult>(res);
     }
 }
 
+class ForEachCompiler implements pxt.blocks.BlockCompiler {
+    getDeclaredVariables(block: Blockly.Block) {
+        const value = block.getFieldValue("cbValue");
+        const index = block.getFieldValue("cbIndex");
+        return [
+            { name: value, type: "string" },
+            { name: index, type: "number" }
+        ];
+    }
+
+    compileBlock(block: Blockly.Block, comments: string[], compiler: pxt.blocks.BlocklyCompiler) {
+        const value = block.getFieldValue("cbValue");
+        const index = block.getFieldValue("cbIndex");
+
+        const arrTarget = block.getInputTargetBlock("array");
+        const array =  arrTarget ? compiler.compileExpression(arrTarget, comments) : pxt.blocks.mkText("[]");
+        
+        const stmtTarget = block.getInputTargetBlock("HANDLER");
+        const statements = stmtTarget ? compiler.compileCodeBlock(stmtTarget) : pxt.blocks.mkBlock([]);
+
+
+        return pxt.blocks.Helpers.namespaceCall("Data", "forEachString", [
+            array,
+            pxt.blocks.mkGroup([
+                pxt.blocks.mkText("function (" + value + ": string, " + index + ": number)"),
+                statements
+            ])
+        ], false);
+    }
+}
