@@ -461,20 +461,17 @@
     <div class="ui text">
         <h1 id="getting-started">Getting started</h1><h3 id="step-1">Step 1</h3><p>Welcome, let’s start by adding a button. Drag a <code>||BUTTON||</code> block into the <code>||UI theme||</code> block.</p>
 <pre><code class="lang-blocks">UI.userInterface(UITheme.Calm, () =&gt; {
-    UI.buttonElement(&quot;&quot;, false, UIButtonClass.Small, [], () =&gt; {
-
-    }, () =&gt; {
-    })
-})</code></pre>
-<h3 id="step-2">Step 2</h3><p>Drag a <code>||TEXT||</code> block into the <code>||BUTTON||</code> block’s “children” section and set the text to <code>Press Me</code>.</p>
-<pre><code class="lang-blocks">UI.userInterface(UITheme.Calm, () =&gt; {
-    UI.buttonElement(&quot;&quot;, false, UIButtonClass.Small, [], () =&gt; {
-        UI.textElement(
+    UI.textElement(
         false,
         UITextClass.Label,
         &quot;Press Me&quot;,
         []
         )
+})</code></pre>
+<h3 id="step-2">Step 2</h3><p>Drag a <code>||TEXT||</code> block into the <code>||BUTTON||</code> block’s “children” section and set the text to <code>Press Me</code>.</p>
+<pre><code class="lang-blocks">UI.userInterface(UITheme.Calm, function() {
+    UI.buttonElement(&quot;&quot;, false, UIButtonClass.Small, null, function() {
+
     }, () =&gt; {
     })
 })</code></pre>

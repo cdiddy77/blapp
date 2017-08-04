@@ -57,6 +57,7 @@ module.exports = {
       require.resolve('./polyfills'),
       paths.appIndexTs
     ],
+    // NEWPAGE : copy this, change paths.simIndexTs to your root control
     sim: [
       require.resolve('./polyfills'),
       paths.simIndexTs
@@ -219,6 +220,7 @@ module.exports = {
         minifyURLs: true
       }
     }),
+    // NEWPAGE : copy this, change template, chunks, filename
     new HtmlWebpackPlugin({
       inject: true,
       template: paths.appSim,

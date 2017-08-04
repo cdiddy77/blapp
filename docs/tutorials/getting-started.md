@@ -6,10 +6,12 @@ Welcome, let's start by adding a button. Drag a ``||BUTTON||`` block into the ``
 
 ```blocks
 UI.userInterface(UITheme.Calm, () => {
-    UI.buttonElement("", false, UIButtonClass.Small, [], () => {
-
-    }, () => {
-    })
+    UI.textElement(
+        false,
+        UITextClass.Label,
+        "Press Me",
+        []
+        )
 })
 ```
 
@@ -18,14 +20,9 @@ UI.userInterface(UITheme.Calm, () => {
 Drag a ``||TEXT||`` block into the ``||BUTTON||`` block's "children" section and set the text to `Press Me`.
 
 ```blocks
-UI.userInterface(UITheme.Calm, () => {
-    UI.buttonElement("", false, UIButtonClass.Small, [], () => {
-        UI.textElement(
-        false,
-        UITextClass.Label,
-        "Press Me",
-        []
-        )
+UI.userInterface(UITheme.Calm, function() {
+    UI.buttonElement("", false, UIButtonClass.Small, null, function() {
+
     }, () => {
     })
 })

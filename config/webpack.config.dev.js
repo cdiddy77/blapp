@@ -52,6 +52,7 @@ module.exports = {
       // initialization, it doesn't blow up the WebpackDevServer client, and
       // changing JS code would still trigger a refresh.
     ],
+    // NEWPAGE : copy this, change paths.simIndexTs to your root control
     sim: [
       // Include an alternative client for WebpackDevServer. A client's job is to
       // connect to WebpackDevServer by a socket and get notified about changes.
@@ -68,6 +69,26 @@ module.exports = {
       require.resolve('./polyfills'),
       // Finally, this is your app's code:
       paths.simIndexTs
+      // We include the app code last so that if there is a runtime error during
+      // initialization, it doesn't blow up the WebpackDevServer client, and
+      // changing JS code would still trigger a refresh.
+    ],
+    pair: [
+      // Include an alternative client for WebpackDevServer. A client's job is to
+      // connect to WebpackDevServer by a socket and get notified about changes.
+      // When you save a file, the client will either apply hot updates (in case
+      // of CSS changes), or refresh the page (in case of JS changes). When you
+      // make a syntax error, this client will display a syntax error overlay.
+      // Note: instead of the default WebpackDevServer client, we use a custom one
+      // to bring better experience for Create React App users. You can replace
+      // the line below with these two lines if you prefer the stock client:
+      // require.resolve('webpack-dev-server/client') + '?/',
+      // require.resolve('webpack/hot/dev-server'),
+      require.resolve('react-dev-utils/webpackHotDevClient'),
+      // We ship a few polyfills by default:
+      require.resolve('./polyfills'),
+      // Finally, this is your app's code:
+      paths.pairIndexTs
       // We include the app code last so that if there is a runtime error during
       // initialization, it doesn't blow up the WebpackDevServer client, and
       // changing JS code would still trigger a refresh.
@@ -218,11 +239,18 @@ module.exports = {
       template: paths.appHtml,
       chunks: ['main']
     }),
+    // NEWPAGE : copy this, change template, chunks, filename
     new HtmlWebpackPlugin({
       inject: true,
       template: paths.appSim,
       chunks: ['sim'],
       filename: 'pxt/simulator.html'
+    }),
+    new HtmlWebpackPlugin({
+      inject: true,
+      template: paths.appSim,
+      chunks: ['pair'],
+      filename: 'pxt/pair.html'
     }),
     // Makes some environment variables available to the JS code, for example:
     // if (process.env.NODE_ENV === 'development') { ... }. See `./env.js`.

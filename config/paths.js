@@ -71,6 +71,8 @@ module.exports = {
   appSim:resolveApp('public/pxt/simulator.html'),
   appIndexTs: resolveApp('client/web/src/index.tsx'),
   simIndexTs: resolveApp('client/web/src/pxt/index.tsx'),
+  pairIndexTs: resolveApp('client/web/src/pxt/pair.tsx'),
+  // NEWPAGE: add new root here
   appPackageJson: resolveApp('package.json'),
   appSrc: resolveApp('client/web/src'),
   yarnLockFile: resolveApp('yarn.lock'),
