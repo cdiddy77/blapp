@@ -52,24 +52,24 @@ export default class PairApp extends React.Component<AppProps, AppState> {
     }
 
     renderConnectionStatus() {
-        console.log('renderConnectionStatus',this.model.connectionState);
-        let imageSrc = constants.serverHost + '/media/hardware/ic_phonelink_off_black_48dp.png';
+        console.log('renderConnectionStatus', this.model.connectionState);
+        let imageSrc = constants.serverHost + '/media/hardware/ic_phonelink_off_white_48dp.png';
         let imageColor = 'orange';
         if (this.model.connectionState == 'unrecognized pairing code') {
-            imageSrc = constants.serverHost + '/media/hardware/ic_phonelink_off_black_48dp.png';
-             imageColor = 'red';
+            imageSrc = constants.serverHost + '/media/hardware/ic_phonelink_off_white_48dp.png';
+            imageColor = 'red';
         } else if (this.model.connectionState == 'joined') {
-             imageSrc = constants.serverHost + '/media/hardware/ic_phonelink_black_48dp.png';
-             imageColor = 'green';
+            imageSrc = constants.serverHost + '/media/hardware/ic_phonelink_white_48dp.png';
+            imageColor = 'green';
         } else if (this.model.connectionState == 'disconnected') {
-             imageSrc = ''; constants.serverHost + '/media/hardware/ic_phonelink_off_black_48dp.png';
-             imageColor = 'red';
+            imageSrc = ''; constants.serverHost + '/media/hardware/ic_phonelink_off_white_48dp.png';
+            imageColor = 'red';
         } else if (this.model.connectionState == 'connecting') {
-             imageSrc = constants.serverHost + '/media/hardware/ic_phonelink_black_48dp.png';
-             imageColor = 'yellow';
+            imageSrc = constants.serverHost + '/media/hardware/ic_phonelink_white_48dp.png';
+            imageColor = 'yellow';
         } else if (this.model.connectionState == 'connected') {
-             imageSrc = constants.serverHost + '/media/hardware/ic_phonelink_off_black_48dp.png';
-             imageColor = 'green';
+            imageSrc = constants.serverHost + '/media/hardware/ic_phonelink_off_white_48dp.png';
+            imageColor = 'green';
         }
 
         return (
@@ -137,41 +137,6 @@ export default class PairApp extends React.Component<AppProps, AppState> {
                 <View style={[{}, styles.targetContainer]} >
                     <Target model={this.model} />
                 </View>
-                {/* <Modal
-          animationType={"fade"}
-          visible={this.state.isSettingsShown}
-          transparent={true}
-          onRequestClose={()=>{}}
-        >
-          <View style={[styles.column, {
-            marginTop: 50,
-            marginLeft: 20,
-            marginRight: 20,
-            backgroundColor: '#cccccc',
-            padding: 10
-          }]}>
-            <Text>Server</Text>
-            <TextInput
-              style={[styles.textInput]}
-              value={this.model.serverUri}
-              placeholder="URL of server"
-              selectTextOnFocus={true}
-              onChangeText={(text) => this.model.setProperty('serverUri', text)}
-              onSubmitEditing={() => console.log('onsubmitediting')}
-            />
-            <Text>Pairing Code</Text>
-            <TextInput
-              style={[styles.textInput]}
-              value={this.model.pairingCode}
-              placeholder="pairing code"
-              selectTextOnFocus={true}
-              autoFocus={true}
-              onChangeText={(text) => this.model.setProperty('pairingCode', text)}
-              onSubmitEditing={() => console.log('onsubmitediting')}
-            />
-            <Button title={'Connect'} onPress={() => { this.onSettingsOk() }} />
-          </View>
-        </Modal> */}
             </View >
         );
     }

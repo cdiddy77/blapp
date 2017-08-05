@@ -1,4 +1,4 @@
-package com.mobile;
+package com.microsoft.makecodeapps;
 
 import com.facebook.react.ReactActivity;
 
