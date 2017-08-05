@@ -10,10 +10,10 @@ import {
   TextInput
 } from 'react-native';
 
-import { AppModel } from './models/AppModel';
-import * as svcConn from './util/ServiceConnection';
-import { styles } from './styles';
-import { Target } from './components/Target';
+import { AppModel } from '../../shared/src/pair/AppModel';
+import * as svcConn from '../../shared/src/pair/ServiceConnection';
+import { styles } from '../../shared/src/pair/styles';
+import { Target } from '../../shared/src/pair/Target';
 
 interface AppProps {
 
@@ -21,6 +21,7 @@ interface AppProps {
 interface AppState {
   isSettingsShown: boolean;
 }
+
 export default class mobile extends React.Component<AppProps, AppState> {
   model: AppModel = new AppModel();
 

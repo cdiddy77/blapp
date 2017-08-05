@@ -248,7 +248,7 @@ module.exports = {
     }),
     new HtmlWebpackPlugin({
       inject: true,
-      template: paths.appSim,
+      template: paths.appPair,
       chunks: ['pair'],
       filename: 'pxt/pair.html'
     }),

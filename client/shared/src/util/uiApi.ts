@@ -3,6 +3,7 @@
 
 import { CodegenRuntime } from './CodegenRuntime';
 import { iconData } from './IconData';
+import * as constants from '../util/constants';
 
 export namespace pxsimui {
     export function userInterfaceImpl(theme: UITheme, body: pxsim.RefAction): void {
@@ -344,7 +345,7 @@ export namespace pxsimui {
         size: number,
         style: pxsim.RefCollection) {
         let name = iconData[category][id];
-        let url = `https://theblapp.azurewebsites.net/media/${category}/ic_${name}_${iconType == IconType.dark ? 'black' : 'white'}_48dp.png`;
+        let url = `${constants.serverHost}/media/${category}/ic_${name}_${iconType == IconType.dark ? 'black' : 'white'}_48dp.png`;
         console.log('iconElementImpl', url);
         CodegenRuntime.beginProps();
 

@@ -69,6 +69,7 @@ module.exports = {
   appPublic: resolveApp('public'),
   appHtml: resolveApp('public/index.html'),
   appSim:resolveApp('public/pxt/simulator.html'),
+  appPair:resolveApp('public/pxt/pair.html'),
   appIndexTs: resolveApp('client/web/src/index.tsx'),
   simIndexTs: resolveApp('client/web/src/pxt/index.tsx'),
   pairIndexTs: resolveApp('client/web/src/pxt/pair.tsx'),

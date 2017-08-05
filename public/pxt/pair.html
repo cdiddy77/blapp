@@ -3,12 +3,24 @@
 
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
     <title>MakeCode Apps</title>
     <link rel="stylesheet" type="text/css" href="/pxt/sim.css">
     <style>
+        html {
+            height: 100%;
+        }
+
         body {
             background: transparent;
             overflow: hidden;
+            height: 100%;
+        }
+
+        #root {
+            height: 100%;
+            flex: 1;
+            display:flex;
         }
     </style>
     <script src="/pxt/bluebird.min.js"></script>

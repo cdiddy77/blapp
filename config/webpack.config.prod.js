@@ -61,6 +61,10 @@ module.exports = {
     sim: [
       require.resolve('./polyfills'),
       paths.simIndexTs
+    ],
+    pair: [
+      require.resolve('./polyfills'),
+      paths.pairIndexTs
     ]
   },
   output: {
@@ -239,7 +243,24 @@ module.exports = {
         minifyURLs: true
       }
     }),
-    // Makes some environment variables available to the JS code, for example:
+    new HtmlWebpackPlugin({
+      inject: true,
+      template: paths.appPair,
+      chunks: ['pair'],
+      filename: 'pxt/pair.html',
+      minify: {
+        removeComments: true,
+        collapseWhitespace: true,
+        removeRedundantAttributes: true,
+        useShortDoctype: true,
+        removeEmptyAttributes: true,
+        removeStyleLinkTypeAttributes: true,
+        keepClosingSlash: true,
+        minifyJS: true,
+        minifyCSS: true,
+        minifyURLs: true
+      }
+    }),    // Makes some environment variables available to the JS code, for example:
     // if (process.env.NODE_ENV === 'production') { ... }. See `./env.js`.
     // It is absolutely essential that NODE_ENV was set to production here.
     // Otherwise React will be compiled in the very slow development mode.

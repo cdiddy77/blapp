@@ -81,6 +81,13 @@ var UIBlockDef = (function () {
             "text": defaultValue
         }, label);
     };
+    UIBlockDef.prototype.variableField = function (name, defaultValue, label) {
+        return this.field({
+            "type": "field_variable",
+            "name": name,
+            "variable": defaultValue
+        }, label);
+    };
     UIBlockDef.prototype.dropdown = function (name, values, label) {
         return this.field({
             "type": "field_dropdown",
@@ -92,7 +99,7 @@ var UIBlockDef = (function () {
         this.colour = color;
         return this;
     };
-    UIBlockDef.prototype.toBlock = function () {
+    UIBlockDef.prototype.toBlock = function (compiler) {
         var that = this;
         return {
             id: that.type,
@@ -105,7 +112,8 @@ var UIBlockDef = (function () {
                     "nextStatement": null,
                     "colour": that.colour
                 });
-            }
+            },
+            compiler: compiler
         };
     };
     return UIBlockDef;
@@ -147,10 +155,44 @@ var pxt;
                         .dropdown("className", textClassOptions)
                         .input("value", "String", "")
                         .input("style", "Array", "style")
-                        .toBlock()
+                        .toBlock(),
+                    new UIBlockDef("for_each_string", "#107c10", "for each string ")
+                        .variableField("cbValue", "value")
+                        .variableField("cbIndex", "index")
+                        .input("array", "Array", "in")
+                        .handler("", "do")
+                        .toBlock(new ForEachCompiler())
                 ]
             };
             return Promise.resolve(res);
         };
     })(editor = pxt.editor || (pxt.editor = {}));
 })(pxt || (pxt = {}));
+var ForEachCompiler = (function () {
+    function ForEachCompiler() {
+    }
+    ForEachCompiler.prototype.getDeclaredVariables = function (block) {
+        var value = block.getFieldValue("cbValue");
+        var index = block.getFieldValue("cbIndex");
+        return [
+            { name: value, type: "string" },
+            { name: index, type: "number" }
+        ];
+    };
+    ForEachCompiler.prototype.compileBlock = function (block, comments, compiler) {
+        var value = block.getFieldValue("cbValue");
+        var index = block.getFieldValue("cbIndex");
+        var arrTarget = block.getInputTargetBlock("array");
+        var array = arrTarget ? compiler.compileExpression(arrTarget, comments) : pxt.blocks.mkText("[]");
+        var stmtTarget = block.getInputTargetBlock("HANDLER");
+        var statements = stmtTarget ? compiler.compileCodeBlock(stmtTarget) : pxt.blocks.mkBlock([]);
+        return pxt.blocks.Helpers.namespaceCall("Data", "forEachString", [
+            array,
+            pxt.blocks.mkGroup([
+                pxt.blocks.mkText("function (" + value + ": string, " + index + ": number)"),
+                statements
+            ])
+        ], false);
+    };
+    return ForEachCompiler;
+}());

@@ -1,5 +1,6 @@
 /// <reference path="../localtypings/blockly.d.ts" />
 import { iconData } from '../../../shared/src/util/IconData';
+import * as constants from '../../../shared/src/util/constants';
 
 export function initBlockDefinitions(): void {
     Blockly.BlockSvg.START_HAT = true;
@@ -1398,7 +1399,7 @@ export function initIconBlockCodeGenerators(): void {
 
             code += '\nCgRt.addProp("source",{uri:"';
             code += dropdown_value && dropdown_value !== ''
-                ? ("http://theblapp.azurewebsites.net/media/" + k + "/ic_" + dropdown_value + "_" + dropdown_shade + "_48dp.png")
+                ? (`${constants.serverHost}/media/` + k + "/ic_" + dropdown_value + "_" + dropdown_shade + "_48dp.png")
                 : "''";
             code += '"});'
             //styles
