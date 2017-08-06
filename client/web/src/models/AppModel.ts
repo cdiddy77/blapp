@@ -20,6 +20,8 @@ export interface AppModelData {
     simplePrompt: SimplePromptModel;
     inputFilePrompt: InputFilePromptModel;
     statusMessage: string;
+    // not implemented in this version
+    sharingCode: string;
 }
 
 export class AppModel extends ModelWithEvents<AppModelData>
@@ -32,7 +34,8 @@ export class AppModel extends ModelWithEvents<AppModelData>
             pairingCode: null,
             simplePrompt: null,
             inputFilePrompt: null,
-            statusMessage: null
+            statusMessage: null,
+            sharingCode: null
         });
         CodegenRuntime.setCodegenHost(this);
     }
@@ -66,6 +69,9 @@ export class AppModel extends ModelWithEvents<AppModelData>
     }
     setPairingCode(code: string): void {
         this.setProperty('pairingCode', code);
+    }
+    setSharingCode(code: string, errorMessage: string): void {
+        this.setProperty('sharingCode', errorMessage ? errorMessage : code);
     }
     //
     ///////////////////////////////////////////////////////

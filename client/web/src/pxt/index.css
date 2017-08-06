@@ -4,28 +4,32 @@ html {
   margin: 0px;
 }
 
-body{
-  height:100%;
+body {
+  height: 100%;
 }
 
-#root{
-    height:100%;
+#root {
+  height: 100%;
 }
 
-#appRoot{
-  height:100%;
+#appRoot {
+  height: 100%;
+  color: white;
 }
 
-#pairingCode{
-  float:right;
-  color:white;
+#pairingCode {
+  margin-bottom: 5px;
+}
+
+#sharingMsg {
+  font-size: 12px;
 }
 
 #codearea {
   margin: 10px;
 }
 
-.codeWrapper{
+.codeWrapper {
   height: 100%;
   overflow: scroll;
 }

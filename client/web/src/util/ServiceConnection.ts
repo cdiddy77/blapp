@@ -8,6 +8,7 @@ export interface ServiceConnectionHost {
     getCode(): string;
     getLastEvalError(): Error;
     setPairingCode(code: string): void;
+    setSharingCode(code: string, errorMessage: string): void;
 }
 
 var pairingCode: string = null;
@@ -82,6 +83,9 @@ export function init(host: ServiceConnectionHost) {
         CodegenRuntime.handleUpdateSharevarDiags(data.clientTime, data.serverTime);
         CodegenRuntime.onVarUpdated(data.name, data.value);
     });
+    socket.on('publishSessionResponse', (data: svcTypes.PublishSessionResponseMessage) => {
+        host.setSharingCode(data.shareName, data.errorMessage);
+    });
 }
 
 function createSession() {
@@ -89,10 +93,12 @@ function createSession() {
     pairingCode = null;
     socket.emit('createSessionRequest');
 }
+
 function joinSession() {
     console.log('calling joinSessionRequest');
     socket.emit('joinSessionRequest', pairingCode);
 }
+
 function leaveSession() {
     console.log('calling leaveSessionRequest');
     socket.emit('leaveSessionRequest', pairingCode);
@@ -111,5 +117,13 @@ export function createNewSession() {
     }
     // create new session
     createSession();
+}
+
+var nameCounter: number = 1;
+export function shareSession(nameHint: string, host: ServiceConnectionHost) {
+    // BLAPPSHARE : implement this
+    console.log('ServiceConnection.shareSession', nameHint);
+    socket.emit('publishSessionRequest', pairingCode, svcTypes.createPublishSessionRequest(nameHint + nameCounter));
+    nameCounter++;
 }
 

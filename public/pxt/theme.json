@@ -1,7 +1,8 @@
 {
-  "logoUrl": "http://sample.pxt.io/",
-  "homeUrl": "http://sample.pxt.io/",
-  "embedUrl": "http://sample.pxt.io/",
+  "logoUrl": "http://theblapp.azurewebsites.net/",
+  "shareUrl": "http://localhost:3000/foo/bar",
+  "homeUrl": "http://theblapp.azurewebsites.net/",
+  "embedUrl": "http://theblapp.azurewebsites.net/",
   "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
   "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
   "docMenu": [

@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var io = require("socket.io");
 var uuid = require("uuid");
 var svcTypes = require("../../client/shared/src/ServiceTypes");
+var sessionShare = require("./sessionShare");
 var sessionMap = {};
 function init(server) {
     console.log('blappSync.init');
@@ -25,7 +26,9 @@ function init(server) {
             sessionId = createMinimalId(sessionId);
             sessionMap[sessionId] = {
                 lastControlMessage: svcTypes.createCodeChangeControlMessage(''),
-                sharedVars: {}
+                sharedVars: {},
+                dirty: false,
+                isPublished: false
             };
             var response = { pairingCode: sessionId };
             socket.emit('createSessionResponse', response);
@@ -39,6 +42,7 @@ function init(server) {
                 executeCode: "",
                 sharedVars: {}
             };
+            var sessionResponseAsync = false;
             if (sessionMap[sid]) {
                 console.log("found sid " + sid);
                 socket.join(sid);
@@ -48,11 +52,47 @@ function init(server) {
                     sharedVars: sessionMap[sid].sharedVars
                 };
             }
+            else if (sid.length > 1 && sid[0] == '!') {
+                sid = sid.substring(1);
+                if (sessionMap[sid]) {
+                    console.log("found shared sid " + sid);
+                    socket.join(sid);
+                    sessionResponse = {
+                        pairingCode: sid,
+                        executeCode: sessionMap[sid].lastControlMessage.code,
+                        sharedVars: sessionMap[sid].sharedVars
+                    };
+                }
+                else {
+                    sessionResponseAsync = true;
+                    sessionShare.restoreSessionAsync(sid, function (data, err) {
+                        if (data) {
+                            var projState = data;
+                            projState.dirty = false;
+                            projState.isPublished = true;
+                            sessionMap[sid] = projState;
+                            sessionResponse.executeCode = projState.lastControlMessage.code;
+                            sessionResponse.pairingCode = sid;
+                            sessionResponse.sharedVars = projState.sharedVars;
+                        }
+                        else {
+                            sessionResponse = {
+                                pairingCode: "noexist",
+                                executeCode: "",
+                                sharedVars: {}
+                            };
+                        }
+                        socket.emit('joinSessionResponse', sessionResponse);
+                    });
+                }
+            }
             else {
                 console.log("did not find sid " + sid);
             }
-            socket.emit('joinSessionResponse', sessionResponse);
-            console.log('sending joinSessionResponse'); //, sessionResponse);
+            if (!sessionResponseAsync) {
+                socket.emit('joinSessionResponse', sessionResponse);
+                console.log('sending joinSessionResponse'); //, sessionResponse);
+            }
         });
         socket.on('simctrlmsg', function (sid, data) {
             console.log('simctrlmsg', sid, data.type);
@@ -75,6 +115,26 @@ function init(server) {
             }
             session.sharedVars[data.name] = data.value;
             ios.to(sid).emit('shareVarUpdated', __assign({ serverTime: new Date().getTime() }, data));
+        });
+        socket.on('publishSessionRequest', function (sid, data) {
+            console.log('got publish request', sid, JSON.stringify(data));
+            sessionShare.storeSession(data.nameHint, sessionMap[sid], function (name) {
+                console.log('created blob', name);
+                var result = {
+                    pairingCode: sid,
+                    shareName: name,
+                    errorMessage: null
+                };
+                socket.emit('publishSessionResponse', result);
+            }, function (err) {
+                console.log('failed to create blob', err.message);
+                var result = {
+                    pairingCode: sid,
+                    shareName: null,
+                    errorMessage: err.message
+                };
+                socket.emit('publishSessionResponse', result);
+            });
         });
     });
 }

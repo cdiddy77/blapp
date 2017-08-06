@@ -14,6 +14,15 @@ export interface JoinSessionResponseMessage {
     executeCode: string;
     sharedVars: any;
 }
+export interface PublishSessionRequestMessage {
+    nameHint: string;
+}
+
+export interface PublishSessionResponseMessage {
+    pairingCode: string;
+    shareName: string;
+    errorMessage:string;
+}
 
 export interface ShareVarSetMessage {
     name: string;
@@ -23,8 +32,8 @@ export interface ShareVarSetMessage {
 export interface ShareVarUpdatedMessage {
     name: string;
     value: any;
-    serverTime?:number;
-    clientTime?:number;
+    serverTime?: number;
+    clientTime?: number;
 }
 
 export function createCodeChangeControlMessage(code: string): ControlMessage {
@@ -39,4 +48,8 @@ export function createEvalStatusChangeControlMessage(evalErr: Error): ControlMes
         type: 'evalstatus_change',
         evalError: evalErr
     };
+}
+
+export function createPublishSessionRequest(nameHint: string): PublishSessionRequestMessage {
+    return { nameHint: nameHint };
 }

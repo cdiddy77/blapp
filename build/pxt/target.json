@@ -5,7 +5,8 @@
   "corepkg": "core",
   "cloud": {
     "workspace": false,
-    "packages": false
+    "packages": false,
+    "sharing": false
   },
   "bundleddirs": [
     "libs/core"
@@ -24,8 +25,9 @@
   },
   "appTheme": {
     "logoUrl": "/pxt/",
+    "shareUrl": "http://localhost:3000/foo/bar",
     "homeUrl": "/pxt/",
-    "embedUrl": "http://sample.pxt.io/",
+    "embedUrl": "http://theblapp.azurewebsites.net/",
     "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
     "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
     "docMenu": [

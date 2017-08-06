@@ -9,6 +9,7 @@ export interface AppModelData {
     code: string;
     lastEvalError: Error;
     pairingCode: string;
+    sharingCode:string;
 }
 
 export class AppModel extends ModelWithEvents<AppModelData>
@@ -17,7 +18,8 @@ export class AppModel extends ModelWithEvents<AppModelData>
         super({
             code: null,
             lastEvalError: null,
-            pairingCode: null
+            pairingCode: null,
+            sharingCode:null
         });
         CodegenRuntime.setCodegenHost(this);
     }
@@ -62,6 +64,10 @@ export class AppModel extends ModelWithEvents<AppModelData>
     setPairingCode(code: string): void {
         this.setProperty('pairingCode', code);
     }
+    // BLAPPSHARE : make sure service API calls this
+    setSharingCode(code:string):void{
+        this.setProperty('sharingCode',code);
+    }
     //
     ///////////////////////////////////////////////////////
 
@@ -98,5 +104,10 @@ export class AppModel extends ModelWithEvents<AppModelData>
 
     resetPairingCode() {
         svcConn.createNewSession();
+    }
+
+    shareLink(){
+        // BLAPPSHARE : change foo to something real that we get somehow from PXT
+        svcConn.shareSession('foo',this);
     }
 }

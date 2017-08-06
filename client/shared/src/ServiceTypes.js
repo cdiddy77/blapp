@@ -14,4 +14,8 @@ function createEvalStatusChangeControlMessage(evalErr) {
     };
 }
 exports.createEvalStatusChangeControlMessage = createEvalStatusChangeControlMessage;
+function createPublishSessionRequest(nameHint) {
+    return { nameHint: nameHint };
+}
+exports.createPublishSessionRequest = createPublishSessionRequest;
 //# sourceMappingURL=ServiceTypes.js.map
