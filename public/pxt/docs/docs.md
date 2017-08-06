@@ -1,4 +1,4 @@
-# Docs for Sample Target
+# UNDER CONSTRUCTION
 
 This is a pure javascript sample target for PXT. For more information about setting your own target, see https://pxt.io/docs .
 

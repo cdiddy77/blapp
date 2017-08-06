@@ -1,7 +1,7 @@
 /**
  * Basic functionalities.
  */
-//% color=#00BCD4 weight=90
+//% color=30 weight=90 icon="\uf017"
 namespace Time {
     /**
      * After a certain amount of time, take some actions

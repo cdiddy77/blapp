@@ -2,7 +2,7 @@
 /**
  * Basic functionalities.
  */
-//% color=#935BA5 weight=100
+//% color=#935BA5 weight=100 icon="\uf2d0"
 namespace UI {
     /**
      * The User Interface goes inside this

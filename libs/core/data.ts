@@ -1,10 +1,10 @@
 /**
  * Basic functionalities.
  */
-//% color=#00BCD4 weight=80
+//% color=210 weight=80 icon="\uf1e0"
 namespace Data {
     /**
-     * get the current value of a shared variable
+     * get the current value of a shared text
      */
     //% weight=100
     //% blockId=get_shared_string
@@ -14,7 +14,7 @@ namespace Data {
     }
 
     /**
-     * get the current value of a shared variable
+     * get the current value of a shared number
      */
     //% weight=90
     //% blockId=get_shared_number
@@ -24,7 +24,7 @@ namespace Data {
     }
 
     /**
-     * get the current value of a shared variable
+     * get the current value of a shared true/false value
      */
     //% weight=80
     //% blockId=get_shared_boolean
@@ -34,7 +34,7 @@ namespace Data {
     }
 
     /**
-     * get the current value of a shared variable
+     * get the current value of a shared list of texts
      */
     //% weight=70
     //% blockId=get_shared_string_list
@@ -44,7 +44,7 @@ namespace Data {
     }
 
   /**
-     * get the current value of a shared variable
+     * get the current value of a shared list of numbers
      */
     //% weight=60
     //% blockId=get_shared_number_list
@@ -54,7 +54,7 @@ namespace Data {
     }
 
     /**
-     * set the current value of a shared variable
+     * sets a shared text value
      */
     //% weight=50
     //% blockId=set_shared_string
@@ -64,7 +64,7 @@ namespace Data {
     }
 
     /**
-     * get the current value of a shared variable
+     * sets a shared number value
      */
     //% weight=40
     //% blockId=set_shared_number
@@ -74,7 +74,7 @@ namespace Data {
     }
 
     /**
-     * get the current value of a shared variable
+     * sets a shared true/false value
      */
     //% weight=30
     //% blockId=set_shared_boolean
@@ -84,7 +84,7 @@ namespace Data {
     }
 
     /**
-     * get the current value of a shared variable
+     * sets a shared list of texts
      */
     //% weight=29
     //% blockId=set_shared_string_list
@@ -94,7 +94,7 @@ namespace Data {
     }
 
    /**
-     * get the current value of a shared variable
+     * sets a shared list of numbers
      */
     //% weight=28
     //% blockId=set_shared_number_list
@@ -104,7 +104,7 @@ namespace Data {
     }
 
     /**
-     * when the UI is updated, execute some code
+     * when a shared variable is changed, make something happen
     **/
     //% weight=27
     //% blockId=on_shared_change
@@ -119,6 +119,7 @@ namespace Data {
     //% weight=26
     //% blockId=convert_number_to_text
     //% block="To text %value"
+    //% blockNamespace=text
     export function convertNumberToText(value: number): string {
         if (value === undefined)
             return null;

@@ -5,7 +5,7 @@
     "corepkg": "core",
     "cloud": {
         "workspace": false,
-        "packages": true
+        "packages": false
     },
     "bundleddirs": [
         "libs/core"
@@ -41,6 +41,7 @@
         "coloredToolbox": true,
         "monacoToolbox": true,
         "invertedMenu": true,
+        "blocksOnly": true,
         "blocklyOptions": {
             "collapse": true,
             "comments": true,
@@ -53,7 +54,6 @@
                 "snap": true
             }
         },
-        "sideDoc": "pxt/docs/tutorials/getting-started",
         "extendEditor": true
     }
 }

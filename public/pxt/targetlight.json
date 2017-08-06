@@ -5,7 +5,7 @@
   "corepkg": "core",
   "cloud": {
     "workspace": false,
-    "packages": true
+    "packages": false
   },
   "runtime": {
     "mathBlocks": true,

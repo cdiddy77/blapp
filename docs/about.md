@@ -1,4 +1,4 @@
-# About Sample Target
+# UNDER CONSTRUCTION
 
 Example for [Microsoft Programming Experience Toolkit](https://www.pxt.io).
 
