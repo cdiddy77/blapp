@@ -173,7 +173,15 @@ namespace pxt.editor {
                   .variableField("cbIndex", "index")
                   .input("array", "Array", "in")
                   .handler("", "do")
-                  .toBlock(new ForEachCompiler())]
+                  .toBlock(new ForEachCompiler())],
+            toolboxOptions: {
+                blocklyXml: BLOCKLY_XML,
+                monacoToolbox: {
+                    arrays: { advanced: false },
+                    text: { advanced: false },
+                    loops: { advanced: false }
+                }
+            }
         };
         return Promise.resolve<pxt.editor.ExtensionResult>(res);
     }
@@ -195,7 +203,7 @@ class ForEachCompiler implements pxt.blocks.BlockCompiler {
 
         const arrTarget = block.getInputTargetBlock("array");
         const array =  arrTarget ? compiler.compileExpression(arrTarget, comments) : pxt.blocks.mkText("[]");
-        
+
         const stmtTarget = block.getInputTargetBlock("HANDLER");
         const statements = stmtTarget ? compiler.compileCodeBlock(stmtTarget) : pxt.blocks.mkBlock([]);
 
