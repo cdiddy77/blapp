@@ -296,6 +296,12 @@ namespace pxsim.Data {
     export function onSharedVariableChangeImpl(name: string, body: pxsim.RefAction): void {
 
     }
+
+    //%
+    export function textContainsImpl(text: string, subtext: string): boolean {
+        return false;
+    }
+
 }
 
 namespace pxsim.Time {

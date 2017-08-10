@@ -128,6 +128,17 @@ namespace Data {
     }
 
     /**
+     * test whether text contains another text
+     */
+    //% weight=27
+    //% blockId=text_contains_text
+    //% block="Does %text|contain %subtext"
+    //% blockNamespace=text
+    export function textContainsText(text:string,subtext:string): boolean {
+        return textContainsImpl(text,subtext);
+    }
+
+    /**
      * Perform an operation for each value of a string
      */
     //% weight=25

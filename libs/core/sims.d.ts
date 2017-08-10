@@ -208,6 +208,10 @@ declare namespace Data {
     //% shim=Data::onSharedVariableChangeImpl
     function onSharedVariableChangeImpl(name: string, body: () => void): void;
 
+    //%
+    //% shim=Data::textContainsImpl
+    function textContainsImpl(text: string, subtext: string): boolean;
+
 }
 declare namespace Time {
     //%

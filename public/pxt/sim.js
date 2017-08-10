@@ -252,6 +252,11 @@ var pxsim;
         function onSharedVariableChangeImpl(name, body) {
         }
         Data.onSharedVariableChangeImpl = onSharedVariableChangeImpl;
+        //%
+        function textContainsImpl(text, subtext) {
+            return false;
+        }
+        Data.textContainsImpl = textContainsImpl;
     })(Data = pxsim.Data || (pxsim.Data = {}));
 })(pxsim || (pxsim = {}));
 (function (pxsim) {

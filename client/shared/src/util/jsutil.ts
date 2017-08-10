@@ -57,6 +57,10 @@ export function mapToArray<T, U>(src: Map<T>, fn: (k: string, v: T) => U): U[] {
     return dest;
 }
 
+export function textSearch(text: string, subtext: string): boolean {
+    return text.indexOf(subtext) != -1;
+}
+
 export function interpolateValue(normValue: number, low: number, high: number): number {
     return low + (normValue * (high - low));
 }

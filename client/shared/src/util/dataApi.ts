@@ -2,6 +2,7 @@
 /// <reference path="../../../../libs/core/types.d.ts"/>
 
 import { CodegenRuntime } from './CodegenRuntime';
+import * as jsutil from './jsutil';
 
 export namespace pxsimdata {
     export function getSharedStringImpl(name: string): string {
@@ -81,6 +82,10 @@ export namespace pxsimdata {
                 });
             });
         }
+    }
+
+    export function textContainsImpl(text:string,subtext:string):boolean{
+        return jsutil.textSearch(text,subtext);
     }
 
 }
