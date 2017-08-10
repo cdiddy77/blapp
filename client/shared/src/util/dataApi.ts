@@ -21,8 +21,10 @@ export namespace pxsimdata {
         // HACK: we are copying the entire list each time we move it back and forth, which is super-inefficient
         let arr: string[] = CodegenRuntime.getShareVar(name);
         let retval: pxsim.RefCollection = CodegenRuntime.getCodegenHost().createRefCollection();
-        for (let i = 0; i < arr.length; i++) {
-            retval.push(arr[i]);
+        if (arr) {
+            for (let i = 0; i < arr.length; i++) {
+                retval.push(arr[i]);
+            }
         }
         return retval;
     }
@@ -31,8 +33,10 @@ export namespace pxsimdata {
         // HACK: we are copying the entire list each time we move it back and forth, which is super-inefficient
         let arr: number[] = CodegenRuntime.getShareVar(name);
         let retval: pxsim.RefCollection = CodegenRuntime.getCodegenHost().createRefCollection();
-        for (let i = 0; i < arr.length; i++) {
-            retval.push(arr[i]);
+        if (arr) {
+            for (let i = 0; i < arr.length; i++) {
+                retval.push(arr[i]);
+            }
         }
         return retval;
     }
@@ -84,8 +88,8 @@ export namespace pxsimdata {
         }
     }
 
-    export function textContainsImpl(text:string,subtext:string):boolean{
-        return jsutil.textSearch(text,subtext);
+    export function textContainsImpl(text: string, subtext: string): boolean {
+        return jsutil.textSearch(text, subtext);
     }
 
 }
