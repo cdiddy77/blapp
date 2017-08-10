@@ -260,13 +260,13 @@ export namespace pxsimui {
         let textInputClass: string;
         switch (className) {
             case UITextInputClass.Inline:
-                textInputClass = 'small';
+                textInputClass = 'inline';
                 break;
             case UITextInputClass.Form:
-                textInputClass = 'medium';
+                textInputClass = 'form';
                 break;
             case UITextInputClass.Headline:
-                textInputClass = 'large';
+                textInputClass = 'headline';
                 break;
             case UITextInputClass.None:
                 textInputClass = 'none';

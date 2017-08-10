@@ -82,11 +82,11 @@ declare const enum UITextClass {
     None
 }
 declare const enum UITextInputClass {
-    //% block=small
+    //% block=inline
     Inline,
-    //% block=medium
+    //% block=form
     Form,
-    //% block=large
+    //% block=headline
     Headline,
     //% block="(none)"
     None

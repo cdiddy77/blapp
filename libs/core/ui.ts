@@ -129,8 +129,8 @@ namespace UI {
 
     /**
      * A block for making a image element
-     * @param width the width of the image, eg. 80
-     * @param height the height of the image, eg. 60
+     * @param width the width of the image, eg: 80
+     * @param height the height of the image, eg: 60
      */
     //% weight=60
     //% color=#5BA5A5
