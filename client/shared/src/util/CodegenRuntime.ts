@@ -31,7 +31,7 @@ import * as BlockThemes from '../util/BlockThemes';
 export interface CodegenHost {
     runFiberAsync(a: any, arg0?: any, arg1?: any, arg2?: any): Promise<any>;
     runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void;
-    createRefCollection():any;
+    createRefCollection(): any;
 }
 
 export type EdgeKind = 'none' | 'left' | 'top' | 'right' | 'bottom';
@@ -100,7 +100,7 @@ export namespace CodegenRuntime {
         cgHost = host;
     }
 
-    export function getCodegenHost():CodegenHost{
+    export function getCodegenHost(): CodegenHost {
         return cgHost;
     }
 
@@ -253,6 +253,12 @@ export namespace CodegenRuntime {
         sharedVars[name] = val;
         if (shareVarSetProc)
             shareVarSetProc(name, val);
+    }
+
+    export function initShareVars(initVars: any): void {
+        console.log('initShareVars'); // , JSON.stringify(initVars));
+        sharedVars = initVars;
+        updateUI();
     }
     export function forceUpdateShareVar(name: string): void {
         let val = sharedVars[name];

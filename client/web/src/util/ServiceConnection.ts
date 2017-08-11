@@ -67,6 +67,7 @@ export function init(host: ServiceConnectionHost) {
             createSession();
         } else {
             setPairingCode(data.pairingCode, host);
+            CodegenRuntime.initShareVars(data.sharedVars);
         }
         console.log('joinSessionResponse');//, data);
     });
@@ -121,7 +122,6 @@ export function createNewSession() {
 
 var nameCounter: number = 1;
 export function shareSession(nameHint: string, host: ServiceConnectionHost) {
-    // BLAPPSHARE : implement this
     console.log('ServiceConnection.shareSession', nameHint);
     socket.emit('publishSessionRequest', pairingCode, svcTypes.createPublishSessionRequest(nameHint + nameCounter));
     nameCounter++;

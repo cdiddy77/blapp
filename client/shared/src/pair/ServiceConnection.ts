@@ -91,10 +91,11 @@ function initPairing(appModel: AppModel) {
             } else {
                 appModel.setProperty('connectionState', 'joined');
             }
-            if (data.executeCode) {
+            CodegenRuntime.initShareVars(data.sharedVars);
+           if (data.executeCode) {
                 appModel.setProperty('code', data.executeCode);
             }
-            console.log('joinSessionResponse');//, data);
+             console.log('joinSessionResponse');//, data);
             pairingCode = data.pairingCode;
             // comment
         });
