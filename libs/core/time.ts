@@ -10,7 +10,7 @@ namespace Time {
     //% weight=90
     //% blockId=set_timeout
     //% block="After %ms|milliseconds"
-    //% handlerStmt=true
+    //% handlerStatement=true
     export function afterTime(
         ms: number,
         body: ()=>void): void {
@@ -23,7 +23,7 @@ namespace Time {
     //% weight=80
     //% blockId=set_interval
     //% block="Every %ms|milliseconds"
-    //% handlerStmt=true
+    //% handlerStatement=true
     export function everyTime(
         ms: number,
         body: ()=>void): void {

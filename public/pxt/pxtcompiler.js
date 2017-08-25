@@ -520,6 +520,7 @@ var ts;
             AssemblerSnippets.prototype.proc_setup = function (main) { return "TBD"; };
             AssemblerSnippets.prototype.push_fixed = function (reg) { return "TBD"; };
             AssemblerSnippets.prototype.push_local = function (reg) { return "TBD"; };
+            AssemblerSnippets.prototype.push_locals = function (n) { return "TBD"; };
             AssemblerSnippets.prototype.proc_setup_end = function () { return ""; };
             AssemblerSnippets.prototype.pop_fixed = function (reg) { return "TBD"; };
             AssemblerSnippets.prototype.pop_locals = function (n) { return "TBD"; };
@@ -568,12 +569,34 @@ var ts;
                 this.exprStack = [];
                 this.calls = [];
                 this.proc = null;
+                this.baseStackSize = 0; // real stack size is this + exprStack.length
                 this.write = function (s) { _this.resText += pxtc.asmline(s); };
                 this.t = t;
                 this.bin = bin;
                 this.proc = proc;
                 this.work();
             }
+            ProctoAssembler.prototype.stackSize = function () {
+                return this.baseStackSize + this.exprStack.length;
+            };
+            ProctoAssembler.prototype.stackAlignmentNeeded = function (offset) {
+                if (offset === void 0) { offset = 0; }
+                if (!pxtc.target.stackAlign)
+                    return 0;
+                var npush = pxtc.target.stackAlign - ((this.stackSize() + offset) & (pxtc.target.stackAlign - 1));
+                if (npush == pxtc.target.stackAlign)
+                    return 0;
+                else
+                    return npush;
+            };
+            ProctoAssembler.prototype.alignStack = function (offset) {
+                if (offset === void 0) { offset = 0; }
+                var npush = this.stackAlignmentNeeded(offset);
+                if (!npush)
+                    return "";
+                this.write(this.t.push_locals(npush));
+                return this.t.pop_locals(npush);
+            };
             ProctoAssembler.prototype.getAssembly = function () {
                 return this.resText;
             };
@@ -620,7 +643,10 @@ var ts;
                         }
                     }
                 };
-                this.write(this.t.debugger_proc(bkptLabel));
+                if (this.bin.options.breakpoints) {
+                    this.write(this.t.debugger_proc(bkptLabel));
+                }
+                this.baseStackSize = 1; // push {lr}
                 this.write(this.t.proc_setup(true));
                 // initialize the locals
                 var numlocals = this.proc.locals.length;
@@ -628,6 +654,7 @@ var ts;
                     this.write(this.t.reg_gets_imm("r0", 0));
                 this.proc.locals.forEach(function (l) {
                     _this.write(_this.t.push_local("r0") + " ;loc");
+                    _this.baseStackSize++;
                 });
                 this.write(this.t.proc_setup_end());
                 this.write("@stackmark locals");
@@ -899,8 +926,14 @@ var ts;
                     this.write(this.t.rt_call(name.slice(7), "r0", "r1"));
                 }
                 else {
-                    this.write(this.t.call_lbl(name));
+                    this.alignedCall(name);
                 }
+            };
+            ProctoAssembler.prototype.alignedCall = function (name, cmt) {
+                if (cmt === void 0) { cmt = ""; }
+                var unalign = this.alignStack();
+                this.write(this.t.call_lbl(name) + cmt);
+                this.write(unalign);
             };
             ProctoAssembler.prototype.emitHelper = function (asm) {
                 if (!this.bin.codeHelpers[asm]) {
@@ -926,7 +959,19 @@ var ts;
                         needsRePush = true;
                     return a;
                 });
+                if (this.stackAlignmentNeeded())
+                    needsRePush = true;
                 if (needsRePush) {
+                    var interAlign = this.stackAlignmentNeeded(argStmts.length);
+                    if (interAlign) {
+                        this.write(this.t.push_locals(interAlign));
+                        for (var i = 0; i < interAlign; ++i) {
+                            var dummy = pxtc.ir.numlit(0);
+                            dummy.totalUses = 1;
+                            dummy.currUses = 1;
+                            this.exprStack.unshift(dummy);
+                        }
+                    }
                     for (var _i = 0, argStmts_1 = argStmts; _i < argStmts_1.length; _i++) {
                         var a = argStmts_1[_i];
                         var idx = this.exprStack.indexOf(a);
@@ -1045,13 +1090,17 @@ var ts;
                 var parms = this.proc.args.map(function (a) { return a.def; });
                 this.write(this.t.proc_setup());
                 this.write(this.t.push_fixed(["r5", "r6", "r7"]));
-                if (parms.length >= 1)
-                    this.write(this.t.push_local("r1"));
+                this.baseStackSize = 4; // above
+                var numpop = parms.length;
+                var alignment = this.stackAlignmentNeeded(parms.length);
+                if (alignment) {
+                    this.write(this.t.push_locals(alignment));
+                    numpop += alignment;
+                }
                 parms.forEach(function (_, i) {
                     if (i >= 3)
                         pxtc.U.userError(pxtc.U.lf("only up to three parameters supported in lambdas"));
-                    if (i > 0)
-                        _this.write(_this.t.push_local("r" + (i + 1)));
+                    _this.write(_this.t.push_local("r" + (i + 1)));
                 });
                 this.write(this.t.proc_setup_end());
                 var asm = this.t.lambda_prologue();
@@ -1065,8 +1114,8 @@ var ts;
                 asm += this.t.lambda_epilogue();
                 this.emitHelper(asm); // using shared helper saves about 3% of binary size
                 this.write(this.t.call_lbl(this.proc.label()));
-                if (parms.length)
-                    this.write(this.t.pop_locals(parms.length));
+                if (numpop)
+                    this.write(this.t.pop_locals(numpop));
                 this.write(this.t.pop_fixed(["r6", "r5", "r7"]));
                 this.write(this.t.proc_return());
                 this.write("@stackempty litfunc");
@@ -1074,7 +1123,7 @@ var ts;
             ProctoAssembler.prototype.emitCallRaw = function (name) {
                 var inf = pxtc.hex.lookupFunc(name);
                 pxtc.assert(!!inf, "unimplemented raw function: " + name);
-                this.write(this.t.call_lbl(name) + " ; *" + inf.argsFmt + " (raw)");
+                this.alignedCall(name);
             };
             return ProctoAssembler;
         }());
@@ -1766,6 +1815,21 @@ var ts;
             function ThumbSnippets() {
                 _super.apply(this, arguments);
             }
+            ThumbSnippets.prototype.stackAligned = function () {
+                return pxtc.target.stackAlign && pxtc.target.stackAlign > 1;
+            };
+            ThumbSnippets.prototype.pushLR = function () {
+                if (this.stackAligned())
+                    return "push {lr, r3}  ; r3 for align";
+                else
+                    return "push {lr}";
+            };
+            ThumbSnippets.prototype.popPC = function () {
+                if (this.stackAligned())
+                    return "pop {pc, r3}  ; r3 for align";
+                else
+                    return "pop {pc}";
+            };
             ThumbSnippets.prototype.nop = function () { return "nop"; };
             ThumbSnippets.prototype.reg_gets_imm = function (reg, imm) {
                 return "movs " + reg + ", #" + imm;
@@ -1784,7 +1848,8 @@ var ts;
                 return "\n    ldr r0, [r6, #0]  ; brk-entry\n    ldr r0, [r0, #4]  ; brk-entry\n" + lbl + ":";
             };
             ThumbSnippets.prototype.push_local = function (reg) { return "push {" + reg + "}"; };
-            ThumbSnippets.prototype.pop_locals = function (n) { return "add sp, #4*" + n + " ; pop locals" + n; };
+            ThumbSnippets.prototype.push_locals = function (n) { return "sub sp, #4*" + n + " ; push locals " + n + " (align)"; };
+            ThumbSnippets.prototype.pop_locals = function (n) { return "add sp, #4*" + n + " ; pop locals " + n; };
             ThumbSnippets.prototype.unconditional_branch = function (lbl) { return "bb " + lbl; };
             ThumbSnippets.prototype.beq = function (lbl) { return "beq " + lbl; };
             ThumbSnippets.prototype.bne = function (lbl) { return "bne " + lbl; };
@@ -1828,16 +1893,16 @@ var ts;
             // NOTE: 43 (in cmp instruction below) is magic number to distinguish
             // NOTE: Map from RefRecord
             ThumbSnippets.prototype.vcall = function (mapMethod, isSet, vtableShift) {
-                return "\n    ldr r0, [sp, #" + (isSet ? 4 : 0) + "] ; ld-this\n    ldrh r3, [r0, #2] ; ld-vtable\n    lsls r3, r3, #" + vtableShift + "\n    ldr r3, [r3, #4] ; iface table\n    cmp r3, #43\n    beq .objlit\n.nonlit:\n    lsls r1, " + (isSet ? "r2" : "r1") + ", #2\n    ldr r0, [r3, r1] ; ld-method\n    bx r0\n.objlit:\n    " + (isSet ? "ldr r2, [sp, #0]" : "") + "\n    push {lr}\n    bl " + mapMethod + "\n    pop {pc}\n";
+                return "\n    ldr r0, [sp, #" + (isSet ? 4 : 0) + "] ; ld-this\n    ldrh r3, [r0, #2] ; ld-vtable\n    lsls r3, r3, #" + vtableShift + "\n    ldr r3, [r3, #4] ; iface table\n    cmp r3, #43\n    beq .objlit\n.nonlit:\n    lsls r1, " + (isSet ? "r2" : "r1") + ", #2\n    ldr r0, [r3, r1] ; ld-method\n    bx r0\n.objlit:\n    " + (isSet ? "ldr r2, [sp, #0]" : "") + "\n    " + this.pushLR() + "\n    bl " + mapMethod + "\n    " + this.popPC() + "\n";
             };
             ThumbSnippets.prototype.prologue_vtable = function (arg_top_index, vtableShift) {
                 return "\n    ldr r0, [sp, #4*" + arg_top_index + "]  ; ld-this\n    ldrh r0, [r0, #2] ; ld-vtable\n    lsls r0, r0, #" + vtableShift + "\n    ";
             };
             ThumbSnippets.prototype.lambda_prologue = function () {
-                return "\n    @stackmark args\n    push {lr}\n    mov r5, r0\n";
+                return "\n    @stackmark args\n    " + this.pushLR() + "\n    mov r5, r0\n";
             };
             ThumbSnippets.prototype.lambda_epilogue = function () {
-                return "\n    bl pxtrt::getGlobalsPtr\n    mov r6, r0\n    pop {pc}\n    @stackempty args\n";
+                return "\n    bl pxtrt::getGlobalsPtr\n    mov r6, r0\n    " + this.popPC() + "\n    @stackempty args\n";
             };
             ThumbSnippets.prototype.load_ptr_full = function (lbl, reg) {
                 pxtc.assert(!!lbl);
@@ -1864,9 +1929,9 @@ var ts;
                             r += "    adds r0, r0, #1\n";
                         r += "    blx lr\n";
                     }
-                    r += "\n.boxed:\n    push {lr}\n    bl numops::" + op + "\n    pop {pc}\n";
+                    r += "\n.boxed:\n    " + this.pushLR() + "\n    bl numops::" + op + "\n    " + this.popPC() + "\n";
                 }
-                r += "\n@scope _numops_toInt\n_numops_toInt:\n    asrs r0, r0, #1\n    bcc .over\n    blx lr\n.over:\n    push {lr}\n    lsls r0, r0, #1\n    bl pxt::toInt\n    pop {pc}\n\n_numops_fromInt:\n    lsls r2, r0, #1\n    asrs r1, r2, #1\n    cmp r0, r1\n    bne .over2\n    adds r0, r2, #1\n    blx lr\n.over2:\n    push {lr}\n    bl pxt::fromInt\n    pop {pc}\n";
+                r += "\n@scope _numops_toInt\n_numops_toInt:\n    asrs r0, r0, #1\n    bcc .over\n    blx lr\n.over:\n    " + this.pushLR() + "\n    lsls r0, r0, #1\n    bl pxt::toInt\n    " + this.popPC() + "\n\n_numops_fromInt:\n    lsls r2, r0, #1\n    asrs r1, r2, #1\n    cmp r0, r1\n    bne .over2\n    adds r0, r2, #1\n    blx lr\n.over2:\n    " + this.pushLR() + "\n    bl pxt::fromInt\n    " + this.popPC() + "\n";
                 return r;
             };
             ThumbSnippets.prototype.emit_int = function (v, reg) {
@@ -1952,12 +2017,9 @@ var ts;
             var lowerCaseAlphabetStartCode = 97;
             var lowerCaseAlphabetEndCode = 122;
             var validStringRegex = /^[^\f\n\r\t\v\u00a0\u1680\u180e\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]*$/;
-            var ShadowType;
-            (function (ShadowType) {
-                ShadowType[ShadowType["Boolean"] = 0] = "Boolean";
-                ShadowType[ShadowType["Number"] = 1] = "Number";
-                ShadowType[ShadowType["String"] = 2] = "String";
-            })(ShadowType || (ShadowType = {}));
+            var numberType = "math_number";
+            var stringType = "text";
+            var booleanType = "logic_boolean";
             var ops = {
                 "+": { type: "math_arithmetic", op: "ADD" },
                 "-": { type: "math_arithmetic", op: "MINUS" },
@@ -2175,7 +2237,7 @@ var ts;
                             error(expr);
                             return false;
                         }
-                        return callInfo.attrs.blockId && !callInfo.isExpression && hasArrowFunction(callInfo);
+                        return callInfo.attrs.blockId && !callInfo.attrs.handlerStatement && !callInfo.isExpression && hasArrowFunction(callInfo);
                     }
                     return false;
                 }
@@ -2247,13 +2309,15 @@ var ts;
                     var emitShadowOnly = false;
                     if (n.value.kind === "expr") {
                         var value = n.value;
-                        switch (value.type) {
-                            case "math_number":
-                            case "logic_boolean":
-                            case "text":
-                                emitShadowOnly = true;
-                                break;
-                            default:
+                        emitShadowOnly = value.type === n.shadowType;
+                        if (!emitShadowOnly) {
+                            switch (value.type) {
+                                case "math_number":
+                                case "logic_boolean":
+                                case "text":
+                                    emitShadowOnly = !n.shadowType;
+                                    break;
+                            }
                         }
                     }
                     if (emitShadowOnly) {
@@ -2263,16 +2327,17 @@ var ts;
                         // Emit a shadow block to appear if the given input is removed
                         if (n.shadowType !== undefined) {
                             switch (n.shadowType) {
-                                case ShadowType.Number:
+                                case numberType:
                                     write("<shadow type=\"math_number\"><field name=\"NUM\">0</field></shadow>");
                                     break;
-                                case ShadowType.Boolean:
+                                case booleanType:
                                     write("<shadow type=\"logic_boolean\"><field name=\"BOOL\">TRUE</field></shadow>");
                                     break;
-                                case ShadowType.String:
+                                case stringType:
                                     write("<shadow type=\"text\"><field name=\"TEXT\"></field></shadow>");
                                     break;
                                 default:
+                                    write("<shadow type=\"" + n.shadowType + "\"/>");
                             }
                         }
                         emitOutputNode(n.value);
@@ -2383,7 +2448,7 @@ var ts;
                             inputs: []
                         };
                         for (var i = 0; i < args.length; i++) {
-                            result_1.inputs.push(getValue("ADD" + i, args[i], ShadowType.String));
+                            result_1.inputs.push(getValue("ADD" + i, args[i], stringType));
                         }
                         return result_1;
                     }
@@ -2396,7 +2461,7 @@ var ts;
                     if (npp.op) {
                         result.fields.push(getField("OP", npp.op));
                     }
-                    var shadowType = (op === "&&" || op === "||") ? ShadowType.Boolean : ShadowType.Number;
+                    var shadowType = (op === "&&" || op === "||") ? booleanType : numberType;
                     result.inputs.push(getValue(npp.leftName || "A", n.left, shadowType));
                     result.inputs.push(getValue(npp.rightName || "B", n.right, shadowType));
                     return result;
@@ -2471,8 +2536,8 @@ var ts;
                         kind: "expr",
                         type: "math_arithmetic",
                         inputs: [
-                            getValue("A", 0),
-                            getValue("B", node, ShadowType.Number)
+                            getValue("A", 0, numberType),
+                            getValue("B", node, numberType)
                         ],
                         fields: [
                             getField("OP", "MINUS")
@@ -2483,7 +2548,7 @@ var ts;
                     switch (node.operator) {
                         case SK.ExclamationToken:
                             var r = { kind: "expr", type: "logic_negate" };
-                            r.inputs = [getValue("BOOL", node.operand, ShadowType.Boolean)];
+                            r.inputs = [getValue("BOOL", node.operand, booleanType)];
                             return r;
                         case SK.PlusToken:
                             return getOutputBlock(node.operand);
@@ -2553,7 +2618,7 @@ var ts;
                     return {
                         kind: "expr",
                         type: "lists_index_get",
-                        inputs: [getValue("LIST", n.expression), getValue("INDEX", n.argumentExpression)]
+                        inputs: [getValue("LIST", n.expression), getValue("INDEX", n.argumentExpression, numberType)]
                     };
                 }
                 function getStatementBlock(n, next, parent, asExpression, topLevel) {
@@ -2609,7 +2674,7 @@ var ts;
                                 stmt = getFunctionDeclaration(node);
                                 break;
                             case SK.CallExpression:
-                                stmt = getCallStatement(node);
+                                stmt = getCallStatement(node, asExpression);
                                 break;
                             default:
                                 if (next) {
@@ -2715,7 +2780,7 @@ var ts;
                                         kind: "value",
                                         name: "VALUE",
                                         value: negateNumericNode(n.right),
-                                        shadowType: ShadowType.Number
+                                        shadowType: numberType
                                     }],
                                 fields: [getField("VAR", getVariableName(n.left))]
                             };
@@ -2728,7 +2793,7 @@ var ts;
                     return {
                         kind: "statement",
                         type: "device_while",
-                        inputs: [getValue("COND", n.expression, ShadowType.Boolean)],
+                        inputs: [getValue("COND", n.expression, booleanType)],
                         handlers: [{ name: "DO", statement: getStatementBlock(n.statement) }]
                     };
                 }
@@ -2745,7 +2810,7 @@ var ts;
                         handlers: []
                     };
                     flatif.ifStatements.forEach(function (stmt, i) {
-                        r.inputs.push(getValue("IF" + i, stmt.expression, ShadowType.Boolean));
+                        r.inputs.push(getValue("IF" + i, stmt.expression, booleanType));
                         r.handlers.push({ name: "DO" + i, statement: getStatementBlock(stmt.thenStatement) });
                     });
                     if (flatif.elseStatement) {
@@ -2764,7 +2829,7 @@ var ts;
                             kind: "statement",
                             type: "controls_repeat_ext",
                             fields: [],
-                            inputs: [getValue("TIMES", condition.right, ShadowType.Number)],
+                            inputs: [getValue("TIMES", condition.right, numberType)],
                             handlers: []
                         };
                     }
@@ -2780,20 +2845,20 @@ var ts;
                             r.inputs.push({
                                 kind: "value",
                                 name: "TO",
-                                shadowType: ShadowType.Number,
+                                shadowType: numberType,
                                 value: {
                                     kind: "expr",
                                     type: "math_arithmetic",
                                     fields: [getField("OP", "MINUS")],
                                     inputs: [
-                                        getValue("A", condition.right, ShadowType.Number),
-                                        getValue("B", 1)
+                                        getValue("A", condition.right, numberType),
+                                        getValue("B", 1, numberType)
                                     ]
                                 }
                             });
                         }
                         else if (condition.operatorToken.kind === SK.LessThanEqualsToken) {
-                            r.inputs.push(getValue("TO", condition.right, ShadowType.Number));
+                            r.inputs.push(getValue("TO", condition.right, numberType));
                         }
                     }
                     r.handlers.push({ name: "DO", statement: getStatementBlock(n.statement) });
@@ -2826,7 +2891,7 @@ var ts;
                     return {
                         kind: "statement",
                         type: changed ? "variables_change" : "variables_set",
-                        inputs: [getValue("VALUE", value, ShadowType.Number)],
+                        inputs: [getValue("VALUE", value, numberType)],
                         fields: [getField("VAR", renamed)]
                     };
                 }
@@ -2836,7 +2901,7 @@ var ts;
                         type: "lists_index_set",
                         inputs: [
                             getValue("LIST", left.expression),
-                            getValue("INDEX", left.argumentExpression, ShadowType.Number),
+                            getValue("INDEX", left.argumentExpression, numberType),
                             getValue("VALUE", right)
                         ]
                     };
@@ -2865,7 +2930,7 @@ var ts;
                         handlers: [{ name: "STACK", statement: statements }]
                     };
                 }
-                function getCallStatement(node) {
+                function getCallStatement(node, asExpression) {
                     var info = node.callInfo;
                     if (!info.attrs.blockId || !info.attrs.block) {
                         var builtin = builtinBlocks[info.qName];
@@ -2892,7 +2957,7 @@ var ts;
                     }
                     var paramInfo = getParameterInfo(info, blocksInfo);
                     var r = {
-                        kind: "statement",
+                        kind: asExpression ? "expr" : "statement",
                         type: info.attrs.blockId
                     };
                     if (info.qName == "Math.max") {
@@ -2930,7 +2995,7 @@ var ts;
                                 var shadow = callInfo && !!callInfo.attrs.blockIdentity;
                                 var aName = pxtc.U.htmlEscape(paramInfo[i].name);
                                 if (shadow && callInfo.attrs.blockIdentity !== info.qName) {
-                                    (r.inputs || (r.inputs = [])).push(getValue(aName, e));
+                                    (r.inputs || (r.inputs = [])).push(getValue(aName, e, paramInfo[i].type));
                                 }
                                 else {
                                     var expr = getOutputBlock(e);
@@ -2941,7 +3006,8 @@ var ts;
                                         (r.inputs || (r.inputs = [])).push({
                                             kind: "value",
                                             name: aName,
-                                            value: expr
+                                            value: expr,
+                                            shadowType: paramInfo[i].type
                                         });
                                     }
                                 }
@@ -2954,7 +3020,8 @@ var ts;
                                     v = {
                                         kind: "value",
                                         name: vName,
-                                        value: getMathRandomArgumentExpresion(e)
+                                        value: getMathRandomArgumentExpresion(e),
+                                        shadowType: numberType
                                     };
                                     defaultV = false;
                                 }
@@ -2968,7 +3035,8 @@ var ts;
                                         v = {
                                             kind: "value",
                                             name: vName,
-                                            value: fieldBlock
+                                            value: fieldBlock,
+                                            shadowType: param.type
                                         };
                                         defaultV = false;
                                     }
@@ -2988,7 +3056,7 @@ var ts;
                                     }
                                 }
                                 if (defaultV) {
-                                    v = getValue(vName, e);
+                                    v = getValue(vName, e, paramInfo[i].type);
                                 }
                                 (r.inputs || (r.inputs = [])).push(v);
                                 break;
@@ -3000,7 +3068,7 @@ var ts;
                 //     openBlockTag(info.attrs.blockId);
                 //     write(`<mutation count="${info.args.length}" />`)
                 //     info.args.forEach((expression, index) => {
-                //         emitValue("value_input_" + index, expression, ShadowType.Number);
+                //         emitValue("value_input_" + index, expression, numberType);
                 //     });
                 // }
                 function getDestructuringMutation(callback) {
@@ -3329,7 +3397,7 @@ var ts;
                         return pxtc.Util.lf("No output expressions as statements");
                     }
                     var hasCallback = hasArrowFunction(info);
-                    if (hasCallback && !topLevel) {
+                    if (hasCallback && !info.attrs.handlerStatement && !topLevel) {
                         return pxtc.Util.lf("Events must be top level");
                     }
                     if (!info.attrs.blockId || !info.attrs.block) {
@@ -3394,6 +3462,15 @@ var ts;
                                 }
                                 else if (isLiteral && (!inf.paramFieldEditorOptions || !inf.paramFieldEditorOptions["decompileLiterals"])) {
                                     fail_1 = pxtc.Util.lf("Field editor does not support literal arguments");
+                                }
+                            }
+                            else if (e.kind === SK.ArrowFunction && info.attrs.mutate === "objectdestructuring") {
+                                var ar = e;
+                                if (ar.parameters.length) {
+                                    var param = unwrapNode(ar.parameters[0]);
+                                    if (param.kind === SK.Parameter && param.name.kind !== SK.ObjectBindingPattern) {
+                                        fail_1 = pxtc.Util.lf("Object destructuring mutation callbacks can only have destructuring patters as arguments");
+                                    }
                                 }
                             }
                         });
@@ -3876,9 +3953,9 @@ var ts;
                         return pxtc.assembler.emitErr("uneven BL?", actual);
                     var off = v / 2;
                     pxtc.assert(off != null);
+                    // Range is +-4M (i.e., 2M instructions)
                     if ((off | 0) != off ||
-                        // we can actually support more but the board has 256k (128k instructions)
-                        !(-128 * 1024 <= off && off <= 128 * 1024))
+                        !(-2 * 1024 * 1024 < off && off < 2 * 1024 * 1024))
                         return pxtc.assembler.emitErr("jump out of range", actual);
                     // note that off is already in instructions, not bytes
                     var imm11 = off & 0x7ff;
@@ -6649,9 +6726,19 @@ var ts;
                     throw unhandled(node, lf("unsupported indexer"), 9239);
                 }
             }
+            function isOnDemandGlobal(decl) {
+                if (!isGlobalVar(decl))
+                    return false;
+                var v = decl;
+                if (!isSideEffectfulInitializer(v.initializer))
+                    return true;
+                var attrs = parseComments(decl);
+                if (attrs.whenUsed)
+                    return true;
+                return false;
+            }
             function isOnDemandDecl(decl) {
-                var res = (isGlobalVar(decl) && !isSideEffectfulInitializer(decl.initializer)) ||
-                    isTopLevelFunctionDecl(decl);
+                var res = isOnDemandGlobal(decl) || isTopLevelFunctionDecl(decl);
                 if (opts.testMode && res) {
                     if (!pxtc.U.startsWith(ts.getSourceFileOfNode(decl).fileName, "pxt_modules"))
                         return false;
@@ -6770,6 +6857,9 @@ var ts;
                     case pxtc.SK.FalseKeyword:
                     case pxtc.SK.NumericLiteral:
                         return true;
+                    case pxtc.SK.PropertyAccessExpression:
+                        var r = emitExpr(node);
+                        return r.exprKind == EK.NumberLiteral;
                     default:
                         return false;
                 }
@@ -8851,6 +8941,114 @@ var ts;
         }
     })(pxtc = ts.pxtc || (ts.pxtc = {}));
 })(ts || (ts = {}));
+var pxt;
+(function (pxt) {
+    var elf;
+    (function (elf) {
+        ;
+        var progHeaderFields = [
+            "type",
+            "offset",
+            "vaddr",
+            "paddr",
+            "filesz",
+            "memsz",
+            "flags",
+            "align",
+        ];
+        ;
+        var r32 = pxt.HF2.read32;
+        var r16 = pxt.HF2.read16;
+        var pageSize = 4096;
+        function parse(buf) {
+            if (r32(buf, 0) != 0x464c457f)
+                pxt.U.userError("no magic");
+            if (buf[4] != 1)
+                pxt.U.userError("not 32 bit");
+            if (buf[5] != 1)
+                pxt.U.userError("not little endian");
+            if (buf[6] != 1)
+                pxt.U.userError("bad version");
+            if (r16(buf, 0x10) != 2)
+                pxt.U.userError("wrong object type");
+            if (r16(buf, 0x12) != 0x28)
+                pxt.U.userError("not ARM");
+            var phoff = r32(buf, 0x1c);
+            var shoff = r32(buf, 0x20);
+            if (phoff == 0)
+                pxt.U.userError("expecting program headers");
+            var phentsize = r16(buf, 42);
+            var phnum = r16(buf, 44);
+            var progHeaders = pxt.U.range(phnum).map(function (no) {
+                return readPH(phoff + no * phentsize);
+            });
+            var addFileOff = buf.length + 1;
+            while (addFileOff & 0xf)
+                addFileOff++;
+            var mapEnd = 0;
+            for (var _i = 0, progHeaders_1 = progHeaders; _i < progHeaders_1.length; _i++) {
+                var s = progHeaders_1[_i];
+                if (s.type == 1 /* LOAD */)
+                    mapEnd = Math.max(mapEnd, s.vaddr + s.memsz);
+            }
+            var addMemOff = ((mapEnd + pageSize - 1) & ~(pageSize - 1)) + (addFileOff & (pageSize - 1));
+            var phOffset = -1;
+            for (var _a = 0, progHeaders_2 = progHeaders; _a < progHeaders_2.length; _a++) {
+                var s = progHeaders_2[_a];
+                if (s.type == 4 /* NOTE */) {
+                    phOffset = s._filepos;
+                }
+            }
+            return {
+                imageMemStart: addMemOff,
+                imageFileStart: addFileOff,
+                phOffset: phOffset,
+                template: buf
+            };
+            function readPH(off) {
+                var r = {};
+                var o0 = off;
+                for (var _i = 0, progHeaderFields_1 = progHeaderFields; _i < progHeaderFields_1.length; _i++) {
+                    var f = progHeaderFields_1[_i];
+                    r[f] = r32(buf, off);
+                    off += 4;
+                }
+                var rr = r;
+                rr._filepos = o0;
+                return rr;
+            }
+        }
+        elf.parse = parse;
+        function patch(info, program) {
+            var resBuf = new Uint8Array(info.imageFileStart + program.length);
+            resBuf.fill(0);
+            pxt.U.memcpy(resBuf, 0, info.template);
+            pxt.U.memcpy(resBuf, info.imageFileStart, program);
+            var ph = {
+                _filepos: info.phOffset,
+                type: 1 /* LOAD */,
+                offset: info.imageFileStart,
+                vaddr: info.imageMemStart,
+                paddr: info.imageMemStart,
+                filesz: program.length,
+                memsz: program.length,
+                flags: 4 /* R */ | 1 /* X */,
+                align: pageSize
+            };
+            savePH(resBuf, ph);
+            return resBuf;
+            function savePH(buf, ph) {
+                var off = ph._filepos;
+                for (var _i = 0, progHeaderFields_2 = progHeaderFields; _i < progHeaderFields_2.length; _i++) {
+                    var f = progHeaderFields_2[_i];
+                    pxt.HF2.write32(buf, off, ph[f] || 0);
+                    off += 4;
+                }
+            }
+        }
+        elf.patch = patch;
+    })(elf = pxt.elf || (pxt.elf = {}));
+})(pxt || (pxt = {}));
 var ts;
 (function (ts) {
     var pxtc;
@@ -9737,131 +9935,6 @@ var ts;
     
         */
         pxtc.vtableShift = 2;
-        var UF2;
-        (function (UF2) {
-            function setWord(block, ptr, v) {
-                block[ptr] = (v & 0xff);
-                block[ptr + 1] = ((v >> 8) & 0xff);
-                block[ptr + 2] = ((v >> 16) & 0xff);
-                block[ptr + 3] = ((v >> 24) & 0xff);
-            }
-            function newBlockFile() {
-                return {
-                    currBlock: null,
-                    currPtr: -1,
-                    blocks: [],
-                    ptrs: []
-                };
-            }
-            UF2.newBlockFile = newBlockFile;
-            function serializeFile(f) {
-                for (var i = 0; i < f.blocks.length; ++i) {
-                    setWord(f.blocks[i], 24, f.blocks.length);
-                }
-                var res = "";
-                for (var _i = 0, _a = f.blocks; _i < _a.length; _i++) {
-                    var b = _a[_i];
-                    res += pxtc.Util.uint8ArrayToString(b);
-                }
-                return res;
-            }
-            UF2.serializeFile = serializeFile;
-            function hasAddr(b, a) {
-                if (!b)
-                    return false;
-                return b.targetAddr <= a && a < b.targetAddr + b.payloadSize;
-            }
-            function readBytesFromFile(f, addr, length) {
-                //console.log(`read @${addr} len=${length}`)
-                var needAddr = addr >> 8;
-                var bl;
-                if (needAddr == f.currPtr)
-                    bl = f.currBlock;
-                else {
-                    for (var i = 0; i < f.ptrs.length; ++i) {
-                        if (f.ptrs[i] == needAddr) {
-                            bl = f.blocks[i];
-                            break;
-                        }
-                    }
-                    if (bl) {
-                        f.currPtr = needAddr;
-                        f.currBlock = bl;
-                    }
-                }
-                if (!bl)
-                    return null;
-                var res = new Uint8Array(length);
-                var toRead = Math.min(length, 256 - (addr & 0xff));
-                pxtc.U.memcpy(res, 0, bl, (addr & 0xff) + 32, toRead);
-                var leftOver = length - toRead;
-                if (leftOver > 0) {
-                    var le = readBytesFromFile(f, addr + toRead, leftOver);
-                    pxtc.U.memcpy(res, toRead, le);
-                }
-                return res;
-            }
-            UF2.readBytesFromFile = readBytesFromFile;
-            function writeBytes(f, addr, bytes) {
-                var currBlock = f.currBlock;
-                var needAddr = addr >> 8;
-                // account for unaligned writes
-                // this function is only used to write small chunks, so recursion is fine
-                var firstChunk = 256 - (addr & 0xff);
-                if (bytes.length > firstChunk) {
-                    writeBytes(f, addr, bytes.slice(0, firstChunk));
-                    writeBytes(f, addr + firstChunk, bytes.slice(firstChunk));
-                    return;
-                }
-                if (needAddr != f.currPtr) {
-                    var i = 0;
-                    currBlock = null;
-                    for (var i_1 = 0; i_1 < f.ptrs.length; ++i_1) {
-                        if (f.ptrs[i_1] == needAddr) {
-                            currBlock = f.blocks[i_1];
-                            break;
-                        }
-                    }
-                    if (!currBlock) {
-                        currBlock = new Uint8Array(512);
-                        setWord(currBlock, 0, UF2.UF2_MAGIC_START0);
-                        setWord(currBlock, 4, UF2.UF2_MAGIC_START1);
-                        setWord(currBlock, 12, needAddr << 8);
-                        setWord(currBlock, 16, 256);
-                        setWord(currBlock, 20, f.blocks.length);
-                        setWord(currBlock, 512 - 4, UF2.UF2_MAGIC_END);
-                        f.blocks.push(currBlock);
-                        f.ptrs.push(needAddr);
-                    }
-                    f.currPtr = needAddr;
-                    f.currBlock = currBlock;
-                }
-                var p = (addr & 0xff) + 32;
-                for (var i = 0; i < bytes.length; ++i)
-                    currBlock[p + i] = bytes[i];
-            }
-            UF2.writeBytes = writeBytes;
-            function writeHex(f, hex) {
-                var upperAddr = "0000";
-                for (var i = 0; i < hex.length; ++i) {
-                    var m = /:02000004(....)/.exec(hex[i]);
-                    if (m) {
-                        upperAddr = m[1];
-                    }
-                    m = /^:..(....)00(.*)[0-9A-F][0-9A-F]$/.exec(hex[i]);
-                    if (m) {
-                        var newAddr = parseInt(upperAddr + m[1], 16);
-                        var hh = m[2];
-                        var arr = [];
-                        for (var j = 0; j < hh.length; j += 2) {
-                            arr.push(parseInt(hh[j] + hh[j + 1], 16));
-                        }
-                        writeBytes(f, newAddr, arr);
-                    }
-                }
-            }
-            UF2.writeHex = writeHex;
-        })(UF2 = pxtc.UF2 || (pxtc.UF2 = {}));
         // TODO should be internal
         var hex;
         (function (hex_1) {
@@ -9871,6 +9944,7 @@ var ts;
             var jmpStartIdx;
             var bytecodePaddingSize;
             var bytecodeStartAddr;
+            var elfInfo;
             var bytecodeStartIdx;
             var asmLabels = {};
             hex_1.asmTotalSource = "";
@@ -9976,10 +10050,27 @@ var ts;
             function setupFor(opts, extInfo, hexinfo) {
                 if (hex_1.isSetupFor(extInfo))
                     return;
+                var funs = extInfo.functions;
                 hex_1.currentSetup = extInfo.sha;
                 hex_1.currentHexInfo = hexinfo;
                 hex = hexinfo.hex;
                 patchSegmentHex(hex);
+                if (hex.length <= 2) {
+                    elfInfo = pxt.elf.parse(pxtc.U.fromHex(hex[0]));
+                    bytecodeStartIdx = -1;
+                    bytecodeStartAddr = elfInfo.imageMemStart;
+                    hex_1.bytecodeStartAddrPadded = elfInfo.imageMemStart;
+                    bytecodePaddingSize = 0;
+                    var jmpIdx = hex[0].indexOf("0108010842424242010801083ed8e98d");
+                    if (jmpIdx < 0)
+                        pxtc.oops("no jmp table in elf");
+                    jmpStartAddr = jmpIdx / 2;
+                    jmpStartIdx = -1;
+                    var ptrs = hex[0].slice(jmpIdx + 32, jmpIdx + 32 + funs.length * 8 + 16);
+                    readPointers(ptrs);
+                    checkFuns();
+                    return;
+                }
                 var i = 0;
                 var upperAddr = "0000";
                 var lastAddr = 0;
@@ -9993,7 +10084,7 @@ var ts;
                             if (bytes[2] & 0xf) {
                                 var next = lastAddr + bytes[0];
                                 var newline = [missing, next >> 8, next & 0xff, 0x00];
-                                for (var i_2 = 0; i_2 < missing; ++i_2)
+                                for (var i_1 = 0; i_1 < missing; ++i_1)
                                     newline.push(0x00);
                                 lastIdx++;
                                 hex.splice(lastIdx, 0, hexBytes(newline));
@@ -10048,12 +10139,17 @@ var ts;
                 if (!bytecodeStartAddr)
                     pxtc.oops("No hex end");
                 funcInfo = {};
-                var funs = extInfo.functions;
-                for (var i_3 = jmpStartIdx + 1; i_3 < hex.length; ++i_3) {
-                    var m = /^:..(....)00(.{4,})/.exec(hex[i_3]);
+                for (var i_2 = jmpStartIdx + 1; i_2 < hex.length; ++i_2) {
+                    var m = /^:..(....)00(.{4,})/.exec(hex[i_2]);
                     if (!m)
                         continue;
-                    var s = m[2];
+                    readPointers(m[2]);
+                    if (funs.length == 0)
+                        break;
+                }
+                checkFuns();
+                return;
+                function readPointers(s) {
                     var step = opts.shortPointers ? 4 : 8;
                     while (s.length >= step) {
                         var hexb = s.slice(0, step);
@@ -10061,16 +10157,21 @@ var ts;
                         s = s.slice(step);
                         var inf = funs.shift();
                         if (!inf)
-                            return;
+                            break;
                         funcInfo[inf.name] = inf;
                         if (!value) {
                             pxtc.U.oops("No value for " + inf.name + " / " + hexb);
                         }
+                        if (!(value & 1)) {
+                            pxtc.U.oops("Non-thumb addr for " + inf.name + " / " + hexb);
+                        }
                         inf.value = value;
                     }
                 }
-                if (funs.length)
-                    pxtc.oops("premature EOF in hex file; missing: " + funs.map(function (f) { return f.name; }).join(", "));
+                function checkFuns() {
+                    if (funs.length)
+                        pxtc.oops("premature EOF in hex file; missing: " + funs.map(function (f) { return f.name; }).join(", "));
+                }
             }
             hex_1.setupFor = setupFor;
             function validateShim(funname, shimName, attrs, hasRet, argIsNumber) {
@@ -10141,35 +10242,55 @@ var ts;
                 bytes.forEach(function (b) { return r += ("0" + b.toString(16)).slice(-2); });
                 return r.toUpperCase();
             }
-            function applyPatches(f) {
+            function applyPatches(f, binfile) {
+                if (binfile === void 0) { binfile = null; }
                 // constant strings in the binary are 4-byte aligned, and marked 
                 // with "@PXT@:" at the beginning - this 6 byte string needs to be
                 // replaced with proper reference count (0xffff to indicate read-only
                 // flash location), string virtual table, and the length of the string
                 var stringVT = [0xff, 0xff, 0x01, 0x00];
                 pxtc.assert(stringVT.length == 4);
-                for (var bidx = 0; bidx < f.blocks.length; ++bidx) {
-                    var b = f.blocks[bidx];
-                    var upper = f.ptrs[bidx] << 8;
-                    for (var i = 32; i < 32 + 256; i += 4) {
-                        // @PXT
-                        if (b[i] == 0x40 && b[i + 1] == 0x50 && b[i + 2] == 0x58 && b[i + 3] == 0x54) {
-                            var addr = upper + i - 32;
-                            var bytes = UF2.readBytesFromFile(f, addr, 200);
-                            // @:
-                            if (bytes[4] == 0x40 && bytes[5] == 0x3a) {
-                                var len = 0;
-                                while (6 + len < bytes.length) {
-                                    if (bytes[6 + len] == 0)
-                                        break;
-                                    len++;
-                                }
-                                if (6 + len >= bytes.length)
-                                    pxtc.U.oops("constant string too long!");
-                                var patchV = stringVT.concat([len & 0xff, len >> 8]);
-                                //console.log("patch file: @" + addr + ": " + U.toHex(patchV))
-                                UF2.writeBytes(f, addr, patchV);
+                var patchAt = function (b, i, readMore) {
+                    // @PXT
+                    if (b[i] == 0x40 && b[i + 1] == 0x50 && b[i + 2] == 0x58 && b[i + 3] == 0x54) {
+                        var bytes = readMore();
+                        // @:
+                        if (bytes[4] == 0x40 && bytes[5] == 0x3a) {
+                            var len = 0;
+                            while (6 + len < bytes.length) {
+                                if (bytes[6 + len] == 0)
+                                    break;
+                                len++;
                             }
+                            if (6 + len >= bytes.length)
+                                pxtc.U.oops("constant string too long!");
+                            return stringVT.concat([len & 0xff, len >> 8]);
+                        }
+                    }
+                    return null;
+                };
+                if (binfile) {
+                    var _loop_5 = function(i) {
+                        var patchV = patchAt(binfile, i, function () { return binfile.slice(i, i + 200); });
+                        if (patchV)
+                            pxtc.U.memcpy(binfile, i, patchV);
+                    };
+                    for (var i = 0; i < binfile.length - 8; i += 4) {
+                        _loop_5(i);
+                    }
+                }
+                else {
+                    for (var bidx = 0; bidx < f.blocks.length; ++bidx) {
+                        var b = f.blocks[bidx];
+                        var upper = f.ptrs[bidx] << 8;
+                        var _loop_6 = function(i) {
+                            var addr = upper + i - 32;
+                            var patchV = patchAt(b, i, function () { return pxtc.UF2.readBytesFromFile(f, addr, 200); });
+                            if (patchV)
+                                pxtc.UF2.writeBytes(f, addr, patchV);
+                        };
+                        for (var i = 32; i < 32 + 256; i += 4) {
+                            _loop_6(i);
                         }
                     }
                 }
@@ -10198,18 +10319,33 @@ var ts;
                 var tmp = hexTemplateHash();
                 for (var i = 0; i < 4; ++i)
                     hd.push(parseInt(swapBytes(tmp.slice(i * 4, i * 4 + 4)), 16));
-                var uf2 = useuf2 ? UF2.newBlockFile() : null;
+                var uf2 = useuf2 ? pxtc.UF2.newBlockFile() : null;
+                if (elfInfo) {
+                    var prog = new Uint8Array(buf.length * 2);
+                    for (var i = 0; i < buf.length; ++i) {
+                        pxt.HF2.write16(prog, i * 2, buf[i]);
+                    }
+                    var resbuf = pxt.elf.patch(elfInfo, prog);
+                    for (var i = 0; i < hd.length; ++i)
+                        pxt.HF2.write16(resbuf, i * 2 + jmpStartAddr, hd[i]);
+                    applyPatches(null, resbuf);
+                    if (uf2) {
+                        pxtc.UF2.writeBytes(uf2, 0, resbuf);
+                        return [pxtc.UF2.serializeFile(uf2)];
+                    }
+                    return [pxtc.U.uint8ArrayToString(resbuf)];
+                }
                 if (uf2) {
-                    UF2.writeHex(uf2, myhex);
+                    pxtc.UF2.writeHex(uf2, myhex);
                     applyPatches(uf2);
-                    UF2.writeBytes(uf2, jmpStartAddr, nextLine(hd, jmpStartIdx).slice(4));
+                    pxtc.UF2.writeBytes(uf2, jmpStartAddr, nextLine(hd, jmpStartIdx).slice(4));
                     if (bin.checksumBlock) {
                         var bytes = [];
                         for (var _i = 0, _a = bin.checksumBlock; _i < _a.length; _i++) {
                             var w = _a[_i];
                             bytes.push(w & 0xff, w >> 8);
                         }
-                        UF2.writeBytes(uf2, bin.target.flashChecksumAddr, bytes);
+                        pxtc.UF2.writeBytes(uf2, bin.target.flashChecksumAddr, bytes);
                     }
                 }
                 else {
@@ -10225,7 +10361,7 @@ var ts;
                 var upper = (addr - 16) >> 16;
                 while (ptr < buf.length) {
                     if (uf2) {
-                        UF2.writeBytes(uf2, addr, nextLine(buf, addr).slice(4));
+                        pxtc.UF2.writeBytes(uf2, addr, nextLine(buf, addr).slice(4));
                     }
                     else {
                         if ((addr >> 16) != upper) {
@@ -10239,12 +10375,12 @@ var ts;
                 if (!shortForm) {
                     var app = hex.slice(bytecodeStartIdx);
                     if (uf2)
-                        UF2.writeHex(uf2, app);
+                        pxtc.UF2.writeHex(uf2, app);
                     else
                         pxtc.Util.pushRange(myhex, app);
                 }
                 if (uf2)
-                    return [UF2.serializeFile(uf2)];
+                    return [pxtc.UF2.serializeFile(uf2)];
                 else
                     return myhex;
             }
@@ -10473,13 +10609,13 @@ var ts;
                     chk[chk.length - 5] = len;
                     bin.checksumBlock = chk;
                 }
-                if (opts.target.useUF2) {
+                if (!pxt.isOutputText(pxtc.target)) {
                     var myhex = btoa(hex.patchHex(bin, res.buf, false, true)[0]);
-                    bin.writeFile(pxtc.BINARY_UF2, myhex);
+                    bin.writeFile(pxt.outputName(pxtc.target), myhex);
                 }
                 else {
                     var myhex = hex.patchHex(bin, res.buf, false, false).join("\r\n") + "\r\n";
-                    bin.writeFile(pxtc.BINARY_HEX, myhex);
+                    bin.writeFile(pxt.outputName(pxtc.target), myhex);
                 }
             }
             for (var _i = 0, _a = cres.breakpoints; _i < _a.length; _i++) {
@@ -10837,7 +10973,7 @@ var ts;
             writeRef("# " + pkg + " Reference");
             writeRef('');
             writeRef('```namespaces');
-            var _loop_5 = function(ns) {
+            var _loop_7 = function(ns) {
                 var nsHelpPages = {};
                 var syms = infos
                     .filter(function (si) { return si.namespace == ns.name && !!si.attributes.jsDoc; })
@@ -10878,8 +11014,8 @@ var ts;
             };
             for (var _i = 0, namespaces_1 = namespaces; _i < namespaces_1.length; _i++) {
                 var ns = namespaces_1[_i];
-                var state_5 = _loop_5(ns);
-                if (state_5 === "continue") continue;
+                var state_7 = _loop_7(ns);
+                if (state_7 === "continue") continue;
             }
             if (options.locs)
                 enumMembers.forEach(function (em) {
@@ -11234,10 +11370,10 @@ var ts;
                     if (!builtinItems) {
                         builtinItems = [];
                         blockDefinitions = pxt.blocks.blockDefinitions();
-                        var _loop_6 = function(id) {
+                        var _loop_8 = function(id) {
                             var blockDef = blockDefinitions[id];
                             if (blockDef.operators) {
-                                var _loop_7 = function(op) {
+                                var _loop_9 = function(op) {
                                     var opValues = blockDef.operators[op];
                                     opValues.forEach(function (v) { return builtinItems.push({
                                         id: id,
@@ -11248,7 +11384,7 @@ var ts;
                                     }); });
                                 };
                                 for (var op in blockDef.operators) {
-                                    _loop_7(op);
+                                    _loop_9(op);
                                 }
                             }
                             else {
@@ -11261,7 +11397,7 @@ var ts;
                             }
                         };
                         for (var id in blockDefinitions) {
-                            _loop_6(id);
+                            _loop_8(id);
                         }
                     }
                     var subset;
@@ -11364,12 +11500,16 @@ var ts;
                     return undefined;
                 }
                 var checker = service ? service.getProgram().getTypeChecker() : undefined;
-                var args = n.parameters ? n.parameters.filter(function (param) { return !param.questionToken; }).map(function (param) {
+                var args = n.parameters ? n.parameters.filter(function (param) { return !param.initializer && !param.questionToken; }).map(function (param) {
                     var typeNode = param.type;
                     if (!typeNode)
                         return "null";
                     var name = param.name.kind === pxtc.SK.Identifier ? param.name.text : undefined;
                     if (attrs && attrs.paramDefl && attrs.paramDefl[name]) {
+                        if (typeNode.kind == pxtc.SK.StringKeyword) {
+                            var defaultName = attrs.paramDefl[name];
+                            return typeNode.kind == pxtc.SK.StringKeyword && defaultName.indexOf("\"") != 0 ? "\"" + defaultName + "\"" : defaultName;
+                        }
                         return attrs.paramDefl[name];
                     }
                     switch (typeNode.kind) {
@@ -11388,6 +11528,9 @@ var ts;
                                                 return type_1.symbol.name + "." + decl.members[0].name.text;
                                             }
                                         }
+                                        return "0";
+                                    }
+                                    else if (type_1.flags & ts.TypeFlags.Number) {
                                         return "0";
                                     }
                                 }

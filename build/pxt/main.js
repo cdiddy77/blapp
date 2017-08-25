@@ -145,6 +145,7 @@ var ProjectView = (function (_super) {
                         .then(function (hd) { return _this.loadHeaderAsync(hd, null); });
                 }
             }];
+        this.resourceImporters = [];
         // Close on escape
         this.closeOnEscape = function (e) {
             if (e.keyCode !== 27)
@@ -472,6 +473,18 @@ var ProjectView = (function (_super) {
                 removeIt();
         });
     };
+    ProjectView.prototype.updateFileAsync = function (name, content, open) {
+        var _this = this;
+        var p = pkg.mainEditorPkg();
+        p.setFile(name, content);
+        return p.updateConfigAsync(function (cfg) { return cfg.files.indexOf(name) < 0 ? cfg.files.push(name) : 0; })
+            .then(function () {
+            if (open)
+                _this.setFile(p.lookupFile("this/" + name));
+            return p.savePkgAsync();
+        })
+            .then(function () { return _this.reloadHeaderAsync(); });
+    };
     ProjectView.prototype.setSideMarkdown = function (md) {
         var sd = this.refs["sidedoc"];
         if (!sd)
@@ -516,7 +529,8 @@ var ProjectView = (function (_super) {
                 switch (t.subtype) {
                     case 'loaded':
                         var tt = msg;
-                        this.editor.filterToolbox({ blocks: tt.toolboxSubset, defaultState: pxt.editor.FilterState.Hidden }, CategoryMode.Basic);
+                        if (tt.toolboxSubset && Object.keys(tt.toolboxSubset).length > 0)
+                            this.editor.filterToolbox({ blocks: tt.toolboxSubset, defaultState: pxt.editor.FilterState.Hidden }, CategoryMode.Basic);
                         var tutorialOptions = this.state.tutorialOptions;
                         tutorialOptions.tutorialReady = true;
                         tutorialOptions.tutorialStepInfo = tt.stepInfo;
@@ -545,7 +559,8 @@ var ProjectView = (function (_super) {
         logs.clear();
         this.setState({
             showFiles: false,
-            filters: filters
+            filters: filters,
+            tutorialOptions: undefined
         });
         return pkg.loadPkgAsync(h.id)
             .then(function () {
@@ -643,7 +658,7 @@ var ProjectView = (function (_super) {
         var _this = this;
         if (!file)
             return;
-        fileReadAsTextAsync(file)
+        ts.pxtc.Util.fileReadAsTextAsync(file)
             .done(function (contents) {
             _this.newProject({
                 filesOverride: { "main.blocks": contents, "main.ts": "  " },
@@ -655,7 +670,7 @@ var ProjectView = (function (_super) {
         var _this = this;
         if (!file)
             return;
-        fileReadAsTextAsync(file)
+        ts.pxtc.Util.fileReadAsTextAsync(file)
             .done(function (contents) {
             _this.newProject({
                 filesOverride: { "main.blocks": '', "main.ts": contents || "  " },
@@ -700,7 +715,7 @@ var ProjectView = (function (_super) {
         var _this = this;
         if (!file)
             return;
-        fileReadAsBufferAsync(file)
+        ts.pxtc.Util.fileReadAsBufferAsync(file)
             .then(function (buf) { return pxt.lzmaDecompressAsync(buf); })
             .done(function (contents) {
             var data = JSON.parse(contents);
@@ -724,8 +739,15 @@ var ProjectView = (function (_super) {
         else if (isProjectFile(file.name)) {
             this.importProjectFile(file);
         }
-        else
-            core.warningNotification(lf("Oops, don't know how to load this file!"));
+        else {
+            var importer = this.resourceImporters.filter(function (fi) { return fi.canImport(file); })[0];
+            if (importer) {
+                importer.importAsync(this, file).done();
+            }
+            else {
+                core.warningNotification(lf("Oops, don't know how to load this file!"));
+            }
+        }
     };
     ProjectView.prototype.importProjectAsync = function (project, filters) {
         var _this = this;
@@ -915,7 +937,7 @@ var ProjectView = (function (_super) {
             .then(function () { return _this.saveProjectNameAsync(); })
             .then(function () { return _this.saveFileAsync(); })
             .then(function () {
-            if (!pxt.appTarget.compile.hasHex) {
+            if (!pxt.appTarget.compile.hasHex || pxt.appTarget.compile.useMkcd) {
                 _this.saveProjectToFileAsync()
                     .finally(function () {
                     _this.setState({ isSaving: false });
@@ -955,7 +977,7 @@ var ProjectView = (function (_super) {
         compiler.compileAsync({ native: true, forceEmit: true, preferredEditor: this.getPreferredEditor() })
             .then(function (resp) {
             _this.editor.setDiagnostics(_this.editorFile, state);
-            var fn = pxt.appTarget.compile.useUF2 ? pxtc.BINARY_UF2 : pxtc.BINARY_HEX;
+            var fn = pxt.outputName();
             if (!resp.outfiles[fn]) {
                 pxt.tickEvent("compile.noemit");
                 core.warningNotification(lf("Compilation failed, please check your code for errors."));
@@ -1344,7 +1366,7 @@ var ProjectView = (function (_super) {
             .then(function (resp) {
             var svg = pxt.blocks.render(resp, { snippetMode: true });
             var viewBox = svg.getAttribute("viewBox").split(/\s+/).map(function (d) { return parseInt(d); });
-            return pxt.blocks.layout.blocklyToSvgAsync(svg, '', viewBox[0], viewBox[1], viewBox[2], viewBox[3]);
+            return pxt.blocks.layout.blocklyToSvgAsync(svg, viewBox[0], viewBox[1], viewBox[2], viewBox[3]);
         }).then(function (re) { return re.xml; });
     };
     ProjectView.prototype.gettingStarted = function () {
@@ -1354,6 +1376,7 @@ var ProjectView = (function (_super) {
         this.startTutorial(targetTheme.sideDoc);
     };
     ProjectView.prototype.openTutorials = function () {
+        //        this.setState({tutorialOptions: undefined});
         pxt.tickEvent("menu.openTutorials");
         this.projects.showOpenTutorials();
     };
@@ -1381,21 +1404,20 @@ var ProjectView = (function (_super) {
             }
             //TODO: parse for tutorial options, mainly initial blocks
         }).then(function () {
+            return _this.createProjectAsync({
+                name: title
+            });
+        }).then(function () {
             var tutorialOptions = {
                 tutorial: tutorialId,
                 tutorialName: title,
                 tutorialStep: 0,
                 tutorialSteps: result
             };
-            _this.setState({ tutorialOptions: tutorialOptions });
+            _this.setState({ tutorialOptions: tutorialOptions, tracing: undefined });
             var tc = _this.refs["tutorialcontent"];
             tc.setPath(tutorialId);
-        }).then(function () {
-            return _this.createProjectAsync({
-                name: title
-            });
-        })
-            .catch(function (e) {
+        }).catch(function (e) {
             core.hideLoading();
             core.handleNetworkError(e);
         });
@@ -1431,7 +1453,7 @@ var ProjectView = (function (_super) {
         })
             .finally(function () {
             core.hideLoading();
-            _this.setState({ active: true, tutorialOptions: undefined });
+            _this.setState({ active: true, tutorialOptions: undefined, tracing: undefined });
         });
     };
     ProjectView.prototype.toggleHighContrast = function () {
@@ -1444,6 +1466,7 @@ var ProjectView = (function (_super) {
         }
     };
     ProjectView.prototype.completeTutorial = function () {
+        //        this.setState({tutorialOptions: undefined});
         pxt.tickEvent("tutorial.complete");
         this.tutorialComplete.show();
     };
@@ -1484,7 +1507,7 @@ var ProjectView = (function (_super) {
         var tutorialOptions = this.state.tutorialOptions;
         var inTutorial = !!tutorialOptions && !!tutorialOptions.tutorial;
         var docMenu = targetTheme.docMenu && targetTheme.docMenu.length && !sandbox && !inTutorial;
-        var gettingStarted = !sandbox && !inTutorial && !this.state.sideDocsLoadUrl && targetTheme && targetTheme.sideDoc && isBlocks;
+        var gettingStarted = !sandbox && !inTutorial && !this.state.sideDocsLoadUrl && targetTheme && targetTheme.sideDoc && isBlocks && !targetTheme.useStartPage;
         var gettingStartedTooltip = lf("Open beginner tutorial");
         var run = true; // !compileBtn || !pxt.appTarget.simulator.autoRun || !isBlocks;
         var restart = run && !simOpts.hideRestart;
@@ -1522,17 +1545,18 @@ var ProjectView = (function (_super) {
             hideMenuBar ? 'hideMenuBar' : '',
             hideEditorToolbar ? 'hideEditorToolbar' : '',
             sandbox && simActive ? 'simView' : '',
-            'full-abs'
+            'full-abs',
+            'dimmable'
         ]);
         return (React.createElement("div", {id: 'root', className: rootClasses}, useModulator ? React.createElement("audio", {id: "modulatorAudioOutput", controls: true}) : undefined, useModulator ? React.createElement("div", {id: "modulatorWrapper"}, React.createElement("div", {id: "modulatorBubble"}, React.createElement("canvas", {id: "modulatorWavStrip"}))) : undefined, hideMenuBar ? undefined :
             React.createElement("div", {id: "menubar", role: "banner"}, React.createElement("div", {className: "ui borderless fixed " + (targetTheme.invertedMenu ? "inverted" : '') + " menu", role: "menubar"}, !sandbox ? React.createElement("div", {className: "left menu"}, React.createElement("span", {id: "logo", className: "ui item logo"}, targetTheme.logo || targetTheme.portraitLogo
-                ? React.createElement("a", {className: "ui image", target: "_blank", href: targetTheme.logoUrl}, React.createElement("img", {className: "ui logo " + (targetTheme.portraitLogo ? " portrait hide" : ''), src: Util.toDataUri(targetTheme.logo || targetTheme.portraitLogo), alt: targetTheme.boardName + " Logo"}))
-                : React.createElement("span", {className: "name"}, targetTheme.name), targetTheme.portraitLogo ? (React.createElement("a", {className: "ui", target: "_blank", href: targetTheme.logoUrl}, React.createElement("img", {className: 'ui mini image portrait only', src: Util.toDataUri(targetTheme.portraitLogo), alt: targetTheme.boardName + " Logo"}))) : null), !inTutorial ? React.createElement(sui.Item, {class: "openproject", role: "menuitem", textClass: "landscape only", icon: "folder open large", text: lf("Projects"), onClick: function () { return _this.openProject(); }}) : null, !inTutorial && this.state.header && sharingEnabled ? React.createElement(sui.Item, {class: "shareproject", role: "menuitem", textClass: "widedesktop only", text: lf("Share"), icon: "share alternate large", onClick: function () { return _this.embed(); }}) : null, inTutorial ? React.createElement(sui.Item, {class: "tutorialname", role: "menuitem", textClass: "landscape only", text: tutorialOptions.tutorialName}) : null) : React.createElement("div", {className: "left menu"}, React.createElement("span", {id: "logo", className: "ui item logo"}, React.createElement("img", {className: "ui mini image", src: Util.toDataUri(rightLogo), onClick: function () { return _this.launchFullEditor(); }, alt: targetTheme.boardName + " Logo"}))), !inTutorial && !targetTheme.blocksOnly ? React.createElement(sui.Item, {class: "editor-menuitem"}, sandbox ? React.createElement(sui.Item, {class: "sim-menuitem thin portrait only", textClass: "landscape only", text: lf("Simulator"), icon: simActive && this.state.running ? "stop" : "play", active: simActive, onClick: function () { return _this.openSimView(); }, title: !simActive ? lf("Show Simulator") : runTooltip}) : undefined, React.createElement(sui.Item, {class: "blocks-menuitem", textClass: "landscape only", text: lf("Blocks"), icon: "xicon blocks", active: blockActive, onClick: function () { return _this.openBlocks(); }, title: lf("Convert code to Blocks")}), React.createElement(sui.Item, {class: "javascript-menuitem", textClass: "landscape only", text: lf("JavaScript"), icon: "xicon js", active: javascriptActive, onClick: function () { return _this.openJavaScript(); }, title: lf("Convert code to JavaScript")})) : undefined, inTutorial ? React.createElement(tutorial.TutorialMenuItem, {parent: this}) : undefined, React.createElement("div", {className: "right menu"}, docMenu ? React.createElement(container.DocsMenuItem, {parent: this}) : undefined, sandbox || inTutorial ? undefined :
-                React.createElement(sui.DropdownMenuItem, {icon: 'setting large', title: lf("More..."), class: "more-dropdown-menuitem"}, this.state.header ? React.createElement(sui.Item, {role: "menuitem", icon: "options", text: lf("Project Settings"), onClick: function () { return _this.setFile(pkg.mainEditorPkg().lookupFile("this/pxt.json")); }}) : undefined, this.state.header && packages ? React.createElement(sui.Item, {role: "menuitem", icon: "disk outline", text: lf("Add Package..."), onClick: function () { return _this.addPackage(); }}) : undefined, this.state.header ? React.createElement(sui.Item, {role: "menuitem", icon: "trash", text: lf("Delete Project"), onClick: function () { return _this.removeProject(); }}) : undefined, reportAbuse ? React.createElement(sui.Item, {role: "menuitem", icon: "warning circle", text: lf("Report Abuse..."), onClick: function () { return _this.showReportAbuse(); }}) : undefined, React.createElement("div", {className: "ui divider"}), selectLanguage ? React.createElement(sui.Item, {icon: "xicon globe", role: "menuitem", text: lf("Language"), onClick: function () { return _this.selectLang(); }}) : undefined, targetTheme.highContrast ? React.createElement(sui.Item, {role: "menuitem", text: this.state.highContrast ? lf("High Contrast Off") : lf("High Contrast On"), onClick: function () { return _this.toggleHighContrast(); }}) : undefined, React.createElement(sui.Item, {role: "menuitem", icon: 'sign out', text: lf("Reset"), onClick: function () { return _this.reset(); }}), React.createElement("div", {className: "ui divider"}), targetTheme.privacyUrl ? React.createElement("a", {className: "ui item", href: targetTheme.privacyUrl, role: "menuitem", title: lf("Privacy & Cookies"), target: "_blank"}, lf("Privacy & Cookies")) : undefined, targetTheme.termsOfUseUrl ? React.createElement("a", {className: "ui item", href: targetTheme.termsOfUseUrl, role: "menuitem", title: lf("Terms Of Use"), target: "_blank"}, lf("Terms Of Use")) : undefined, React.createElement(sui.Item, {role: "menuitem", text: lf("About..."), onClick: function () { return _this.about(); }}), electron.isElectron ? React.createElement(sui.Item, {role: "menuitem", text: lf("Check for updates..."), onClick: function () { return electron.checkForUpdate(); }}) : undefined, targetTheme.feedbackUrl ? React.createElement("div", {className: "ui divider"}) : undefined, targetTheme.feedbackUrl ? React.createElement("a", {className: "ui item", href: targetTheme.feedbackUrl, role: "menuitem", title: lf("Give Feedback"), target: "_blank"}, lf("Give Feedback")) : undefined), sandbox && !targetTheme.hideEmbedEdit ? React.createElement(sui.Item, {role: "menuitem", icon: "external", textClass: "mobile hide", text: lf("Edit"), onClick: function () { return _this.launchFullEditor(); }}) : undefined, !sandbox && gettingStarted ? React.createElement("span", {className: "ui item tablet only"}, React.createElement(sui.Button, {class: "small getting-started-btn", title: gettingStartedTooltip, text: lf("Getting Started"), onClick: function () { return _this.gettingStarted(); }})) : undefined, inTutorial ? React.createElement(sui.ButtonMenuItem, {class: "exit-tutorial-btn", role: "menuitem", icon: "external", text: lf("Exit tutorial"), textClass: "landscape only", onClick: function () { return _this.exitTutorial(true); }}) : undefined, !sandbox ? React.createElement("a", {id: "organization", href: targetTheme.organizationUrl, target: "blank", className: "ui item logo", onClick: function () { return pxt.tickEvent("menu.org"); }}, targetTheme.organizationWideLogo || targetTheme.organizationLogo
+                ? React.createElement("a", {className: "ui image", target: "_blank", rel: "noopener", href: targetTheme.logoUrl}, React.createElement("img", {className: "ui logo " + (targetTheme.portraitLogo ? " portrait hide" : ''), src: Util.toDataUri(targetTheme.logo || targetTheme.portraitLogo), alt: targetTheme.boardName + " Logo"}))
+                : React.createElement("span", {className: "name"}, targetTheme.name), targetTheme.portraitLogo ? (React.createElement("a", {className: "ui", target: "_blank", rel: "noopener", href: targetTheme.logoUrl}, React.createElement("img", {className: 'ui mini image portrait only', src: Util.toDataUri(targetTheme.portraitLogo), alt: targetTheme.boardName + " Logo"}))) : null), !inTutorial ? React.createElement(sui.Item, {class: "icon openproject", role: "menuitem", textClass: "landscape only", icon: "folder open large", text: lf("Projects"), onClick: function () { return _this.openProject(); }}) : null, !inTutorial && this.state.header && sharingEnabled ? React.createElement(sui.Item, {class: "icon shareproject", role: "menuitem", textClass: "widedesktop only", text: lf("Share"), icon: "share alternate large", onClick: function () { return _this.embed(); }}) : null, inTutorial ? React.createElement(sui.Item, {class: "tutorialname", role: "menuitem", textClass: "landscape only", text: tutorialOptions.tutorialName}) : null) : React.createElement("div", {className: "left menu"}, React.createElement("span", {id: "logo", className: "ui item logo"}, React.createElement("img", {className: "ui mini image", src: Util.toDataUri(rightLogo), onClick: function () { return _this.launchFullEditor(); }, alt: targetTheme.boardName + " Logo"}))), !inTutorial && !targetTheme.blocksOnly ? React.createElement(sui.Item, {class: "editor-menuitem"}, React.createElement("div", {className: "ui grid padded"}, sandbox ? React.createElement(sui.Item, {class: "sim-menuitem thin portrait only", textClass: "landscape only", text: lf("Simulator"), icon: simActive && this.state.running ? "stop" : "play", active: simActive, onClick: function () { return _this.openSimView(); }, title: !simActive ? lf("Show Simulator") : runTooltip}) : undefined, React.createElement(sui.Item, {class: "blocks-menuitem", textClass: "landscape only", text: lf("Blocks"), icon: "xicon blocks", active: blockActive, onClick: function () { return _this.openBlocks(); }, title: lf("Convert code to Blocks")}), React.createElement(sui.Item, {class: "javascript-menuitem", textClass: "landscape only", text: lf("JavaScript"), icon: "xicon js", active: javascriptActive, onClick: function () { return _this.openJavaScript(); }, title: lf("Convert code to JavaScript")}), React.createElement("div", {className: "ui item toggle"}))) : undefined, inTutorial ? React.createElement(tutorial.TutorialMenuItem, {parent: this}) : undefined, React.createElement("div", {className: "right menu"}, docMenu ? React.createElement(container.DocsMenuItem, {parent: this}) : undefined, sandbox || inTutorial ? undefined :
+                React.createElement(sui.DropdownMenuItem, {icon: 'setting large', title: lf("More..."), class: "more-dropdown-menuitem"}, this.state.header ? React.createElement(sui.Item, {role: "menuitem", icon: "options", text: lf("Project Settings"), onClick: function () { return _this.setFile(pkg.mainEditorPkg().lookupFile("this/pxt.json")); }}) : undefined, this.state.header && packages ? React.createElement(sui.Item, {role: "menuitem", icon: "disk outline", text: lf("Add Package..."), onClick: function () { return _this.addPackage(); }}) : undefined, this.state.header ? React.createElement(sui.Item, {role: "menuitem", icon: "trash", text: lf("Delete Project"), onClick: function () { return _this.removeProject(); }}) : undefined, reportAbuse ? React.createElement(sui.Item, {role: "menuitem", icon: "warning circle", text: lf("Report Abuse..."), onClick: function () { return _this.showReportAbuse(); }}) : undefined, React.createElement("div", {className: "ui divider"}), selectLanguage ? React.createElement(sui.Item, {icon: "xicon globe", role: "menuitem", text: lf("Language"), onClick: function () { return _this.selectLang(); }}) : undefined, targetTheme.highContrast ? React.createElement(sui.Item, {role: "menuitem", text: this.state.highContrast ? lf("High Contrast Off") : lf("High Contrast On"), onClick: function () { return _this.toggleHighContrast(); }}) : undefined, React.createElement(sui.Item, {role: "menuitem", icon: 'sign out', text: lf("Reset"), onClick: function () { return _this.reset(); }}), React.createElement("div", {className: "ui divider"}), targetTheme.privacyUrl ? React.createElement("a", {className: "ui item", href: targetTheme.privacyUrl, role: "menuitem", title: lf("Privacy & Cookies"), target: "_blank"}, lf("Privacy & Cookies")) : undefined, targetTheme.termsOfUseUrl ? React.createElement("a", {className: "ui item", href: targetTheme.termsOfUseUrl, role: "menuitem", title: lf("Terms Of Use"), target: "_blank"}, lf("Terms Of Use")) : undefined, React.createElement(sui.Item, {role: "menuitem", text: lf("About..."), onClick: function () { return _this.about(); }}), electron.isElectron ? React.createElement(sui.Item, {role: "menuitem", text: lf("Check for updates..."), onClick: function () { return electron.checkForUpdate(); }}) : undefined, targetTheme.feedbackUrl ? React.createElement("div", {className: "ui divider"}) : undefined, targetTheme.feedbackUrl ? React.createElement("a", {className: "ui item", href: targetTheme.feedbackUrl, role: "menuitem", title: lf("Give Feedback"), target: "_blank", rel: "noopener"}, lf("Give Feedback")) : undefined), sandbox && !targetTheme.hideEmbedEdit ? React.createElement(sui.Item, {role: "menuitem", icon: "external", textClass: "mobile hide", text: lf("Edit"), onClick: function () { return _this.launchFullEditor(); }}) : undefined, inTutorial ? React.createElement(sui.ButtonMenuItem, {class: "exit-tutorial-btn", role: "menuitem", icon: "external", text: lf("Exit tutorial"), textClass: "landscape only", onClick: function () { return _this.exitTutorial(true); }}) : undefined, !sandbox ? React.createElement("a", {id: "organization", href: targetTheme.organizationUrl, target: "blank", rel: "noopener", className: "ui item logo", onClick: function () { return pxt.tickEvent("menu.org"); }}, targetTheme.organizationWideLogo || targetTheme.organizationLogo
                 ? React.createElement("img", {className: "ui logo " + (targetTheme.organizationWideLogo ? " portrait hide" : ''), src: Util.toDataUri(targetTheme.organizationWideLogo || targetTheme.organizationLogo), alt: targetTheme.organization + " Logo"})
                 : React.createElement("span", {className: "name"}, targetTheme.organization), targetTheme.organizationLogo ? (React.createElement("img", {className: 'ui mini image portrait only', src: Util.toDataUri(targetTheme.organizationLogo), alt: targetTheme.organization + " Logo"})) : null) : undefined, betaUrl ? React.createElement("a", {href: "" + betaUrl, className: "ui red mini corner top left attached label betalabel"}, lf("Beta")) : undefined))), gettingStarted ?
             React.createElement("div", {id: "getting-started-btn"}, React.createElement(sui.Button, {class: "portrait hide bottom attached small getting-started-btn", title: gettingStartedTooltip, text: lf("Getting Started"), onClick: function () { return _this.gettingStarted(); }}))
-            : undefined, React.createElement("div", {id: "simulator"}, React.createElement("div", {id: "filelist", className: "ui items", role: "complementary"}, React.createElement("div", {id: "boardview", className: "ui vertical editorFloat"}), !isHeadless ? React.createElement("div", {className: "ui item grid centered portrait hide simtoolbar"}, React.createElement("div", {className: "ui icon buttons " + (this.state.fullscreen ? 'massive' : ''), style: { padding: "0" }}, make ? React.createElement(sui.Button, {icon: 'configure', class: "fluid sixty secondary", text: lf("Make"), title: makeTooltip, onClick: function () { return _this.openInstructions(); }}) : undefined, run ? React.createElement(sui.Button, {key: 'runbtn', class: "play-button " + (this.state.running ? "stop" : "play"), icon: this.state.running ? "stop" : "play", title: runTooltip, onClick: function () { return _this.startStopSimulator(); }}) : undefined, restart ? React.createElement(sui.Button, {key: 'restartbtn', class: "restart-button", icon: "refresh", title: restartTooltip, onClick: function () { return _this.restartSimulator(); }}) : undefined, trace ? React.createElement(sui.Button, {key: 'debug', class: "trace-button " + (this.state.tracing ? 'orange' : ''), icon: "xicon turtle", title: traceTooltip, onClick: function () { return _this.toggleTrace(); }}) : undefined), React.createElement("div", {className: "ui icon buttons " + (this.state.fullscreen ? 'massive' : ''), style: { padding: "0" }}, audio ? React.createElement(sui.Button, {key: 'mutebtn', class: "mute-button " + (this.state.mute ? 'red' : ''), icon: "" + (this.state.mute ? 'volume off' : 'volume up'), title: muteTooltip, onClick: function () { return _this.toggleMute(); }}) : undefined, fullscreen ? React.createElement(sui.Button, {key: 'fullscreenbtn', class: "fullscreen-button", icon: "" + (this.state.fullscreen ? 'compress' : 'maximize'), title: fullscreenTooltip, onClick: function () { return _this.toggleSimulatorFullscreen(); }}) : undefined)) : undefined, React.createElement("div", {className: "ui item portrait hide"}, pxt.options.debug && !this.state.running ? React.createElement(sui.Button, {key: 'debugbtn', class: 'teal', icon: "xicon bug", text: "Sim Debug", onClick: function () { return _this.runSimulator({ debug: true }); }}) : '', pxt.options.debug ? React.createElement(sui.Button, {key: 'hwdebugbtn', class: 'teal', icon: "xicon chip", text: "Dev Debug", onClick: function () { return _this.hwDebug(); }}) : ''), React.createElement("div", {className: "ui editorFloat portrait hide"}, React.createElement(logview.LogView, {ref: "logs"})), sandbox || isBlocks ? undefined : React.createElement(filelist.FileList, {parent: this}))), React.createElement("div", {id: "maineditor", className: sandbox ? "sandbox" : "", role: "main"}, inTutorial ? React.createElement(tutorial.TutorialCard, {ref: "tutorialcard", parent: this}) : undefined, this.allEditors.map(function (e) { return e.displayOuter(); })), inTutorial ? React.createElement(tutorial.TutorialHint, {ref: "tutorialhint", parent: this}) : undefined, inTutorial ? React.createElement(tutorial.TutorialContent, {ref: "tutorialcontent", parent: this}) : undefined, hideEditorToolbar ? undefined : React.createElement("div", {id: "editortools", role: "complementary"}, React.createElement(editortoolbar.EditorToolbar, {ref: "editortools", parent: this})), sideDocs ? React.createElement(container.SideDocs, {ref: "sidedoc", parent: this}) : undefined, sandbox ? undefined : React.createElement(scriptsearch.ScriptSearch, {parent: this, ref: function (v) { return _this.scriptSearch = v; }}), sandbox ? undefined : React.createElement(projects.Projects, {parent: this, ref: function (v) { return _this.projects = v; }}), sandbox || !sharingEnabled ? undefined : React.createElement(share.ShareEditor, {parent: this, ref: function (v) { return _this.shareEditor = v; }}), selectLanguage ? React.createElement(lang.LanguagePicker, {parent: this, ref: function (v) { return _this.languagePicker = v; }}) : undefined, inTutorial ? React.createElement(tutorial.TutorialComplete, {parent: this, ref: function (v) { return _this.tutorialComplete = v; }}) : undefined, sandbox ? React.createElement("div", {className: "ui horizontal small divided link list sandboxfooter"}, targetTheme.organizationUrl && targetTheme.organization ? React.createElement("a", {className: "item", target: "_blank", href: targetTheme.organizationUrl}, targetTheme.organization) : undefined, React.createElement("a", {target: "_blank", className: "item", href: targetTheme.termsOfUseUrl}, lf("Terms of Use")), React.createElement("a", {target: "_blank", className: "item", href: targetTheme.privacyUrl}, lf("Privacy")), React.createElement("span", {className: "item"}, React.createElement("a", {className: "ui thin portrait only", title: compileTooltip, onClick: function () { return _this.compile(); }}, React.createElement("i", {className: "icon " + (pxt.appTarget.appTheme.downloadIcon || 'download')}), pxt.appTarget.appTheme.useUploadMessage ? lf("Upload") : lf("Download")))) : undefined, cookieConsented ? undefined : React.createElement("div", {id: 'cookiemsg', className: "ui teal inverted black segment"}, React.createElement("button", {"arial-label": lf("Ok"), className: "ui right floated icon button clear inverted", onClick: consentCookie}, React.createElement("i", {className: "remove icon"})), lf("By using this site you agree to the use of cookies for analytics."), React.createElement("a", {target: "_blank", className: "ui link", href: pxt.appTarget.appTheme.privacyUrl}, lf("Learn more")))));
+            : undefined, React.createElement("div", {id: "simulator"}, React.createElement("div", {id: "filelist", className: "ui items", role: "complementary"}, React.createElement("div", {id: "boardview", className: "ui vertical editorFloat"}), !isHeadless ? React.createElement("div", {className: "ui item grid centered portrait hide simtoolbar"}, React.createElement("div", {className: "ui icon buttons " + (this.state.fullscreen ? 'massive' : ''), style: { padding: "0" }}, make ? React.createElement(sui.Button, {icon: 'configure', class: "fluid sixty secondary", text: lf("Make"), title: makeTooltip, onClick: function () { return _this.openInstructions(); }}) : undefined, run ? React.createElement(sui.Button, {key: 'runbtn', class: "play-button " + (this.state.running ? "stop" : "play"), icon: this.state.running ? "stop" : "play", title: runTooltip, onClick: function () { return _this.startStopSimulator(); }}) : undefined, restart ? React.createElement(sui.Button, {key: 'restartbtn', class: "restart-button", icon: "refresh", title: restartTooltip, onClick: function () { return _this.restartSimulator(); }}) : undefined, trace ? React.createElement(sui.Button, {key: 'debug', class: "trace-button " + (this.state.tracing ? 'orange' : ''), icon: "xicon turtle", title: traceTooltip, onClick: function () { return _this.toggleTrace(); }}) : undefined), React.createElement("div", {className: "ui icon buttons " + (this.state.fullscreen ? 'massive' : ''), style: { padding: "0" }}, audio ? React.createElement(sui.Button, {key: 'mutebtn', class: "mute-button " + (this.state.mute ? 'red' : ''), icon: "" + (this.state.mute ? 'volume off' : 'volume up'), title: muteTooltip, onClick: function () { return _this.toggleMute(); }}) : undefined, fullscreen ? React.createElement(sui.Button, {key: 'fullscreenbtn', class: "fullscreen-button", icon: "" + (this.state.fullscreen ? 'compress' : 'maximize'), title: fullscreenTooltip, onClick: function () { return _this.toggleSimulatorFullscreen(); }}) : undefined)) : undefined, React.createElement("div", {className: "ui item portrait hide"}, pxt.options.debug && !this.state.running ? React.createElement(sui.Button, {key: 'debugbtn', class: 'teal', icon: "xicon bug", text: "Sim Debug", onClick: function () { return _this.runSimulator({ debug: true }); }}) : '', pxt.options.debug ? React.createElement(sui.Button, {key: 'hwdebugbtn', class: 'teal', icon: "xicon chip", text: "Dev Debug", onClick: function () { return _this.hwDebug(); }}) : ''), React.createElement("div", {className: "ui editorFloat portrait hide"}, React.createElement(logview.LogView, {ref: "logs"})), sandbox || isBlocks ? undefined : React.createElement(filelist.FileList, {parent: this}))), React.createElement("div", {id: "maineditor", className: sandbox ? "sandbox" : "", role: "main"}, inTutorial ? React.createElement(tutorial.TutorialCard, {ref: "tutorialcard", parent: this}) : undefined, this.allEditors.map(function (e) { return e.displayOuter(); })), inTutorial ? React.createElement(tutorial.TutorialHint, {ref: "tutorialhint", parent: this}) : undefined, inTutorial ? React.createElement(tutorial.TutorialContent, {ref: "tutorialcontent", parent: this}) : undefined, hideEditorToolbar ? undefined : React.createElement("div", {id: "editortools", role: "complementary"}, React.createElement(editortoolbar.EditorToolbar, {ref: "editortools", parent: this})), sideDocs ? React.createElement(container.SideDocs, {ref: "sidedoc", parent: this}) : undefined, sandbox ? undefined : React.createElement(scriptsearch.ScriptSearch, {parent: this, ref: function (v) { return _this.scriptSearch = v; }}), sandbox ? undefined : React.createElement(projects.Projects, {parent: this, ref: function (v) { return _this.projects = v; }, hasGettingStarted: gettingStarted}), sandbox || !sharingEnabled ? undefined : React.createElement(share.ShareEditor, {parent: this, ref: function (v) { return _this.shareEditor = v; }}), selectLanguage ? React.createElement(lang.LanguagePicker, {parent: this, ref: function (v) { return _this.languagePicker = v; }}) : undefined, inTutorial ? React.createElement(tutorial.TutorialComplete, {parent: this, ref: function (v) { return _this.tutorialComplete = v; }}) : undefined, sandbox ? React.createElement("div", {className: "ui horizontal small divided link list sandboxfooter"}, targetTheme.organizationUrl && targetTheme.organization ? React.createElement("a", {className: "item", target: "_blank", rel: "noopener", href: targetTheme.organizationUrl}, targetTheme.organization) : undefined, React.createElement("a", {target: "_blank", className: "item", href: targetTheme.termsOfUseUrl, rel: "noopener"}, lf("Terms of Use")), React.createElement("a", {target: "_blank", className: "item", href: targetTheme.privacyUrl, rel: "noopener"}, lf("Privacy")), React.createElement("span", {className: "item"}, React.createElement("a", {className: "ui thin portrait only", title: compileTooltip, onClick: function () { return _this.compile(); }}, React.createElement("i", {className: "icon " + (pxt.appTarget.appTheme.downloadIcon || 'download')}), pxt.appTarget.appTheme.useUploadMessage ? lf("Upload") : lf("Download")))) : undefined, cookieConsented ? undefined : React.createElement("div", {id: 'cookiemsg', className: "ui teal inverted black segment"}, React.createElement("button", {"arial-label": lf("Ok"), className: "ui right floated icon button clear inverted", onClick: consentCookie}, React.createElement("i", {className: "remove icon"})), lf("By using this site you agree to the use of cookies for analytics."), React.createElement("a", {target: "_blank", className: "ui link", href: pxt.appTarget.appTheme.privacyUrl, rel: "noopener"}, lf("Learn more")))));
     };
     return ProjectView;
 }(data.Component));
@@ -1554,30 +1578,6 @@ function isTypescriptFile(filename) {
 }
 function isProjectFile(filename) {
     return /\.(pxt|mkcd)$/i.test(filename);
-}
-function fileReadAsBufferAsync(f) {
-    if (!f)
-        return Promise.resolve(null);
-    else {
-        return new Promise(function (resolve, reject) {
-            var reader = new FileReader();
-            reader.onerror = function (ev) { return resolve(null); };
-            reader.onload = function (ev) { return resolve(new Uint8Array(reader.result)); };
-            reader.readAsArrayBuffer(f);
-        });
-    }
-}
-function fileReadAsTextAsync(f) {
-    if (!f)
-        return Promise.resolve(null);
-    else {
-        return new Promise(function (resolve, reject) {
-            var reader = new FileReader();
-            reader.onerror = function (ev) { return resolve(null); };
-            reader.onload = function (ev) { return resolve(reader.result); };
-            reader.readAsText(f);
-        });
-    }
 }
 function initLogin() {
     {
@@ -1732,6 +1732,13 @@ function initTheme() {
             pxt.debug("swapping to " + semanticHref);
             semanticLink.setAttribute("href", semanticHref);
         }
+        // replace blockly.css with rtlblockly.css
+        var blocklyLink = links.filter(function (l) { return Util.endsWith(l.getAttribute("href"), "blockly.css"); })[0];
+        var blocklyHref = blocklyLink.getAttribute("data-rtl");
+        if (blocklyHref) {
+            pxt.debug("swapping to " + blocklyHref);
+            blocklyLink.setAttribute("href", blocklyHref);
+        }
     }
     function patchCdn(url) {
         if (!url)
@@ -1824,6 +1831,28 @@ function handleHash(hash) {
     }
     return false;
 }
+// Determines whether the hash argument affects the starting project
+function isProjectRelatedHash(hash) {
+    if (!hash) {
+        return false;
+    }
+    switch (hash.cmd) {
+        case "follow":
+        case "newproject":
+        case "newjavascript":
+        // case "gettingstarted": // This should be true, #gettingstarted hash handling is not yet implemented
+        case "tutorial":
+        case "projects":
+        case "sandbox":
+        case "pub":
+        case "edit":
+        case "sandboxproject":
+        case "project":
+            return true;
+        default:
+            return false;
+    }
+}
 function loadHeaderBySharedId(id) {
     var existing = workspace.getHeaders()
         .filter(function (h) { return h.pubCurrent && h.pubId == id; })[0];
@@ -1852,6 +1881,12 @@ function initExtensionsAsync() {
             res.hexFileImporters.forEach(function (fi) {
                 pxt.debug("\tadded hex importer " + fi.id);
                 theEditor.hexFileImporters.push(fi);
+            });
+        }
+        if (res.resourceImporters) {
+            res.resourceImporters.forEach(function (fi) {
+                pxt.debug("\tadded resource importer " + fi.id);
+                theEditor.resourceImporters.push(fi);
             });
         }
         if (res.deployCoreAsync) {
@@ -1913,11 +1948,12 @@ $(document).ready(function () {
     if (hm)
         Cloud.apiRoot = hm[1] + "/api/";
     var ws = /ws=(\w+)/.exec(window.location.href);
+    var isSandbox = pxt.shell.isSandboxMode() || pxt.shell.isReadOnly();
     if (ws)
         workspace.setupWorkspace(ws[1]);
     else if (pxt.appTarget.appTheme.allowParentController)
         workspace.setupWorkspace("iframe");
-    else if (pxt.shell.isSandboxMode() || pxt.shell.isReadOnly())
+    else if (isSandbox)
         workspace.setupWorkspace("mem");
     else if (pxt.winrt.isWinRT())
         workspace.setupWorkspace("uwp");
@@ -1935,37 +1971,50 @@ $(document).ready(function () {
         if (useLang)
             pxt.tickEvent("locale." + useLang + (live ? ".live" : ""));
         lang.initialLang = useLang;
-        return Util.updateLocalizationAsync(config.commitCdnUrl, useLang, pxt.appTarget.versions.pxtCrowdinBranch, live);
+        return Util.updateLocalizationAsync(pxt.appTarget.id, false, config.commitCdnUrl, useLang, pxt.appTarget.versions.pxtCrowdinBranch, pxt.appTarget.versions.branch, live);
     })
         .then(function () { return initTheme(); })
         .then(function () { return cmds.initCommandsAsync(); })
-        .then(function () { return compiler.init(); })
-        .then(function () { return workspace.initAsync(); })
-        .then(function (state) {
+        .then(function () {
+        compiler.init();
+        return workspace.initAsync();
+    })
+        .then(function () {
         $("#loading").remove();
         render();
         return workspace.syncAsync();
     })
-        .then(function (state) { return state ? theEditor.setState(state) : undefined; })
-        .then(function () {
+        .then(function (state) {
+        if (state) {
+            theEditor.setState(state);
+        }
         initSerial();
         initScreenshots();
         initHashchange();
-        return pxt.winrt.initAsync(importHex);
-    })
-        .then(function () { return initExtensionsAsync(); })
-        .then(function () {
         electron.init();
-        if (hash.cmd && handleHash(hash))
-            return Promise.resolve();
-        if (pxt.winrt.hasActivationProject) {
-            return pxt.winrt.loadActivationProject();
-        }
-        // default handlers
+        return initExtensionsAsync();
+    })
+        .then(function () { return pxt.winrt.initAsync(importHex); })
+        .then(function () { return pxt.winrt.hasActivationProjectAsync(); })
+        .then(function (hasWinRTProject) {
         var ent = theEditor.settings.fileHistory.filter(function (e) { return !!workspace.getHeader(e.id); })[0];
         var hd = workspace.getHeaders()[0];
         if (ent)
             hd = workspace.getHeader(ent.id);
+        // Only show the start page if there are no initial projects requested
+        // (e.g. from the URL hash or from WinRT activation arguments)
+        var shouldShowStartPage = !isSandbox && pxt.appTarget.appTheme.useStartPage && !hasWinRTProject && !isProjectRelatedHash(hash);
+        if (shouldShowStartPage) {
+            theEditor.projects.showInitialStartPage(hd);
+            return Promise.resolve();
+        }
+        if (hash.cmd && handleHash(hash)) {
+            return Promise.resolve();
+        }
+        if (hasWinRTProject) {
+            return pxt.winrt.loadActivationProject();
+        }
+        // default handlers
         if (hd)
             return theEditor.loadHeaderAsync(hd, null);
         else
@@ -2032,18 +2081,20 @@ $(document).ready(function () {
 var core = require("./core");
 function init(hash) {
     var appCache = window.applicationCache;
-    appCache.addEventListener('updateready', function () {
-        core.infoNotification(lf("Update download complete. Reloading... "));
-        setTimeout(function () {
-            // On embedded pages, preserve the loaded project
-            if (pxt.BrowserUtils.isIFrame() && hash.cmd === "pub") {
-                location.replace(location.origin + ("/#pub:" + hash.arg));
-            }
-            else {
-                location.reload();
-            }
-        }, 5000);
-    }, false);
+    if (!(pxt.appTarget.appTheme && pxt.appTarget.appTheme.noReloadOnUpdate)) {
+        appCache.addEventListener('updateready', function () {
+            core.infoNotification(lf("Update download complete. Reloading... "));
+            setTimeout(function () {
+                // On embedded pages, preserve the loaded project
+                if (pxt.BrowserUtils.isIFrame() && hash.cmd === "pub") {
+                    location.replace(location.origin + ("/#pub:" + hash.arg));
+                }
+                else {
+                    location.reload();
+                }
+            }, 5000);
+        }, false);
+    }
 }
 exports.init = init;
 
@@ -2255,10 +2306,8 @@ var Editor = (function (_super) {
             needsLayout = needsLayout || (b.type != ts.pxtc.ON_START_TYPE && tp.x == 0 && tp.y == 0);
         });
         if (needsLayout) {
-            var metrics = this.editor.getMetrics();
             // If the blocks file has no location info (e.g. it's from the decompiler), format the code.
-            // Only limit the width if the editor is in portrait
-            pxt.blocks.layout.flow(this.editor, metrics.viewWidth < metrics.viewHeight ? { maxWidth: metrics.viewWidth } : undefined);
+            pxt.blocks.layout.flow(this.editor, { useViewWidth: true });
         }
         else {
             // Otherwise translate the blocks so that they are positioned on the top left
@@ -2278,9 +2327,12 @@ var Editor = (function (_super) {
          * @param {function()=} opt_callback The callback when the alert is dismissed.
          */
         Blockly.alert = function (message, opt_callback) {
-            return core.dialogAsync({
+            return core.confirmAsync({
                 hideCancel: true,
                 header: lf("Alert"),
+                agreeLbl: lf("Ok"),
+                agreeClass: "positive",
+                agreeIcon: "checkmark",
                 body: message,
                 size: "small"
             }).then(function () {
@@ -2443,9 +2495,6 @@ var Editor = (function (_super) {
         var blocklyOptions = this.getBlocklyOptions(showCategories);
         Util.jsonMergeFrom(blocklyOptions, pxt.appTarget.appTheme.blocklyOptions || {});
         this.editor = Blockly.inject(blocklyDiv, blocklyOptions);
-        // zoom out on mobile by default
-        if (pxt.BrowserUtils.isMobile())
-            this.editor.zoomCenter(-4);
         this.editor.addChangeListener(function (ev) {
             Blockly.Events.disableOrphans(ev);
             if (ev.type != 'ui') {
@@ -2461,6 +2510,7 @@ var Editor = (function (_super) {
                 pxt.tickActivity("blocks.create", "blocks.create." + blockId);
                 if (ev.xml.tagName == 'SHADOW')
                     _this.cleanUpShadowBlocks();
+                _this.parent.setState({ hideEditorFloats: false });
             }
             if (ev.type == 'ui') {
                 if (ev.element == 'category') {
@@ -2672,7 +2722,8 @@ var Editor = (function (_super) {
                 wheel: true,
                 maxScale: 2.5,
                 minScale: .2,
-                scaleSpeed: 1.05
+                scaleSpeed: 1.05,
+                startScale: pxt.BrowserUtils.isMobile() ? 1.2 : 1.0
             },
             rtl: Util.isUserLanguageRtl()
         };
@@ -3193,15 +3244,16 @@ function browserDownloadAsync(text, name, contentType) {
 function browserDownloadDeployCoreAsync(resp) {
     var url = "";
     var fn = "";
-    if (pxt.appTarget.compile.useUF2) {
-        var uf2 = resp.outfiles[pxtc.BINARY_UF2];
-        fn = pkg.genFileName(".uf2");
+    var ext = pxt.outputName().replace(/[^.]*/, "");
+    if (!pxt.isOutputText()) {
+        var uf2 = resp.outfiles[pxt.outputName()];
+        fn = pkg.genFileName(ext);
         pxt.debug('saving ' + fn);
         url = pxt.BrowserUtils.browserDownloadBase64(uf2, fn, "application/x-uf2", resp.userContextWindow, function (e) { return core.errorNotification(lf("saving file failed...")); });
     }
     else {
-        var hex = resp.outfiles[pxtc.BINARY_HEX];
-        fn = pkg.genFileName(".hex");
+        var hex = resp.outfiles[pxt.outputName()];
+        fn = pkg.genFileName(ext);
         pxt.debug('saving ' + fn);
         url = pxt.BrowserUtils.browserDownloadBinText(hex, fn, pxt.appTarget.compile.hexMimeType, resp.userContextWindow, function (e) { return core.errorNotification(lf("saving file failed...")); });
     }
@@ -3297,10 +3349,13 @@ function initCommandsAsync() {
     }
     else if (pxt.winrt.isWinRT()) {
         if (pxt.appTarget.serial && pxt.appTarget.serial.useHF2) {
-            hidbridge.mkPacketIOAsync = pxt.winrt.mkPacketIOAsync;
+            pxt.HF2.mkPacketIOAsync = pxt.winrt.mkPacketIOAsync;
             pxt.commands.deployCoreAsync = hidDeployCoreAsync;
         }
         else {
+            if (pxt.appTarget.serial && pxt.appTarget.serial.rawHID) {
+                pxt.HF2.mkPacketIOAsync = pxt.winrt.mkPacketIOAsync;
+            }
             pxt.commands.deployCoreAsync = pxt.winrt.driveDeployCoreAsync;
         }
         pxt.commands.browserDownloadAsync = pxt.winrt.browserDownloadAsync;
@@ -3362,8 +3417,8 @@ var CodeCardView = (function (_super) {
         var sideUrl = url && /^\//.test(url) ? "#doc:" + url : url;
         var className = card.className;
         var cardDiv = React.createElement("div", {className: "ui card " + color + " " + (card.onClick ? "link" : '') + " " + (className ? className : ''), title: card.title, onClick: function (e) { return card.onClick ? card.onClick(e) : undefined; }}, card.header || card.blocks || card.javascript || card.hardware || card.software || card.any ?
-            React.createElement("div", {key: "header", className: "ui content " + (card.responsive ? " tall desktop only" : "")}, React.createElement("div", {className: "right floated meta"}, card.any ? (React.createElement("i", {key: "costany", className: "ui grey circular label tiny"}, card.any > 0 ? card.any : null)) : null, repeat(card.blocks, function (k) { return React.createElement("i", {key: "costblocks" + k, className: "puzzle orange icon"}); }), repeat(card.javascript, function (k) { return React.createElement("i", {key: "costjs" + k, className: "align left blue icon"}); }), repeat(card.hardware, function (k) { return React.createElement("i", {key: "costhardware" + k, className: "certificate black icon"}); }), repeat(card.software, function (k) { return React.createElement("i", {key: "costsoftware" + k, className: "square teal icon"}); })), card.header) : null, React.createElement("div", {className: "ui image"}, card.label ? React.createElement("label", {className: "ui orange right ribbon label"}, card.label) : undefined, card.blocksXml ? React.createElement(blockspreview.BlocksPreview, {key: "promoblocks", xml: card.blocksXml}) : undefined, card.typeScript ? React.createElement("pre", {key: "promots"}, card.typeScript) : undefined, card.imageUrl ? React.createElement("div", {className: "ui cardimage", style: { backgroundImage: "url(\"" + card.imageUrl + "\")" }}) : undefined, card.youTubeId ? React.createElement("div", {className: "ui cardimage", style: { backgroundImage: "url(\"https://img.youtube.com/vi/" + card.youTubeId + "/maxresdefault.jpg\")" }}) : undefined), card.icon ?
-            React.createElement("div", {className: "" + ('ui button massive ' + card.iconColor)}, " ", React.createElement("i", {className: "" + ('icon ' + card.icon)}), " ") : null, card.shortName || card.name || card.description ?
+            React.createElement("div", {key: "header", className: "ui content " + (card.responsive ? " tall desktop only" : "")}, React.createElement("div", {className: "right floated meta"}, card.any ? (React.createElement("i", {key: "costany", className: "ui grey circular label tiny"}, card.any > 0 ? card.any : null)) : null, repeat(card.blocks, function (k) { return React.createElement("i", {key: "costblocks" + k, className: "puzzle orange icon"}); }), repeat(card.javascript, function (k) { return React.createElement("i", {key: "costjs" + k, className: "align left blue icon"}); }), repeat(card.hardware, function (k) { return React.createElement("i", {key: "costhardware" + k, className: "certificate black icon"}); }), repeat(card.software, function (k) { return React.createElement("i", {key: "costsoftware" + k, className: "square teal icon"}); })), card.header) : null, card.label || card.blocksXml || card.typeScript || card.imageUrl || card.youTubeId ? React.createElement("div", {className: "ui image"}, card.label ? React.createElement("label", {className: "ui orange right ribbon label"}, card.label) : undefined, card.blocksXml ? React.createElement(blockspreview.BlocksPreview, {key: "promoblocks", xml: card.blocksXml}) : undefined, card.typeScript ? React.createElement("pre", {key: "promots"}, card.typeScript) : undefined, card.imageUrl ? React.createElement("div", {className: "ui cardimage", style: { backgroundImage: "url(\"" + card.imageUrl + "\")" }}) : undefined, card.youTubeId ? React.createElement("div", {className: "ui cardimage", style: { backgroundImage: "url(\"https://img.youtube.com/vi/" + card.youTubeId + "/maxresdefault.jpg\")" }}) : undefined) : undefined, card.icon || card.iconContent ?
+            React.createElement("div", {className: "ui"}, React.createElement("div", {className: "ui button massive fluid " + card.iconColor + " " + (card.iconContent ? "iconcontent" : "")}, card.icon ? React.createElement("i", {className: "" + ('icon ' + card.icon)}) : undefined, card.iconContent || undefined)) : undefined, card.shortName || card.name || card.description ?
             React.createElement("div", {className: "content"}, card.shortName || card.name ? React.createElement("div", {className: "header"}, card.shortName || card.name) : null, card.time ? React.createElement("div", {className: "meta tall"}, card.time ? React.createElement("span", {key: "date", className: "date"}, pxt.Util.timeSince(card.time)) : null) : undefined, card.description ? React.createElement("div", {className: "description tall"}, renderMd(card.description)) : null) : undefined);
         if (!card.onClick && url) {
             return (React.createElement("div", null, React.createElement("a", {href: url, target: "docs", className: "ui widedesktop hide"}, cardDiv), React.createElement("a", {href: sideUrl, className: "ui widedesktop only"}, cardDiv)));
@@ -3619,6 +3674,18 @@ var __extends = (this && this.__extends) || function (d, b) {
 var React = require("react");
 var data = require("./data");
 var sui = require("./sui");
+// common menu items -- do not remove
+// lf("About")
+// lf("Getting started")
+// lf("Buy")
+// lf("Blocks")
+// lf("JavaScript")
+// lf("Examples")
+// lf("Tutorials")
+// lf("Projects")
+// lf("Reference")
+// lf("Support")
+// lf("Hardware")
 var DocsMenuItem = (function (_super) {
     __extends(DocsMenuItem, _super);
     function DocsMenuItem(props) {
@@ -3636,9 +3703,9 @@ var DocsMenuItem = (function (_super) {
         var _this = this;
         var targetTheme = pxt.appTarget.appTheme;
         return React.createElement(sui.DropdownMenuItem, {icon: "help circle large", class: "help-dropdown-menuitem", textClass: "landscape only", title: lf("Reference, lessons, ...")}, targetTheme.docMenu.map(function (m) {
-            return !/^\//.test(m.path) ? React.createElement("a", {key: "docsmenulink" + m.path, role: "menuitem", className: "ui item link", href: m.path, target: "docs"}, m.name)
-                : !m.tutorial ? React.createElement(sui.Item, {key: "docsmenu" + m.path, role: "menuitem", text: m.name, class: "", onClick: function () { return _this.openDocs(m.path); }})
-                    : React.createElement(sui.Item, {key: "docsmenututorial" + m.path, role: "menuitem", text: m.name, class: "", onClick: function () { return _this.openTutorial(m.path); }});
+            return !/^\//.test(m.path) ? React.createElement("a", {key: "docsmenulink" + m.path, role: "menuitem", className: "ui item link", href: m.path, target: "docs"}, Util.rlf(m.name))
+                : !m.tutorial ? React.createElement(sui.Item, {key: "docsmenu" + m.path, role: "menuitem", text: Util.rlf(m.name), class: "", onClick: function () { return _this.openDocs(m.path); }})
+                    : React.createElement(sui.Item, {key: "docsmenututorial" + m.path, role: "menuitem", text: Util.rlf(m.name), class: "", onClick: function () { return _this.openTutorial(m.path); }});
         }));
     };
     return DocsMenuItem;
@@ -3698,7 +3765,7 @@ var SideDocs = (function (_super) {
         var docsUrl = state.sideDocsLoadUrl;
         if (!docsUrl)
             return null;
-        return React.createElement("div", null, React.createElement("button", {id: "sidedocstoggle", role: "button", className: "ui icon button", onClick: function () { return _this.toggleVisibility(); }}, React.createElement("i", {className: "icon large inverted " + (state.sideDocsCollapsed ? 'book' : 'chevron right')}), state.sideDocsCollapsed ? React.createElement("i", {className: "icon large inverted chevron left hover"}) : undefined), React.createElement("div", {id: "sidedocs"}, React.createElement("div", {id: "sidedocsbar"}, React.createElement("h3", null, React.createElement("a", {className: "ui icon link", "data-content": lf("Open documentation in new tab"), title: lf("Open documentation in new tab"), onClick: function () { return _this.popOut(); }}, React.createElement("i", {className: "external icon"})))), React.createElement("iframe", {id: "sidedocsframe", src: docsUrl, role: "complementary", sandbox: "allow-scripts allow-same-origin allow-forms allow-popups"})));
+        return React.createElement("div", null, React.createElement("button", {id: "sidedocstoggle", role: "button", className: "ui icon button", onClick: function () { return _this.toggleVisibility(); }}, React.createElement("i", {className: "icon large inverted " + (state.sideDocsCollapsed ? 'book' : 'chevron right')}), state.sideDocsCollapsed ? React.createElement("i", {className: "icon large inverted chevron left hover"}) : undefined), React.createElement("div", {id: "sidedocs"}, React.createElement("div", {id: "sidedocsbar"}, React.createElement("h3", null, React.createElement("a", {className: "ui icon link", "data-content": lf("Open documentation in new tab"), title: lf("Open documentation in new tab"), onClick: function () { return _this.popOut(); }}, React.createElement("i", {className: "external icon"})))), React.createElement("div", {id: "sidedocsframe-wrapper"}, React.createElement("iframe", {id: "sidedocsframe", src: docsUrl, role: "complementary", sandbox: "allow-scripts allow-same-origin allow-forms allow-popups"}))));
     };
     return SideDocs;
 }(data.Component));
@@ -3715,27 +3782,29 @@ var Util = pxt.Util;
 var lf = Util.lf;
 var dimmerInitialized = false;
 function isLoading() {
-    return !!$('.ui.page.dimmer .loadingcontent')[0];
+    return !!$('.ui.loading.dimmer .loadingcontent')[0];
 }
 exports.isLoading = isLoading;
 function hideLoading() {
-    $('.ui.page.dimmer .loadingcontent').remove();
-    $('body.main').dimmer('hide');
+    $('.ui.dimmer.loading .loadingcontent').remove();
+    $('.ui.dimmer.loading').dimmer('hide');
     if (!dimmerInitialized) {
         initializeDimmer();
     }
-    $('body.main').dimmer('hide');
+    setTimeout(function () {
+        $('.ui.dimmer.loading').dimmer('hide');
+    }, 200);
 }
 exports.hideLoading = hideLoading;
 function showLoading(msg) {
     initializeDimmer();
-    $('body.main').dimmer('show');
-    $('.ui.page.dimmer').html("\n  <div class=\"content loadingcontent\">\n    <div class=\"ui text large loader msg\">{lf(\"Please wait\")}</div>\n  </div>\n");
-    $('.ui.page.dimmer .msg').text(msg);
+    $('.ui.dimmer.loading').dimmer('show');
+    $('.ui.dimmer.loading').html("\n  <div class=\"content loadingcontent\">\n    <div class=\"ui text large loader msg\">" + lf("Please wait") + "</div>\n  </div>\n");
+    $('.ui.dimmer.loading .msg').text(msg);
 }
 exports.showLoading = showLoading;
 function initializeDimmer() {
-    $('body.main').dimmer({
+    $('#content').dimmer({ 'dimmerName': 'loading' }).dimmer({
         closable: false
     });
     dimmerInitialized = true;
@@ -4878,12 +4947,7 @@ var FileList = (function (_super) {
         }).then(function (v) {
             if (!v)
                 return;
-            var p = pkg.mainEditorPkg();
-            p.setFile(customFile, "\n/**\n * " + lf("Use this file to define custom functions and blocks.") + "\n * " + lf("Read more at {0}", pxt.appTarget.appTheme.homeUrl + 'blocks/custom') + "\n */\n\nenum MyEnum {\n    //% block=\"one\"\n    One,\n    //% block=\"two\"\n    Two\n}\n\n/**\n * " + lf("Custom blocks") + "\n */\n//% weight=100 color=#0fbc11 icon=\"\uF0C3\"\nnamespace custom {\n    /**\n     * TODO: " + lf("describe your function here") + "\n     * @param n " + lf("describe parameter here") + ", eg: 5\n     * @param s " + lf("describe parameter here") + ", eg: \"Hello\"\n     * @param e " + lf("describe parameter here") + "\n     */    \n    //% block\n    export function foo(n: number, s: string, e: MyEnum): void {\n        // Add code here\n    }\n\n    /**\n     * TODO: " + lf("describe your function here") + "\n     * @param value " + lf("describe value here") + ", eg: 5\n     */    \n    //% block\n    export function fib(value: number): number {\n        return value <= 1 ? value : fib(value -1) + fib(value - 2);\n    }\n}\n");
-            return p.updateConfigAsync(function (cfg) { return cfg.files.push(customFile); })
-                .then(function () { return _this.props.parent.setFile(p.lookupFile("this/" + customFile)); })
-                .then(function () { return p.savePkgAsync(); })
-                .then(function () { return _this.props.parent.reloadHeaderAsync(); });
+            return _this.props.parent.updateFileAsync(customFile, "\n/**\n * " + lf("Use this file to define custom functions and blocks.") + "\n * " + lf("Read more at {0}", pxt.appTarget.appTheme.homeUrl + 'blocks/custom') + "\n */\n\nenum MyEnum {\n    //% block=\"one\"\n    One,\n    //% block=\"two\"\n    Two\n}\n\n/**\n * " + lf("Custom blocks") + "\n */\n//% weight=100 color=#0fbc11 icon=\"\uF0C3\"\nnamespace custom {\n    /**\n     * TODO: " + lf("describe your function here") + "\n     * @param n " + lf("describe parameter here") + ", eg: 5\n     * @param s " + lf("describe parameter here") + ", eg: \"Hello\"\n     * @param e " + lf("describe parameter here") + "\n     */    \n    //% block\n    export function foo(n: number, s: string, e: MyEnum): void {\n        // Add code here\n    }\n\n    /**\n     * TODO: " + lf("describe your function here") + "\n     * @param value " + lf("describe value here") + ", eg: 5\n     */    \n    //% block\n    export function fib(value: number): number {\n        return value <= 1 ? value : fib(value -1) + fib(value - 2);\n    }\n}\n", true);
         });
     };
     FileList.prototype.renderCore = function () {
@@ -5211,23 +5275,31 @@ function init() {
     }
 }
 function shouldUse() {
-    return pxt.appTarget.serial && pxt.appTarget.serial.useHF2 &&
-        (Cloud.isLocalHost() && !!Cloud.localToken || pxt.winrt.isWinRT());
+    var serial = pxt.appTarget.serial;
+    return serial && serial.useHF2 && (Cloud.isLocalHost() && !!Cloud.localToken || pxt.winrt.isWinRT());
 }
 exports.shouldUse = shouldUse;
 function mkBridgeAsync() {
     init();
-    var b = new BridgeIO();
+    var raw = false;
+    if (pxt.appTarget.serial && pxt.appTarget.serial.rawHID)
+        raw = true;
+    var b = new BridgeIO(raw);
     return b.initAsync()
         .then(function () { return b; });
 }
-exports.mkPacketIOAsync = mkBridgeAsync;
+pxt.HF2.mkPacketIOAsync = mkBridgeAsync;
 var BridgeIO = (function () {
-    function BridgeIO() {
+    function BridgeIO(rawMode) {
+        var _this = this;
+        if (rawMode === void 0) { rawMode = false; }
+        this.rawMode = rawMode;
         this.onData = function (v) { };
         this.onEvent = function (v) { };
         this.onError = function (e) { };
         this.onSerial = function (v, isErr) { };
+        if (rawMode)
+            this.onEvent = function (v) { return _this.onData(v); };
     }
     BridgeIO.prototype.onOOB = function (v) {
         if (v.op == "serial") {
@@ -5258,6 +5330,12 @@ var BridgeIO = (function () {
         });
     };
     BridgeIO.prototype.sendPacketAsync = function (pkt) {
+        if (this.rawMode)
+            return iface.opAsync("send", {
+                path: this.dev.path,
+                data: U.toHex(pkt),
+                raw: true
+            });
         throw new Error("should use talksAsync()!");
     };
     BridgeIO.prototype.sendSerialAsync = function (buf, useStdErr) {
@@ -5270,8 +5348,11 @@ var BridgeIO = (function () {
     BridgeIO.prototype.initAsync = function () {
         var _this = this;
         return iface.opAsync("list", {})
-            .then(function (devs) {
-            var d0 = devs.devices.filter(function (d) { return (d.release & 0xff00) == 0x4200; })[0];
+            .then(function (devs0) {
+            var devs = devs0.devices;
+            var d0 = devs.filter(function (d) { return (d.release & 0xff00) == 0x4200; })[0];
+            if (pxt.appTarget.serial && pxt.appTarget.serial.rawHID)
+                d0 = devs[0];
             if (d0) {
                 if (_this.dev)
                     delete bridgeByPath[_this.dev.path];
@@ -5282,13 +5363,14 @@ var BridgeIO = (function () {
                 throw new Error("No device connected");
         })
             .then(function () { return iface.opAsync("init", {
-            path: _this.dev.path
+            path: _this.dev.path,
+            raw: _this.rawMode,
         }); });
     };
     return BridgeIO;
 }());
 function hf2Async() {
-    return exports.mkPacketIOAsync()
+    return pxt.HF2.mkPacketIOAsync()
         .then(function (h) {
         var w = new pxt.HF2.Wrapper(h);
         return w.reconnectAsync(true)
@@ -5520,11 +5602,23 @@ var LogView = (function (_super) {
         _super.call(this, props);
         this.lastStreamUploadTime = 0;
         this.streamUploadTimeout = 0;
+        // resolve chrome extension info
+        var serial = pxt.appTarget.serial || {};
+        var chromeExtension = serial.chromeExtension;
+        var m = /chromeserial=([a-z]+)/i.exec(window.location.href);
+        if (m)
+            chromeExtension = m[1];
+        // init view
         this.view = new pxsim.logs.LogViewElement({
             maxEntries: 80,
             maxAccValues: 500,
             onClick: function (es) { return _this.onClick(es); },
-            onTrendChartChanged: function () { return _this.setState({ trends: _this.view.hasTrends() }); }
+            onTrendChartChanged: function () { return _this.setState({ trends: _this.view.hasTrends() }); },
+            chromeExtension: chromeExtension,
+            useHF2: serial.useHF2,
+            productId: serial.productId,
+            vendorId: serial.vendorId,
+            nameFilter: serial.nameFilter
         });
         this.state = {};
     }
@@ -5608,7 +5702,7 @@ var LogView = (function (_super) {
         var streamUrl = this.state.stream ? rootUrl + this.state.stream.id : undefined;
         core.confirmAsync({
             logos: streaming ? ["https://az851932.vo.msecnd.net/pub/hjlxsmaf"] : undefined,
-            header: pxt.appTarget.title + ' - ' + lf("Analyze Data"),
+            header: lf("Analyze Data"),
             hideAgree: true,
             disagreeLbl: lf("Close"),
             onLoaded: function (_) {
@@ -6226,6 +6320,7 @@ var Editor = (function (_super) {
             this.selectedCategoryRow.style.color = "" + this.selectedCategoryColor;
             this.selectedCategoryRow.className = 'blocklyTreeRow';
         }
+        this.parent.setState({ hideEditorFloats: !clear });
         if (clear) {
             this.selectedCategoryRow = null;
         }
@@ -6268,6 +6363,8 @@ var Editor = (function (_super) {
             group.appendChild(this.createCategoryElement("", pxt.blocks.getNamespaceColor('advanced'), this.showAdvanced ? 'advancedexpanded' : 'advancedcollapsed', false, null, function () {
                 _this.showAdvanced = !_this.showAdvanced;
                 _this.updateToolbox();
+                _this.parent.setState({ hideEditorFloats: false });
+                _this.resize();
             }, lf("{id:category}Advanced")));
         }
         if (this.showAdvanced) {
@@ -6401,6 +6498,7 @@ var Editor = (function (_super) {
                 monacoEditor.selectedCategoryRow = null;
                 monacoFlyout.style.display = 'none';
                 treerow.className = 'blocklyTreeRow';
+                _this.parent.setState({ hideEditorFloats: false });
                 return;
             }
             else {
@@ -7046,10 +7144,10 @@ exports.maths = {
             }
         },
         {
-            name: "random",
-            snippet: "Math.random(4)",
+            name: "randomRange",
+            snippet: "Math.randomRange(0, 10)",
             attributes: {
-                jsDoc: lf("Returns a random number between 0 and an upper bound")
+                jsDoc: lf("Returns a random number between min and max")
             }
         },
         {
@@ -7804,6 +7902,7 @@ var core = require("./core");
 var compiler = require("./compiler");
 var codecard = require("./codecard");
 var gallery = require("./gallery");
+var WELCOME = "__welcome";
 var MYSTUFF = "__mystuff";
 var Projects = (function (_super) {
     __extends(Projects, _super);
@@ -7818,8 +7917,28 @@ var Projects = (function (_super) {
             tab: MYSTUFF
         };
     }
-    Projects.prototype.hide = function () {
-        this.setState({ visible: false });
+    Projects.prototype.hide = function (closeOnly) {
+        if (closeOnly === void 0) { closeOnly = false; }
+        if (this.state.isInitialStartPage && closeOnly) {
+            // If this was the initial start page and the dialog was close without a selection being made, load the
+            // previous project if available or create a new one
+            pxt.tickEvent("projects.welcome.hide");
+            if (this.state.resumeProject) {
+                this.props.parent.loadHeaderAsync(this.state.resumeProject);
+            }
+            else {
+                this.props.parent.newProject();
+            }
+        }
+        this.setState({ visible: false, isInitialStartPage: false });
+    };
+    Projects.prototype.showInitialStartPage = function (resumeProject) {
+        this.setState({
+            visible: true,
+            tab: WELCOME,
+            isInitialStartPage: true,
+            resumeProject: resumeProject
+        });
     };
     Projects.prototype.showOpenProject = function (tab) {
         var gals = pxt.appTarget.appTheme.galleries || {};
@@ -7871,7 +7990,8 @@ var Projects = (function (_super) {
     Projects.prototype.shouldComponentUpdate = function (nextProps, nextState, nextContext) {
         return this.state.visible != nextState.visible
             || this.state.tab != nextState.tab
-            || this.state.searchFor != nextState.searchFor;
+            || this.state.searchFor != nextState.searchFor
+            || this.state.welcomeDescription != nextState.welcomeDescription;
     };
     Projects.prototype.numDaysOld = function (d1) {
         var diff = Math.abs((Date.now() / 1000) - d1);
@@ -7882,7 +8002,8 @@ var Projects = (function (_super) {
         var _a = this.state, visible = _a.visible, tab = _a.tab;
         var theme = pxt.appTarget.appTheme;
         var galleries = theme.galleries || {};
-        var tabs = [MYSTUFF].concat(Object.keys(galleries));
+        var galleryNames = Object.keys(galleries);
+        var tabs = (pxt.appTarget.appTheme.useStartPage ? [WELCOME, MYSTUFF] : [MYSTUFF]).concat(Object.keys(galleries));
         // lf("Make")
         // lf("Code")
         // lf("Projects")
@@ -7893,7 +8014,7 @@ var Projects = (function (_super) {
         this.galleryFetchErrors = {};
         var gals = Util.mapMap(galleries, function (k) { return _this.fetchGallery(k, galleries[k]); });
         var chgHeader = function (hdr) {
-            pxt.tickEvent("projects.header");
+            pxt.tickEvent(tab == WELCOME ? "projects.welcome.resume" : "projects.header");
             _this.hide();
             _this.props.parent.loadHeaderAsync(hdr);
         };
@@ -7902,10 +8023,10 @@ var Projects = (function (_super) {
             _this.hide();
             switch (scr.cardType) {
                 case "example":
-                    chgCode(scr);
-                    break;
-                case "blocksExample":
                     chgCode(scr, true);
+                    break;
+                case "codeExample":
+                    chgCode(scr, false);
                     break;
                 case "tutorial":
                     _this.props.parent.startTutorial(scr.url);
@@ -7914,15 +8035,18 @@ var Projects = (function (_super) {
                     var m = /^\/#tutorial:([a-z0A-Z0-9\-\/]+)$/.exec(scr.url);
                     if (m)
                         _this.props.parent.startTutorial(m[1]);
-                    else
-                        _this.props.parent.newEmptyProject(scr.name.toLowerCase(), scr.url);
+                    else {
+                        if (scr.youTubeId && !scr.url)
+                            window.open('https://youtu.be/' + scr.youTubeId, 'yt');
+                        else
+                            _this.props.parent.newEmptyProject(scr.name.toLowerCase(), scr.url);
+                    }
             }
         };
         var chgCode = function (scr, loadBlocks) {
             core.showLoading(lf("Loading..."));
             gallery.loadExampleAsync(scr.name.toLowerCase(), scr.url)
                 .done(function (opts) {
-                core.hideLoading();
                 if (opts) {
                     if (loadBlocks) {
                         var ts_1 = opts.filesOverride["main.ts"];
@@ -7965,7 +8089,7 @@ var Projects = (function (_super) {
             _this.props.parent.importUrlDialog();
         };
         var newProject = function () {
-            pxt.tickEvent("projects.new");
+            pxt.tickEvent(tab == WELCOME ? "projects.welcome.new" : "projects.new");
             _this.hide();
             _this.props.parent.newProject();
         };
@@ -7973,6 +8097,28 @@ var Projects = (function (_super) {
             pxt.tickEvent("projects.rename");
             _this.hide();
             _this.props.parent.setFile(pkg.mainEditorPkg().files[pxt.CONFIG_NAME]);
+        };
+        var resume = function () {
+            if (_this.state.isInitialStartPage) {
+                chgHeader(_this.state.resumeProject);
+            }
+            else {
+                // The msot recent project is already loaded in the editor, so this is a no-op
+                _this.hide();
+            }
+        };
+        var gettingStarted = function () {
+            pxt.tickEvent("projects.welcome.gettingstarted");
+            _this.hide();
+            _this.props.parent.gettingStarted();
+        };
+        var loadProject = function () {
+            pxt.tickEvent("projects.welcome.loadproject");
+            _this.setState({ tab: MYSTUFF });
+        };
+        var projectGalleries = function () {
+            pxt.tickEvent("projects.welcome.galleries");
+            _this.setState({ tab: galleryNames[0] });
         };
         var isEmpty = function () {
             if (_this.state.searchFor) {
@@ -7999,14 +8145,21 @@ var Projects = (function (_super) {
             { name: lf("Older"), headers: headersOlder },
         ];
         var hadFetchError = this.galleryFetchErrors[tab];
-        var isLoading = tab != MYSTUFF && !hadFetchError && !gals[tab].length;
+        var isLoading = tab != WELCOME && tab != MYSTUFF && !hadFetchError && !gals[tab].length;
         var tabClasses = sui.cx([
             isLoading ? 'loading' : '',
             'ui segment bottom attached tab active tabsegment'
         ]);
-        return (React.createElement(sui.Modal, {open: visible, className: "projectsdialog", size: "fullscreen", closeIcon: false, onClose: function () { return _this.setState({ visible: false }); }, dimmer: true, closeOnDimmerClick: true, closeOnDocumentClick: true}, React.createElement(sui.Segment, {inverted: targetTheme.invertedMenu, attached: "top"}, React.createElement(sui.Menu, {inverted: targetTheme.invertedMenu, secondary: true}, tabs.map(function (t) {
-            return React.createElement(sui.MenuItem, {key: "tab" + t, active: tab == t, name: t == MYSTUFF ? lf("My Stuff") : Util.rlf(t), onClick: function () { return _this.setState({ tab: t }); }});
-        }), React.createElement("div", {className: "right menu"}, React.createElement(sui.Button, {icon: 'close', class: "huge clear " + (targetTheme.invertedMenu ? 'inverted' : ''), onClick: function () { return _this.setState({ visible: false }); }})))), tab == MYSTUFF ? React.createElement("div", {className: tabClasses}, React.createElement("div", {className: "group"}, React.createElement("div", {className: "ui cards"}, React.createElement(codecard.CodeCardView, {key: 'newproject', icon: "file outline", iconColor: "primary", name: lf("New Project..."), description: lf("Creates a new empty project"), onClick: function () { return newProject(); }}), pxt.appTarget.compile ?
+        return (React.createElement(sui.Modal, {open: visible, className: "projectsdialog", size: "fullscreen", closeIcon: false, onClose: function () { return _this.hide(/* closeOnly */ true); }, dimmer: true, closeOnDimmerClick: true}, React.createElement(sui.Segment, {inverted: targetTheme.invertedMenu, attached: "top"}, React.createElement(sui.Menu, {inverted: targetTheme.invertedMenu, secondary: true}, tabs.map(function (t) {
+            var name;
+            if (t == MYSTUFF)
+                name = lf("My Stuff");
+            else if (t == WELCOME)
+                name = lf("Welcome!");
+            else
+                name = Util.rlf(t);
+            return (React.createElement(sui.MenuItem, {key: "tab" + t, active: tab == t, name: name, onClick: function () { return _this.setState({ tab: t }); }}));
+        }), React.createElement("div", {className: "right menu"}, React.createElement(sui.Button, {icon: 'close', class: "huge clear " + (targetTheme.invertedMenu ? 'inverted' : ''), onClick: function () { return _this.hide(/* closeOnly */ true); }})))), tab == WELCOME ? React.createElement("div", {className: tabClasses}, React.createElement("div", {className: "ui stackable two column grid welcomegrid"}, React.createElement("div", {className: "six wide column labelsgroup"}, React.createElement("h2", {className: "editorname"}, pxt.appTarget.name), React.createElement("div", {className: "large ui loader editoravatar"})), React.createElement("div", {className: "group ten wide column"}, React.createElement("div", {className: "ui cards centered"}, this.state.resumeProject ? React.createElement(codecard.CodeCardView, {key: 'resume', iconColor: "teal", iconContent: lf("Resume"), description: lf("Load the last project you worked on"), onClick: function () { return resume(); }}) : undefined, pxt.appTarget.appTheme.sideDoc ? React.createElement(codecard.CodeCardView, {key: 'gettingstarted', iconColor: "green", iconContent: lf("Getting started"), description: lf("Create a fun, beginner project in a guided tutorial"), onClick: function () { return gettingStarted(); }}) : undefined, React.createElement(codecard.CodeCardView, {key: 'newproject', iconColor: "brown", iconContent: lf("New project"), description: lf("Start a new, empty project"), onClick: function () { return newProject(); }}), React.createElement(codecard.CodeCardView, {key: 'loadproject', iconColor: "grey", iconContent: lf("Load project"), description: lf("Load a previous project"), onClick: function () { return loadProject(); }}), galleryNames.length > 0 ? React.createElement(codecard.CodeCardView, {key: 'projectgalleries', iconColor: "orange", iconContent: lf("Project galleries"), description: lf("Browse guided tutorials, project samples and awesome activities"), onClick: function () { return projectGalleries(); }}) : undefined)))) : undefined, tab == MYSTUFF ? React.createElement("div", {className: tabClasses}, React.createElement("div", {className: "group"}, React.createElement("div", {className: "ui cards"}, React.createElement(codecard.CodeCardView, {key: 'newproject', icon: "file outline", iconColor: "primary", name: lf("New Project..."), description: lf("Creates a new empty project"), onClick: function () { return newProject(); }}), pxt.appTarget.compile ?
             React.createElement(codecard.CodeCardView, {key: 'import', icon: "upload", iconColor: "secondary", name: lf("Import File..."), description: lf("Open files from your computer"), onClick: function () { return importHex(); }}) : undefined, pxt.appTarget.cloud && pxt.appTarget.cloud.sharing && pxt.appTarget.cloud.publishing && pxt.appTarget.cloud.importing ?
             React.createElement(codecard.CodeCardView, {key: 'importurl', icon: "cloud download", iconColor: "secondary", name: lf("Import URL..."), description: lf("Open a shared project URL"), onClick: function () { return importUrl(); }}) : undefined)), headersGrouped.filter(function (g) { return g.headers.length != 0; }).map(function (headerGroup) {
             return React.createElement("div", {key: 'localgroup' + headerGroup.name, className: "group"}, React.createElement("h3", {className: "ui dividing header disabled"}, headerGroup.name), React.createElement("div", {className: "ui cards"}, headerGroup.headers.map(function (scr) {
@@ -8014,7 +8167,7 @@ var Projects = (function (_super) {
             })));
         }), React.createElement("div", {className: "group"}, React.createElement("div", {className: "ui cards"}, urldata.map(function (scr) {
             return React.createElement(codecard.CodeCardView, {name: scr.name, time: scr.time, header: '/' + scr.id, description: scr.description, key: 'cloud' + scr.id, onClick: function () { return installScript(scr); }, url: '/' + scr.id, color: "blue"});
-        })))) : undefined, tab != MYSTUFF ? React.createElement("div", {className: tabClasses}, hadFetchError ?
+        })))) : undefined, tab != MYSTUFF && tab != WELCOME ? React.createElement("div", {className: tabClasses}, hadFetchError ?
             React.createElement("p", {className: "ui red inverted segment"}, lf("Oops! There was an error. Please ensure you are connected to the Internet and try again."))
             : React.createElement("div", {className: "ui cards centered"}, gals[tab].map(function (scr) { return React.createElement(codecard.CodeCardView, {key: tab + scr.name, name: scr.name, description: scr.description, url: scr.url, imageUrl: scr.imageUrl, youTubeId: scr.youTubeId, onClick: function () { return chgGallery(scr); }}); }))) : undefined, isEmpty() ?
             React.createElement("div", {className: "ui items"}, React.createElement("div", {className: "ui item"}, lf("We couldn't find any projects matching '{0}'", this.state.searchFor)))
@@ -8358,7 +8511,7 @@ var ScriptSearch = (function (_super) {
                         // Single conflict: "Package a is..."
                         lf("Package {0} is incompatible with {1}. Remove {0} and add {1}?", conflicts[0].pkg0.id, config.name) :
                         // 2 conflicts: "Packages A and B are..."; 3+ conflicts: "Packages A, B, C and D are..."
-                        lf("Packages {0} and {1} are incompatible with {2}. Remove them and add {2}?", conflicts.slice(0, -1).map(function (c) { return c.pkg0.id; }).join(","), conflicts.slice(-1)[0].pkg0.id, config.name);
+                        lf("Packages {0} and {1} are incompatible with {2}. Remove them and add {2}?", conflicts.slice(0, -1).map(function (c) { return c.pkg0.id; }).join(", "), conflicts.slice(-1)[0].pkg0.id, config.name);
                     addDependencyPromise = addDependencyPromise
                         .then(function () { return core.confirmAsync({
                         header: lf("Some packages will be removed"),
@@ -8658,7 +8811,8 @@ function init(root, cfg) {
         onDebuggerBreakpoint: function (brk) {
             updateDebuggerButtons(brk);
             var brkInfo = lastCompileResult.breakpoints[brk.breakpointId];
-            config.highlightStatement(brkInfo);
+            if (config)
+                config.highlightStatement(brkInfo);
             if (brk.exceptionMessage) {
                 core.errorNotification(lf("Program Error: {0}", brk.exceptionMessage));
             }
@@ -8666,7 +8820,8 @@ function init(root, cfg) {
         },
         onTraceMessage: function (msg) {
             var brkInfo = lastCompileResult.breakpoints[msg.breakpointId];
-            config.highlightStatement(brkInfo);
+            if (config)
+                config.highlightStatement(brkInfo);
         },
         onDebuggerWarning: function (wrn) {
             for (var _i = 0, _a = wrn.breakpointIds; _i < _a.length; _i++) {
@@ -8674,7 +8829,8 @@ function init(root, cfg) {
                 var brkInfo = lastCompileResult.breakpoints[id];
                 if (brkInfo) {
                     if (!U.startsWith("pxt_modules/", brkInfo.fileName)) {
-                        config.highlightStatement(brkInfo);
+                        if (config)
+                            config.highlightStatement(brkInfo);
                         break;
                     }
                 }
@@ -8682,7 +8838,8 @@ function init(root, cfg) {
         },
         onDebuggerResume: function () {
             postSimEditorEvent("resumed");
-            config.highlightStatement(null);
+            if (config)
+                config.highlightStatement(null);
             updateDebuggerButtons();
         },
         onStateChanged: function (state) {
@@ -8745,7 +8902,7 @@ function postSimEditorEvent(subtype, exception) {
     }
 }
 function setState(editor, tutMode) {
-    if (config.editor != editor) {
+    if (config && config.editor != editor) {
         config.editor = editor;
         config.highlightStatement(null);
         updateDebuggerButtons();
@@ -24621,7 +24778,7 @@ module.exports={
         "spec": "1.3.2",
         "type": "version"
       },
-      "/Users/charles/dev/pxt/node_modules/pouchdb"
+      "d:\\src\\cdiddy77\\pxt\\node_modules\\pouchdb"
     ]
   ],
   "_from": "levelup@1.3.2",
@@ -24655,7 +24812,7 @@ module.exports={
   "_shasum": "b321d3071f0e75c2dfaf2f0fe8864e5b9a387bc9",
   "_shrinkwrap": null,
   "_spec": "levelup@1.3.2",
-  "_where": "/Users/charles/dev/pxt/node_modules/pouchdb",
+  "_where": "d:\\src\\cdiddy77\\pxt\\node_modules\\pouchdb",
   "browser": {
     "leveldown": false,
     "leveldown/package": false,

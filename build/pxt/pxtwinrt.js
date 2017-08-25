@@ -10,7 +10,7 @@ var pxt;
             pxt.Util.assert(!!drives);
             pxt.debug("deploying to drives " + drives);
             var drx = new RegExp(drives);
-            var firmware = pxt.appTarget.compile.useUF2 ? pxtc.BINARY_UF2 : pxtc.BINARY_HEX;
+            var firmware = pxt.outputName();
             var r = res.outfiles[firmware];
             function writeAsync(folder) {
                 pxt.debug("writing " + firmware + " to " + folder.displayName);
@@ -92,7 +92,7 @@ var pxt;
                 if (!this.dev)
                     return Promise.resolve();
                 var ar = [0];
-                for (var i = 0; i < 64; ++i)
+                for (var i = 0; i < Math.max(pkt.length, 64); ++i)
                     ar.push(pkt[i] || 0);
                 var dataWriter = new Windows.Storage.Streams.DataWriter();
                 dataWriter.writeBytes(ar);
@@ -291,11 +291,8 @@ var pxt;
                 e.handled = true;
             };
             winrt.initSerial();
-            return initialActivationPromise
-                .then(function (args) {
-                if (args && args.kind === Windows.ApplicationModel.Activation.ActivationKind.file) {
-                    winrt.hasActivationProject = true;
-                }
+            return hasActivationProjectAsync()
+                .then(function () {
                 if (importHexImpl) {
                     importHex = importHexImpl;
                     var app = Windows.UI.WebUI.WebUIApplication;
@@ -310,25 +307,33 @@ var pxt;
             if (!isWinRT()) {
                 return;
             }
+            initialActivationDeferred = Promise.defer();
             Windows.UI.WebUI.WebUIApplication.addEventListener("activated", initialActivationHandler);
         }
         winrt.captureInitialActivation = captureInitialActivation;
         function loadActivationProject() {
-            return initialActivationPromise
+            return initialActivationDeferred.promise
                 .then(function (args) { return fileActivationHandler(args, /* createNewIfFailed */ true); });
         }
         winrt.loadActivationProject = loadActivationProject;
-        winrt.hasActivationProject = false;
+        function hasActivationProjectAsync() {
+            if (!isWinRT()) {
+                return Promise.resolve(false);
+            }
+            // By the time the webapp calls this, if the activation promise hasn't been settled yet, assume we missed the
+            // activation event and pretend there were no activation args
+            initialActivationDeferred.resolve(null); // This is no-op if the promise had been previously resolved
+            return initialActivationDeferred.promise
+                .then(function (args) {
+                return Promise.resolve(args && args.kind === Windows.ApplicationModel.Activation.ActivationKind.file);
+            });
+        }
+        winrt.hasActivationProjectAsync = hasActivationProjectAsync;
         function initialActivationHandler(args) {
             Windows.UI.WebUI.WebUIApplication.removeEventListener("activated", initialActivationHandler);
-            resolveInitialActivationPromise(args);
+            initialActivationDeferred.resolve(args);
         }
-        var initialActivationPromise = new Promise(function (resolve, reject) {
-            resolveInitialActivationPromise = resolve;
-            // After a few seconds, consider we missed the initial activation event and ignore any double clicked file
-            setTimeout(function () { return resolve(null); }, 3500);
-        });
-        var resolveInitialActivationPromise;
+        var initialActivationDeferred;
         var importHex;
         function fileActivationHandler(args, createNewIfFailed) {
             if (createNewIfFailed === void 0) { createNewIfFailed = false; }

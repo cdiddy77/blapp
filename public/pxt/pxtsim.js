@@ -1541,7 +1541,11 @@ var pxsim;
                 this.fixBreakpoints();
             }
             this.sendEvent(new pxsim.protocol.InitializedEvent());
-            this.driver.run(js, { parts: parts, fnArgs: fnArgs, boardDefinition: board });
+            this.driver.run(js, {
+                parts: parts,
+                fnArgs: fnArgs,
+                boardDefinition: board
+            });
         };
         SimDebugSession.prototype.stopSimulator = function (unload) {
             if (unload === void 0) { unload = false; }
@@ -3186,7 +3190,13 @@ var pxsim;
     // (but the code below doesn't come from there; I wrote it myself)
     // TODO use Math.imul if available
     function intMult(a, b) {
-        return (((a & 0xffff) * (b >>> 16) + (b & 0xffff) * (a >>> 16)) << 16) + ((a & 0xffff) * (b & 0xffff));
+        var ah = (a >>> 16) & 0xffff;
+        var al = a & 0xffff;
+        var bh = (b >>> 16) & 0xffff;
+        var bl = b & 0xffff;
+        // the shift by 0 fixes the sign on the high part
+        // the final |0 converts the unsigned value into a signed value 
+        return ((al * bl) + (((ah * bl + al * bh) << 16) >>> 0) | 0);
     }
     var Number_;
     (function (Number_) {
@@ -3674,10 +3684,21 @@ var pxsim;
             };
             LogViewElement.prototype.registerChromeSerial = function () {
                 var _this = this;
+                var extensionId = this.props.chromeExtension;
+                if (!extensionId)
+                    return;
                 var buffers = {};
                 var chrome = window.chrome;
                 if (chrome && chrome.runtime) {
-                    var port = chrome.runtime.connect("cihhkhnngbjlhahcfmhekmbnnjcjdbge", { name: "micro:bit" });
+                    console.debug("chrome: connecting to extension " + extensionId);
+                    var port = chrome.runtime.connect(extensionId, { name: "serial" });
+                    port.postMessage({
+                        type: "serial-config",
+                        useHF2: this.props.useHF2,
+                        vendorId: this.props.vendorId,
+                        productId: this.props.productId,
+                        nameFilter: this.props.nameFilter
+                    });
                     port.onMessage.addListener(function (msg) {
                         if (msg.type == "serial") {
                             if (!_this.dropSim) {

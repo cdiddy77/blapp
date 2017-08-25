@@ -85,7 +85,7 @@
     "workerjs": "/pxt/worker.js",
     "tdworkerjs": "/pxt/tdworker.js",
     "monacoworkerjs": "/pxt/monacoworker.js",
-    "pxtVersion": "1.7.17",
+    "pxtVersion": "1.8.20",
     "pxtRelId": "",
     "pxtCdnUrl": "/pxt/",
     "commitCdnUrl": "/pxt/",
@@ -94,6 +94,7 @@
     "targetVersion": "0.0.0",
     "targetRelId": "",
     "targetUrl": "",
+    "targetId": "blapp",
     "simUrl": "/pxt/simulator.html",
     "partsUrl": "/pxt/siminstructions.html",
     "runUrl": "/pxt/run.html",
@@ -106,12 +107,12 @@
     <script type="text/javascript">
         (function () {
         var loading = document.getElementById('loading');
-        var id = /id=([^&?]+)/i.exec(window.location.href);
-        var code = /code=([^&?]+)/i.exec(window.location.href);
-        var localToken = /local_token=([^&?]+)/i.exec(window.location.href);
-        var hex = !!/hex=1/i.exec(window.location.href);
-        var footer = !/nofooter=1/i.exec(window.location.href);
-        var debugSim = !!/debugSim=1/i.exec(window.location.href);
+        var id = /id(?:[:=])([^&?]+)/i.exec(window.location.href);
+        var code = /code(?:[:=])([^&?]+)/i.exec(window.location.href);
+        var localToken = /local_token(?:[:=])([^&?]+)/i.exec(window.location.href);
+        var hex = !!/hex(?:[:=])1/i.exec(window.location.href);
+        var footer = !/nofooter(?:[:=])1/i.exec(window.location.href);
+        var debugSim = !!/debugSim(?:[:=])1/i.exec(window.location.href);
         var sims = document.getElementById('simulators');
 
         if (!id && !code && !debugSim) {

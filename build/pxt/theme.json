@@ -306,6 +306,24 @@
           "path": "/types/boolean",
           "prevName": "String",
           "prevPath": "/types/string",
+          "nextName": "Array",
+          "nextPath": "/types/array"
+        },
+        {
+          "name": "Array",
+          "subitems": [],
+          "path": "/types/array",
+          "prevName": "Boolean",
+          "prevPath": "/types/boolean",
+          "nextName": "Function",
+          "nextPath": "/types/function"
+        },
+        {
+          "name": "Function",
+          "subitems": [],
+          "path": "/types/function",
+          "prevName": "Array",
+          "prevPath": "/types/array",
           "nextName": "Support",
           "nextPath": "/support"
         }
@@ -323,8 +341,8 @@
           "name": "Support",
           "subitems": [],
           "path": "/support",
-          "prevName": "Boolean",
-          "prevPath": "/types/boolean",
+          "prevName": "Function",
+          "prevPath": "/types/function",
           "nextName": "FAQ",
           "nextPath": "/faq"
         },
@@ -369,31 +387,49 @@
           "subitems": [],
           "path": "/streaming",
           "prevName": "Offline support",
-          "prevPath": "/offline"
+          "prevPath": "/offline",
+          "nextName": "Command Line Interface",
+          "nextPath": "/cli"
         }
       ],
-      "prevName": "Boolean",
-      "prevPath": "/types/boolean"
+      "prevName": "Function",
+      "prevPath": "/types/function"
+    },
+    {
+      "name": "",
+      "subitems": [
+        {
+          "name": "Command Line Interface",
+          "subitems": [],
+          "path": "/cli",
+          "prevName": "Streaming",
+          "prevPath": "/streaming",
+          "nextName": "Visual Studio Code support",
+          "nextPath": "/code"
+        },
+        {
+          "name": "Visual Studio Code support",
+          "subitems": [],
+          "path": "/code",
+          "prevName": "Command Line Interface",
+          "prevPath": "/cli",
+          "nextName": "Coding on Raspberry Pi",
+          "nextPath": "/raspberry-pi"
+        },
+        {
+          "name": "Coding on Raspberry Pi",
+          "subitems": [],
+          "path": "/raspberry-pi",
+          "prevName": "Visual Studio Code support",
+          "prevPath": "/code"
+        }
+      ],
+      "prevName": "Streaming",
+      "prevPath": "/streaming"
     }
   ],
   "id": "blapp",
   "title": "MakeCode Apps Target",
   "name": "MakeCode Apps",
-  "htmlDocIncludes": {},
-  "locales": {
-    "pl": {
-      "name": "Przykład PXT",
-      "title": "Przykładowe Doświadczenie PXT",
-      "docMenu": [
-        {
-          "name": "O nas",
-          "path": "/about"
-        },
-        {
-          "name": "Dokumentacja",
-          "path": "/docs"
-        }
-      ]
-    }
-  }
+  "htmlDocIncludes": {}
 }

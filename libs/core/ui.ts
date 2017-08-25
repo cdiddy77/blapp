@@ -22,7 +22,7 @@ namespace UI {
     //% color=#5B6DA5
     //% blockId=group_element
     //% block="GROUP id %name|dir %direction|flex %flex|class %className|style %style=lists_create_empty"
-    //% handlerStmt=true
+    //% handlerStatement=true
     //% externallyLoadedBlock=true
     //% name.fieldEditor="text" name.fieldOptions.onParentBlock=true name.fieldOptions.decompileLiterals=true
     //% flex.fieldEditor="checkbox" flex.fieldOptions.onParentBlock=true flex.fieldOptions.decompileLiterals=true
@@ -43,7 +43,7 @@ namespace UI {
     //% color=#80A55B
     //% blockId=scroller_element
     //% block="SCROLLER id %name|flex %flex|class %className|horizontal? %horz|style %style=lists_create_empty"
-    //% handlerStmt=true
+    //% handlerStatement=true
     //% externallyLoadedBlock=true
     //% name.fieldEditor="text" name.fieldOptions.onParentBlock=true name.fieldOptions.decompileLiterals=true
     //% flex.fieldEditor="checkbox" flex.fieldOptions.onParentBlock=true flex.fieldOptions.decompileLiterals=true
@@ -68,7 +68,7 @@ namespace UI {
     //% externallyLoadedBlock=true
     //% name.fieldEditor="text" name.fieldOptions.onParentBlock=true name.fieldOptions.decompileLiterals=true
     //% flex.fieldEditor="checkbox" flex.fieldOptions.onParentBlock=true flex.fieldOptions.decompileLiterals=true
-    //% handlerStmt=true
+    //% handlerStatement=true
     export function buttonElement(
         name: string,
         flex: boolean,
@@ -108,7 +108,7 @@ namespace UI {
     //% color=#A55B93
     //% blockId=textinput_element
     //% block="TEXT INPUT id %name|flex %flex|class %className|style %style=lists_create_empty|initial %initialValue| when text changes"
-    //% handlerStmt=true
+    //% handlerStatement=true
     //% mutate=objectdestructuring
     //% mutateText="new text"
     //% mutateDefaults="text"

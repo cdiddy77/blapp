@@ -47,7 +47,8 @@
 <!-- end include appmeta.html -->
 
 
-    <link rel="stylesheet" data-rtl="/pxt/rtlsemantic.css" href="/pxt/semantic.css" type="text/css">    
+    <link id="blocklycss" rel="stylesheet" data-rtl="/pxt/rtlblockly.css" href="/pxt/blockly.css" type="text/css">
+    <link rel="stylesheet" data-rtl="/pxt/rtlsemantic.css" href="/pxt/semantic.css" type="text/css">
     <style type="text/css">
         @import "/pxt/custom.css";
         @import "/pxt/icons.css";
@@ -59,7 +60,7 @@
         <div class="ui large loader"></div>
     </div>
 
-    <div id='content'>
+    <div id='content' class="ui dimmable full-abs">
     </div>
 
     <div id='msg'>
@@ -76,7 +77,7 @@
     "workerjs": "/pxt/worker.js",
     "tdworkerjs": "/pxt/tdworker.js",
     "monacoworkerjs": "/pxt/monacoworker.js",
-    "pxtVersion": "1.7.17",
+    "pxtVersion": "1.8.20",
     "pxtRelId": "",
     "pxtCdnUrl": "/pxt/",
     "commitCdnUrl": "/pxt/",
@@ -85,6 +86,7 @@
     "targetVersion": "0.0.0",
     "targetRelId": "",
     "targetUrl": "",
+    "targetId": "blapp",
     "simUrl": "/pxt/simulator.html",
     "partsUrl": "/pxt/siminstructions.html",
     "runUrl": "/pxt/run.html",
@@ -122,7 +124,7 @@
                 telemetryItem.properties["WindowsApp"] = 1;
         });
     });
-    appInsights.trackPageView();
+    appInsights.trackPageView(null, null, {urlReferrer: document.referrer});
 </script>
 <!-- end include tracking.html -->
 

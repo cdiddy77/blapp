@@ -261,10 +261,9 @@ var pxt;
                 pxt.debug("Downloading screenshot for: " + woptions.hexname);
                 var filename_1 = woptions.hexname.substr(0, woptions.hexname.lastIndexOf('.'));
                 var fontSize = window.getComputedStyle($svg.get(0).getElementsByClassName("blocklyText").item(0)).getPropertyValue("font-size");
-                var customCss = "\n.blocklyMainBackground {\n    stroke:none !important;\n}\n\n.blocklyText {\n    font-family:'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace !important;\n    font-size:" + fontSize + " !important;\n}\n\n.blocklyCheckbox,\n.blocklyLed {\n    fill: #ff3030 !important;\n    text-shadow: 0px 0px 6px #f00;\n    font-size: 17pt !important;\n}";
                 var svgElement = $svg.get(0);
                 var bbox = $svg.get(0).getBoundingClientRect();
-                pxt.blocks.layout.svgToPngAsync(svgElement, customCss, 0, 0, bbox.width, bbox.height, 4)
+                pxt.blocks.layout.svgToPngAsync(svgElement, 0, 0, bbox.width, bbox.height, 4)
                     .done(function (uri) {
                     if (uri)
                         pxt.BrowserUtils.browserDownloadDataUri(uri, (name || (pxt.appTarget.nickname || pxt.appTarget.id) + "-" + filename_1) + ".png");
@@ -312,6 +311,7 @@ var pxt;
                 if (options.snippetReplaceParent)
                     c = c.parent();
                 var compiled = r.compileJS && r.compileJS.success;
+                // TODO should this use pxt.outputName() and not pxtc.BINARY_HEX
                 var hex = options.hex && compiled && r.compileJS.outfiles[pxtc.BINARY_HEX]
                     ? r.compileJS.outfiles[pxtc.BINARY_HEX] : undefined;
                 var hexname = (pxt.appTarget.nickname || pxt.appTarget.id) + "-" + (options.hexName || '') + "-" + snippetCount++ + ".hex";
@@ -374,6 +374,43 @@ var pxt;
                 c.replaceWith(segment);
             }, { package: options.package, snippetMode: true });
         }
+        function renderNamespaces(options) {
+            return pxt.runner.decompileToBlocksAsync('', options)
+                .then(function (r) {
+                var res = {};
+                var info = r.compileBlocks.blocksInfo;
+                info.blocks.forEach(function (fn) {
+                    var ns = (fn.attributes.blockNamespace || fn.namespace).split('.')[0];
+                    if (!res[ns]) {
+                        var nsn = info.apis.byQName[ns];
+                        if (nsn && nsn.attributes.color)
+                            res[ns] = nsn.attributes.color;
+                    }
+                });
+                var nsStyleBuffer = '';
+                Object.keys(res).forEach(function (ns) {
+                    var color = res[ns] || '#dddddd';
+                    nsStyleBuffer += "\n                        span.docs." + ns.toLowerCase() + " {\n                            background-color: " + color + " !important;\n                            border-color: " + Blockly.PXTUtils.fadeColour(color, 0.2, true) + " !important;\n                        }\n                    ";
+                });
+                return nsStyleBuffer;
+            })
+                .then(function (nsStyleBuffer) {
+                Object.keys(pxt.blocks.blockColors).forEach(function (ns) {
+                    var color = pxt.blocks.blockColors[ns];
+                    nsStyleBuffer += "\n                        span.docs." + ns.toLowerCase() + " {\n                            background-color: " + color + " !important;\n                            border-color: " + Blockly.PXTUtils.fadeColour(color, 0.2, true) + " !important;\n                        }\n                    ";
+                });
+                return nsStyleBuffer;
+            })
+                .then(function (nsStyleBuffer) {
+                // Inject css
+                var nsStyle = document.createElement('style');
+                nsStyle.id = "namespaceColors";
+                nsStyle.type = 'text/css';
+                var head = document.head || document.getElementsByTagName('head')[0];
+                head.appendChild(nsStyle);
+                nsStyle.appendChild(document.createTextNode(nsStyleBuffer));
+            });
+        }
         function renderInlineBlocksAsync(options) {
             options = pxt.Util.clone(options);
             options.emPixels = 18;
@@ -387,8 +424,10 @@ var pxt;
                 var text = $el.text();
                 var mbtn = /^(\|+)([^\|]+)\|+$/.exec(text);
                 if (mbtn) {
-                    var lev = mbtn[1].length == 1 ? "docs inlinebutton" : "docs inlineblock";
-                    var txt = mbtn[2];
+                    var mtxt = /^(([^\:\.]*?)[\:\.])?(.*)$/.exec(mbtn[2]);
+                    var ns = mtxt[2] ? mtxt[2].trim().toLowerCase() : '';
+                    var lev = mbtn[1].length == 1 ? "docs inlinebutton " + ns : "docs inlineblock " + ns;
+                    var txt = mtxt[3].trim();
                     $el.replaceWith($("<span class=\"" + lev + "\"/>").text(pxt.U.rlf(txt)));
                     return renderNextAsync();
                 }
@@ -460,8 +499,8 @@ var pxt;
                             var ii = r.compileBlocks.blocksInfo.apis.byQName[info.qName];
                             var nsi = r.compileBlocks.blocksInfo.apis.byQName[ii.namespace];
                             addItem({
-                                name: nsi.name,
-                                url: nsi.attributes.help || ("reference/" + nsi.name),
+                                name: nsi.attributes.blockNamespace || nsi.name,
+                                url: nsi.attributes.help || ("reference/" + (nsi.attributes.blockNamespace || nsi.name).toLowerCase()),
                                 description: nsi.attributes.jsDoc,
                                 blocksXml: block && block.codeCard
                                     ? block.codeCard.blocksXml
@@ -673,6 +712,7 @@ var pxt;
             }
             renderTypeScript(options);
             return Promise.resolve()
+                .then(function () { return renderNamespaces(options); })
                 .then(function () { return renderInlineBlocksAsync(options); })
                 .then(function () { return renderShuffleAsync(options); })
                 .then(function () { return renderLinksAsync(options, options.linksClass, options.snippetReplaceParent, false); })
@@ -819,7 +859,7 @@ var pxt;
             var versions = pxt.appTarget.versions;
             patchSemantic();
             var cfg = pxt.webConfig;
-            return pxt.Util.updateLocalizationAsync(cfg.commitCdnUrl, lang, versions ? versions.pxtCrowdinBranch : "", live)
+            return pxt.Util.updateLocalizationAsync(pxt.appTarget.id, true, cfg.commitCdnUrl, lang, versions ? versions.pxtCrowdinBranch : "", versions ? versions.branch : "", live)
                 .then(function () {
                 runner.mainPkg = new pxt.MainPackage(new Host());
             });
@@ -929,7 +969,8 @@ var pxt;
                     var runOptions = {
                         boardDefinition: board,
                         parts: parts,
-                        fnArgs: fnArgs
+                        fnArgs: fnArgs,
+                        cdnUrl: pxt.webConfig.commitCdnUrl
                     };
                     if (pxt.appTarget.simulator)
                         runOptions.aspectRatio = parts.length && pxt.appTarget.simulator.partsAspectRatio
@@ -952,7 +993,7 @@ var pxt;
             if (locale != runner.editorLocale) {
                 var localeLiveRx = /^live-/;
                 runner.editorLocale = locale;
-                return pxt.Util.updateLocalizationAsync(pxt.webConfig.commitCdnUrl, runner.editorLocale.replace(localeLiveRx, ''), pxt.appTarget.versions.pxtCrowdinBranch, localeLiveRx.test(runner.editorLocale));
+                return pxt.Util.updateLocalizationAsync(pxt.appTarget.id, true, pxt.webConfig.commitCdnUrl, runner.editorLocale.replace(localeLiveRx, ''), pxt.appTarget.versions.pxtCrowdinBranch, pxt.appTarget.versions.branch, localeLiveRx.test(runner.editorLocale));
             }
             return Promise.resolve();
         }
@@ -1004,6 +1045,8 @@ var pxt;
                             var body = $('body');
                             body.addClass('tutorial');
                             return renderTutorialAsync(content, src);
+                        case "book":
+                            return renderBookAsync(content, src);
                         default:
                             return renderMarkdownAsync(content, src);
                     }
@@ -1027,7 +1070,7 @@ var pxt;
                     .done(function () { });
             }
             function renderHash() {
-                var m = /^#(doc|md|tutorial):([^&?:]+)(:([^&?:]+):([^&?:]+))?/i.exec(window.location.hash);
+                var m = /^#(doc|md|tutorial|book):([^&?:]+)(:([^&?:]+):([^&?:]+))?/i.exec(window.location.hash);
                 if (m) {
                     // navigation occured
                     var p = m[4] ? setEditorContextAsync(/^blocks$/.test(m[4]) ? LanguageMode.Blocks : LanguageMode.TypeScript, m[5]) : Promise.resolve();
@@ -1071,6 +1114,37 @@ var pxt;
             docid = docid.replace(/^\//, "");
             return pxt.Cloud.downloadMarkdownAsync(docid, runner.editorLocale, pxt.Util.localizeLive)
                 .then(function (md) { return renderMarkdownAsync(content, md, { path: docid }); });
+        }
+        function renderBookAsync(content, summaryid) {
+            summaryid = summaryid.replace(/^\//, "");
+            pxt.tickEvent('book', { id: summaryid });
+            pxt.log("rendering book from " + summaryid);
+            var toc;
+            return pxt.Cloud.downloadMarkdownAsync(summaryid, runner.editorLocale, pxt.Util.localizeLive)
+                .then(function (summary) {
+                toc = pxt.docs.buildTOC(summary);
+                pxt.log("TOC: " + JSON.stringify(toc, null, 2));
+                var tocsp = [];
+                pxt.docs.visitTOC(toc, function (entry) {
+                    if (!/^\//.test(entry.path) || /^\/pkg\//.test(entry.path))
+                        return;
+                    tocsp.push(pxt.Cloud.downloadMarkdownAsync(entry.path, runner.editorLocale, pxt.Util.localizeLive)
+                        .then(function (md) {
+                        entry.markdown = md;
+                    }, function (e) {
+                        entry.markdown = "_" + entry.path + " failed to load._";
+                    }));
+                });
+                return Promise.all(tocsp);
+            })
+                .then(function (pages) {
+                var md = toc[0].name;
+                pxt.docs.visitTOC(toc, function (entry) {
+                    if (entry.markdown)
+                        md += '\n\n' + entry.markdown;
+                });
+                return renderMarkdownAsync(content, md);
+            });
         }
         var template = "\n<aside id=button class=box>\n   <a class=\"ui primary button\" href=\"@ARGS@\">@BODY@</a>\n</aside>\n\n<aside id=vimeo>\n<div class=\"ui two column stackable grid container\">\n<div class=\"column\">\n    <div class=\"ui embed mdvid\" data-source=\"vimeo\" data-id=\"@ARGS@\" data-placeholder=\"/thumbnail/1024/vimeo/@ARGS@\" data-icon=\"video play\">\n    </div>\n</div></div>\n</aside>\n\n<aside id=youtube>\n<div class=\"ui two column stackable grid container\">\n<div class=\"column\">\n    <div class=\"ui embed mdvid\" data-source=\"youtube\" data-id=\"@ARGS@\" data-placeholder=\"https://img.youtube.com/vi/@ARGS@/maxresdefault.jpg\">\n    </div>\n</div></div>\n</aside>\n\n<aside id=section>\n    <!-- section @ARGS@ -->\n</aside>\n\n<aside id=hide class=box>\n    <div style='display:none'>\n        @BODY@\n    </div>\n</aside>\n\n<aside id=avatar class=box>\n    <div class='avatar @ARGS@'>\n        <div class='avatar-image'></div>\n        <div class='ui compact message'>\n            @BODY@\n        </div>\n    </div>\n</aside>\n\n<aside id=hint class=box>\n    <div class=\"ui icon green message\">\n        <div class=\"content\">\n            <div class=\"header\">Hint</div>\n            @BODY@\n        </div>\n    </div>\n</aside>\n\n<!-- wrapped around ordinary content -->\n<aside id=main-container class=box>\n    <div class=\"ui text\">\n        @BODY@\n    </div>\n</aside>\n\n<!-- used for 'column' box - they are collected and wrapped in 'column-container' -->\n<aside id=column class=aside>\n    <div class='column'>\n        @BODY@\n    </div>\n</aside>\n<aside id=column-container class=box>\n    <div class=\"ui three column stackable grid text\">\n        @BODY@\n    </div>\n</aside>\n@breadcrumb@\n@body@";
         function renderMarkdownAsync(content, md, options) {
@@ -1140,7 +1214,7 @@ var pxt;
                     .then(function () {
                     var uptoSteps = steps.join();
                     uptoSteps = uptoSteps.replace(/((?!.)\s)+/g, "\n");
-                    var regex = /```(sim|block|blocks|shuffle|filterblocks)\n([\s\S]*?)\n```/gmi;
+                    var regex = /```(sim|block|blocks|shuffle|filterblocks)\s*\n([\s\S]*?)\n```/gmi;
                     var match;
                     var code = '';
                     while ((match = regex.exec(uptoSteps)) != null) {
@@ -1150,6 +1224,7 @@ var pxt;
                         return pxt.runner.decompileToBlocksAsync(code, {
                             emPixels: 14,
                             layout: pxt.blocks.BlockLayout.Flow,
+                            useViewWidth: true,
                             package: undefined
                         }).then(function (r) {
                             var blocksxml = r.compileBlocks.outfiles['main.blocks'];

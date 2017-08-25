@@ -896,12 +896,7 @@ var pxt;
             if (e.renames.oldToNew[name]) {
                 return e.renames.oldToNew[name];
             }
-            var n = name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_$]/g, function (a) {
-                return ts.pxtc.isIdentifierPart(a.charCodeAt(0), ts.pxtc.ScriptTarget.ES5) ? a : "";
-            });
-            if (!n || !ts.pxtc.isIdentifierStart(n.charCodeAt(0), ts.pxtc.ScriptTarget.ES5) || blocks.reservedWords.indexOf(n) !== -1) {
-                n = "_" + n;
-            }
+            var n = ts.pxtc.escapeIdentifier(name);
             if (e.renames.takenNames[n]) {
                 var i = 2;
                 while (e.renames.takenNames[n + i]) {
@@ -1463,9 +1458,9 @@ var pxt;
                 // multiple calls allowed
                 if (b.type == ts.pxtc.ON_START_TYPE)
                     flagDuplicate(ts.pxtc.ON_START_TYPE, b);
-                else if (b.type === "procedures_defnoreturn" || call && call.attrs.blockAllowMultiple)
+                else if (b.type === "procedures_defnoreturn" || call && call.attrs.blockAllowMultiple && !call.attrs.handlerStatement)
                     return;
-                else if (call && call.hasHandler) {
+                else if (call && call.hasHandler && !call.attrs.handlerStatement) {
                     // compute key that identifies event call
                     // detect if same event is registered already
                     var key = callKey(e, b);
@@ -1894,7 +1889,15 @@ var pxt;
             layout.shuffle = shuffle;
             function flow(ws, opts) {
                 if (opts) {
-                    flowBlocks(ws.getTopBlocks(true), opts.ratio, opts.maxWidth);
+                    if (opts.useViewWidth) {
+                        var metrics = ws.getMetrics();
+                        // Only use the width if in portrait, otherwise the blocks are too spread out
+                        if (metrics.viewHeight > metrics.viewWidth) {
+                            flowBlocks(ws.getTopBlocks(true), undefined, metrics.viewWidth);
+                            return;
+                        }
+                    }
+                    flowBlocks(ws.getTopBlocks(true), opts.ratio);
                 }
                 else {
                     flowBlocks(ws.getTopBlocks(true));
@@ -1919,8 +1922,8 @@ var pxt;
                 });
             }
             layout.toPngAsync = toPngAsync;
-            function svgToPngAsync(svg, customCss, x, y, width, height, pixelDensity) {
-                return blocklyToSvgAsync(svg, customCss, x, y, width, height)
+            function svgToPngAsync(svg, x, y, width, height, pixelDensity) {
+                return blocklyToSvgAsync(svg, x, y, width, height)
                     .then(function (sg) {
                     if (!sg)
                         return Promise.resolve(undefined);
@@ -1947,17 +1950,16 @@ var pxt;
                     img.src = data;
                 });
             }
-            var CUSTOM_CSS = "\n.blocklyMainBackground {\n    stroke:none !important;\n}\n\n.blocklyTreeLabel, .blocklyText, .blocklyHtmlInput {\n    font-family:'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace !important;\n}\n\n.rtl .blocklyText {\n    text-align:right;\n}\n\n.blocklyTreeLabel {\n    font-size:1.25rem !important;\n}\n\n.blocklyCheckbox {\n    fill: #ff3030 !important;\n    text-shadow: 0px 0px 6px #f00;\n    font-size: 17pt !important;\n}";
             var XLINK_NAMESPACE = "http://www.w3.org/1999/xlink";
             function toSvgAsync(ws) {
                 if (!ws)
                     return Promise.resolve(undefined);
                 var bbox = document.getElementsByClassName("blocklyBlockCanvas")[0].getBBox();
                 var sg = ws.svgBlockCanvas_.cloneNode(true);
-                return blocklyToSvgAsync(sg, CUSTOM_CSS, bbox.x, bbox.y, bbox.width, bbox.height);
+                return blocklyToSvgAsync(sg, bbox.x, bbox.y, bbox.width, bbox.height);
             }
             layout.toSvgAsync = toSvgAsync;
-            function blocklyToSvgAsync(sg, customCss, x, y, width, height) {
+            function blocklyToSvgAsync(sg, x, y, width, height) {
                 if (!sg.childNodes[0])
                     return Promise.resolve(undefined);
                 sg.removeAttribute("width");
@@ -1965,12 +1967,16 @@ var pxt;
                 sg.removeAttribute("transform");
                 var xsg = new DOMParser().parseFromString("<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"" + XLINK_NAMESPACE + "\" width=\"" + width + "\" height=\"" + height + "\" viewBox=\"" + x + " " + y + " " + width + " " + height + "\">\n            " + new XMLSerializer().serializeToString(sg) + "\n            </svg>", "image/svg+xml");
                 var cssLink = xsg.createElementNS("http://www.w3.org/1999/xhtml", "style");
-                // CSS may contain <, > which need to be stored in CDATA section
-                cssLink.appendChild(xsg.createCDATASection(Blockly.Css.CONTENT.join('') + '\n\n' + customCss + '\n\n'));
-                xsg.documentElement.insertBefore(cssLink, xsg.documentElement.firstElementChild);
-                return expandImagesAsync(xsg)
-                    .then(function () {
-                    return { width: width, height: height, xml: documentToSvg(xsg) };
+                var customCssHref = document.getElementById("blocklycss").href;
+                return pxt.BrowserUtils.loadAjaxAsync(customCssHref)
+                    .then(function (customCss) {
+                    // CSS may contain <, > which need to be stored in CDATA section
+                    cssLink.appendChild(xsg.createCDATASection(Blockly.Css.CONTENT.join('') + '\n\n' + customCss + '\n\n'));
+                    xsg.documentElement.insertBefore(cssLink, xsg.documentElement.firstElementChild);
+                    return expandImagesAsync(xsg)
+                        .then(function () {
+                        return { width: width, height: height, xml: documentToSvg(xsg) };
+                    });
                 });
             }
             layout.blocklyToSvgAsync = blocklyToSvgAsync;
@@ -2377,7 +2383,7 @@ var pxt;
                 toolboxStyleBuffer += "\n                .blocklyTreeIcon." + className + "::before {\n                    content: \"" + icon + "\";\n                }\n            ";
             }
             else {
-                toolboxStyleBuffer += "\n                .blocklyTreeIcon." + className + " {\n                    display: inline-block !important;\n                    background-image: url(\"" + (pxt.webConfig.commitCdnUrl + encodeURI(i)) + "\")!important;\n                    width: 1em;\n                    height: 1em;\n                    background-size: 1em!important;\n                }\n            ";
+                toolboxStyleBuffer += "\n                .blocklyTreeIcon." + className + " {\n                    background-image: url(\"" + (pxt.webConfig.commitCdnUrl + encodeURI(i)) + "\")!important;\n                    width: 30px;\n                    height: 100%;\n                    background-size: 20px !important;\n                    background-repeat: no-repeat !important;\n                    background-position: 50% 50% !important;\n                }\n            ";
             }
         }
         blocks_6.appendToolboxIconCss = appendToolboxIconCss;
@@ -2390,13 +2396,22 @@ var pxt;
                 head.appendChild(toolboxStyle);
             }
             if (toolboxStyle.sheet) {
-                toolboxStyle.textContent = toolboxStyleBuffer;
+                toolboxStyle.textContent = toolboxStyleBuffer + namespaceStyleBuffer;
             }
             else {
-                toolboxStyle.appendChild(document.createTextNode(toolboxStyleBuffer));
+                toolboxStyle.appendChild(document.createTextNode(toolboxStyleBuffer + namespaceStyleBuffer));
             }
         }
         blocks_6.injectToolboxIconCss = injectToolboxIconCss;
+        var namespaceStyleBuffer = '';
+        function appendNamespaceCss(namespace, color) {
+            var ns = namespace.toLowerCase();
+            color = color || '#dddddd'; // Default toolbox color
+            if (namespaceStyleBuffer.indexOf(ns) > -1)
+                return;
+            namespaceStyleBuffer += "\n            span.docs." + ns + " {\n                background-color: " + color + " !important;\n                border-color: " + Blockly.PXTUtils.fadeColour(color, 0.2, true) + " !important;\n            }\n        ";
+        }
+        blocks_6.appendNamespaceCss = appendNamespaceCss;
         var iconCanvasCache = {};
         function iconToFieldImage(c) {
             var url = iconCanvasCache[c];
@@ -2802,9 +2817,8 @@ var pxt;
             }
             // hook up/down if return value is void
             var hasHandlers = hasArrowFunction(fn);
-            var isStatement = fn.attributes.handlerStmt;
-            block.setPreviousStatement((!hasHandlers || isStatement) && fn.retType == "void");
-            block.setNextStatement((!hasHandlers || isStatement) && fn.retType == "void");
+            block.setPreviousStatement(!(hasHandlers && !fn.attributes.handlerStatement) && fn.retType == "void");
+            block.setNextStatement(!(hasHandlers && !fn.attributes.handlerStatement) && fn.retType == "void");
             block.setTooltip(fn.attributes.jsDoc);
         }
         function hasArrowFunction(fn) {
@@ -2934,6 +2948,8 @@ var pxt;
                 var cats = tb.getElementsByTagName('category');
                 for (var i = 0; i < cats.length; i++) {
                     cats[i].setAttribute('name', pxt.Util.rlf("{id:category}" + cats[i].getAttribute('name'), []));
+                    // Append Namespace CSS
+                    appendNamespaceCss(cats[i].getAttribute('name'), cats[i].getAttribute('colour'));
                 }
                 // update category colors and add heading
                 var topCats = blocks_6.getDirectChildren(tb, "category");
@@ -2976,10 +2992,11 @@ var pxt;
             // lf("{id:category}Loops")
             // lf("{id:category}Logic")
             // lf("{id:category}Variables")
-            // lf("{id:category}Arrays")
-            // lf("{id:category}Text")
             // lf("{id:category}Math")
             // lf("{id:category}Advanced")
+            // lf("{id:category}Functions")
+            // lf("{id:category}Arrays")
+            // lf("{id:category}Text")
             // lf("{id:category}Search")
             // lf("{id:category}More\u2026")
             // update shadow types
@@ -3601,12 +3618,16 @@ var pxt;
                 return Math.floor(mouseX - (elemBounds.left + (elemBounds.width / 2)));
             };
             /**
-             * Track a drag of an object on this workspace.
-             * @param {!Event} e Mouse move event.
-             * @return {!goog.math.Coordinate} New location of object.
+             * Execute a step of block dragging, based on the given event.  Update the
+             * display accordingly.
+             * @param {!Event} e The most recent move event.
+             * @param {!goog.math.Coordinate} currentDragDeltaXY How far the pointer has
+             *     moved from the position at the start of the drag, in pixel units.
+             * @package
              */
-            var moveDrag = Blockly.WorkspaceSvg.prototype.moveDrag;
-            Blockly.WorkspaceSvg.prototype.moveDrag = function (e) {
+            var blockDrag = Blockly.BlockDragger.prototype.dragBlock;
+            Blockly.BlockDragger.prototype.dragBlock = function (e, currentDragDeltaXY) {
+                var blocklyToolboxDiv = document.getElementsByClassName('blocklyToolboxDiv')[0];
                 var blocklyTreeRoot = document.getElementsByClassName('blocklyTreeRoot')[0];
                 var trashIcon = document.getElementById("blocklyTrashIcon");
                 if (blocklyTreeRoot && trashIcon) {
@@ -3616,27 +3637,35 @@ var pxt;
                         trashIcon.style.opacity = "" + (1 - opacity);
                         trashIcon.style.display = 'block';
                         blocklyTreeRoot.style.opacity = "" + opacity;
+                        if (distance < 50) {
+                            blocklyToolboxDiv.classList.add('blocklyToolboxDeleting');
+                        }
                     }
                     else {
                         trashIcon.style.display = 'none';
                         blocklyTreeRoot.style.opacity = '1';
+                        blocklyToolboxDiv.classList.remove('blocklyToolboxDeleting');
                     }
                 }
-                return moveDrag.call(this, e);
+                return blockDrag.call(this, e, currentDragDeltaXY);
             };
             /**
-             * Stop binding to the global mouseup and mousemove events.
-             * @private
+             * Finish dragging the workspace and put everything back where it belongs.
+             * @param {!goog.math.Coordinate} currentDragDeltaXY How far the pointer has
+             *     moved from the position at the start of the drag, in pixel coordinates.
+             * @package
              */
-            var terminateDrag_ = Blockly.terminateDrag_;
-            Blockly.terminateDrag_ = function () {
+            var blockEndDrag = Blockly.BlockDragger.prototype.endBlockDrag;
+            Blockly.BlockDragger.prototype.endBlockDrag = function (e, currentDragDeltaXY) {
+                blockEndDrag.call(this, e, currentDragDeltaXY);
+                var blocklyToolboxDiv = document.getElementsByClassName('blocklyToolboxDiv')[0];
                 var blocklyTreeRoot = document.getElementsByClassName('blocklyTreeRoot')[0];
                 var trashIcon = document.getElementById("blocklyTrashIcon");
                 if (trashIcon) {
                     trashIcon.style.display = 'none';
                     blocklyTreeRoot.style.opacity = '1';
+                    blocklyToolboxDiv.classList.remove('blocklyToolboxDeleting');
                 }
-                terminateDrag_.call(this);
             };
         }
         function initContextMenu() {
@@ -3772,7 +3801,7 @@ var pxt;
                     enabled: true,
                     callback: function () {
                         pxt.tickEvent("blocks.context.format");
-                        pxt.blocks.layout.flow(_this);
+                        pxt.blocks.layout.flow(_this, { useViewWidth: true });
                     }
                 };
                 menuOptions.push(formatCodeOption);
@@ -4259,13 +4288,14 @@ var pxt;
             var variablesGetDef = pxt.blocks.getBlockDefinition(variablesGetId);
             msg.VARIABLES_GET_CREATE_SET = variablesGetDef.block["VARIABLES_GET_CREATE_SET"];
             installBuiltinHelpInfo(variablesGetId);
+            // Dropdown menu of variables_get
+            msg.RENAME_VARIABLE = lf("Rename variable...");
+            msg.DELETE_VARIABLE = lf("Delete the \"%1\" variable");
             // builtin variables_set
             var variablesSetId = "variables_set";
             var variablesSetDef = pxt.blocks.getBlockDefinition(variablesSetId);
             msg.VARIABLES_SET = variablesSetDef.block["VARIABLES_SET"];
             msg.VARIABLES_DEFAULT_NAME = varname;
-            //XXX Do not translate the default variable name.
-            //XXX Variable names with Unicode character are harmful at this point.
             msg.VARIABLES_SET_CREATE_GET = lf("Create 'get %1'");
             installBuiltinHelpInfo(variablesSetId);
             // pxt variables_change
@@ -5277,7 +5307,7 @@ var pxt;
                         pxt.blocks.layout.shuffle(workspace, options.aspectRatio);
                         break;
                     case BlockLayout.Flow:
-                        pxt.blocks.layout.flow(workspace, { ratio: options.aspectRatio });
+                        pxt.blocks.layout.flow(workspace, { ratio: options.aspectRatio, useViewWidth: options.useViewWidth });
                         break;
                     case BlockLayout.Clean:
                         if (workspace.cleanUp_)
@@ -5466,6 +5496,7 @@ var pxtblockly;
                 yOffset: parseInt(options.tooltipsYOffset) || -10
             };
             this.tooltipConfig_ = tooltipCfg;
+            this.hasSearchBar_ = !!options.hasSearchBar || false;
         }
         /**
          * When disposing the grid picker, make sure the tooltips are disposed too.
@@ -5476,59 +5507,44 @@ var pxtblockly;
             this.disposeTooltips();
         };
         /**
-         * Create a dropdown menu under the text.
-         * @private
+         * Create blocklyGridPickerRows and add them to table container
+         * @param options
+         * @param tableContainer
          */
-        FieldGridPicker.prototype.showEditor_ = function () {
-            var _this = this;
-            Blockly.WidgetDiv.show(this, this.sourceBlock_.RTL, null);
+        FieldGridPicker.prototype.populateTableContainer = function (options, tableContainer) {
             this.disposeTooltips();
-            var options = this.getOptions();
-            // Container for the menu rows
-            var tableContainer = new goog.ui.Control();
-            // Container used to limit the height of the tableContainer, because the tableContainer uses
-            // display: table, which ignores height and maxHeight
-            var scrollContainer = new goog.ui.Control();
-            // Needed to correctly style borders and padding around the scrollContainer, because the padding around the
-            // scrollContainer is part of the scrollable area and will not be correctly shown at the top and bottom
-            // when scrolling
-            var paddingContainer = new goog.ui.Control();
+            tableContainer.removeChildren(true);
             for (var i = 0; i < options.length / this.columns_; i++) {
                 var row = this.createRow(i, options);
                 tableContainer.addChild(row, true);
             }
-            // Record windowSize and scrollOffset before adding menu.
-            var windowSize = goog.dom.getViewportSize();
-            var scrollOffset = goog.style.getViewportPageOffset(document);
-            var xy = this.getAbsoluteXY_();
-            var borderBBox = this.getScaledBBox_();
-            var div = Blockly.WidgetDiv.DIV;
-            scrollContainer.addChild(tableContainer, true);
-            paddingContainer.addChild(scrollContainer, true);
-            paddingContainer.render(div);
-            paddingContainer.getElement().style.border = "solid 1px " + this.borderColour_;
-            var paddingContainerDom = paddingContainer.getElement();
-            var scrollContainerDom = scrollContainer.getElement();
             var tableContainerDom = tableContainer.getElement();
-            // Resize the grid picker if width > screen width
-            if (this.width_ > windowSize.width) {
-                this.width_ = windowSize.width;
+            if (tableContainerDom) {
+                var menuItemsDom = tableContainerDom.childNodes;
+                for (var i = 0; i < menuItemsDom.length; ++i) {
+                    var elem = menuItemsDom[i];
+                    elem.className = "blocklyGridPickerRow";
+                }
             }
-            tableContainerDom.style.width = this.width_ + 'px';
-            tableContainerDom.style.backgroundColor = this.backgroundColour_;
-            scrollContainerDom.style.backgroundColor = this.backgroundColour_;
-            paddingContainerDom.style.backgroundColor = this.backgroundColour_;
-            tableContainerDom.className = 'blocklyGridPickerMenu';
-            scrollContainerDom.className = 'blocklyGridPickerScroller';
-            paddingContainerDom.className = 'blocklyGridPickerPadder';
-            // Add the tooltips and style the items
+        };
+        /**
+         * Add the tooltips and style the items
+         * @param options
+         * @param tableContainer
+         */
+        FieldGridPicker.prototype.createTooltips = function (options, tableContainer) {
+            var _this = this;
+            var needToFloatLeft = (options.length < this.columns_);
+            var tableContainerDom = tableContainer.getElement();
             var menuItemsDom = tableContainerDom.getElementsByClassName('goog-menuitem');
             var largestTextItem = -1;
             var _loop_3 = function(i) {
                 var elem = menuItemsDom[i];
                 elem.style.borderColor = this_2.backgroundColour_;
                 elem.style.backgroundColor = this_2.itemColour_;
-                elem.parentElement.className = 'blocklyGridPickerRow';
+                if (needToFloatLeft) {
+                    elem.className += " floatLeft";
+                }
                 var tooltipText = options[i][0].alt;
                 if (tooltipText) {
                     var tooltip_1 = new goog.ui.Tooltip(elem, tooltipText);
@@ -5564,6 +5580,83 @@ var pxtblockly;
                     goog.style.setWidth(elem, largestTextItem);
                 }
             }
+        };
+        /**
+         * Create a dropdown menu under the text.
+         * @private
+         */
+        FieldGridPicker.prototype.showEditor_ = function () {
+            var _this = this;
+            Blockly.WidgetDiv.show(this, this.sourceBlock_.RTL, null);
+            this.disposeTooltips();
+            var options = this.getOptions();
+            // Container for the menu rows
+            var tableContainer = new goog.ui.Control();
+            //const tableContainer = this.getTableContainer(options);
+            this.populateTableContainer(options, tableContainer);
+            // Container used to limit the height of the tableContainer, because the tableContainer uses
+            // display: table, which ignores height and maxHeight
+            var scrollContainer = new goog.ui.Control();
+            // Needed to correctly style borders and padding around the scrollContainer, because the padding around the
+            // scrollContainer is part of the scrollable area and will not be correctly shown at the top and bottom
+            // when scrolling
+            var paddingContainer = new goog.ui.Control();
+            // Record windowSize and scrollOffset before adding menu.
+            var windowSize = goog.dom.getViewportSize();
+            var scrollOffset = goog.style.getViewportPageOffset(document);
+            var xy = this.getAbsoluteXY_();
+            var borderBBox = this.getScaledBBox_();
+            var div = Blockly.WidgetDiv.DIV;
+            scrollContainer.addChild(tableContainer, true);
+            paddingContainer.addChild(scrollContainer, true);
+            paddingContainer.render(div);
+            var paddingContainerDom = paddingContainer.getElement();
+            var scrollContainerDom = scrollContainer.getElement();
+            var tableContainerDom = tableContainer.getElement();
+            // Search bar
+            if (this.hasSearchBar_) {
+                var searchBarDiv = document.createElement("div");
+                searchBarDiv.setAttribute("class", "ui fluid icon input");
+                var searchIcon = document.createElement("i");
+                searchIcon.setAttribute("class", "search icon");
+                var searchBar_1 = document.createElement("input");
+                searchBar_1.setAttribute("type", "search");
+                searchBar_1.setAttribute("id", "search-bar");
+                searchBar_1.setAttribute("class", "blocklyGridPickerSearchBar");
+                searchBar_1.setAttribute("placeholder", pxt.Util.lf("Search"));
+                searchBar_1.addEventListener("click", function () {
+                    searchBar_1.focus();
+                    searchBar_1.setSelectionRange(0, searchBar_1.value.length);
+                });
+                searchBar_1.addEventListener("keyup", function () {
+                    var text = searchBar_1.value;
+                    var re = new RegExp(text, "i");
+                    var filteredOptions = options.filter(function (block) {
+                        var alt = block[0].alt; // Human-readable text or image.
+                        var value = block[1]; // Language-neutral value.
+                        return alt ? re.test(alt) : re.test(value);
+                    });
+                    _this.populateTableContainer.bind(_this)(filteredOptions, tableContainer);
+                    _this.createTooltips(filteredOptions, tableContainer);
+                });
+                searchBarDiv.appendChild(searchBar_1);
+                searchBarDiv.appendChild(searchIcon);
+                paddingContainerDom.insertBefore(searchBarDiv, paddingContainerDom.childNodes[0]);
+                searchBar_1.focus();
+            }
+            paddingContainerDom.style.border = "solid 1px " + this.borderColour_;
+            // Resize the grid picker if width > screen width
+            if (this.width_ > windowSize.width) {
+                this.width_ = windowSize.width;
+            }
+            tableContainerDom.style.width = this.width_ + 'px';
+            tableContainerDom.style.backgroundColor = this.backgroundColour_;
+            scrollContainerDom.style.backgroundColor = this.backgroundColour_;
+            paddingContainerDom.style.backgroundColor = this.backgroundColour_;
+            tableContainerDom.className = 'blocklyGridPickerMenu';
+            scrollContainerDom.className = 'blocklyGridPickerScroller';
+            paddingContainerDom.className = 'blocklyGridPickerPadder';
+            this.createTooltips(options, tableContainer);
             // Record current container sizes after adding menu.
             var paddingContainerSize = goog.style.getSize(paddingContainerDom);
             var scrollContainerSize = goog.style.getSize(scrollContainerDom);
@@ -5640,7 +5733,6 @@ var pxtblockly;
             }
             Blockly.WidgetDiv.position(xy.x, xy.y, windowSize, scrollOffset, this.sourceBlock_.RTL);
             goog.style.setHeight(div, "auto");
-            tableContainerDom.focus();
         };
         FieldGridPicker.prototype.createRow = function (row, options) {
             var columns = this.columns_;
@@ -5708,12 +5800,64 @@ var pxtblockly;
 /// <reference path="../../localtypings/blockly.d.ts" />
 var pxtblockly;
 (function (pxtblockly) {
+    var Note;
+    (function (Note) {
+        Note[Note["C"] = 262] = "C";
+        Note[Note["CSharp"] = 277] = "CSharp";
+        Note[Note["D"] = 294] = "D";
+        Note[Note["Eb"] = 311] = "Eb";
+        Note[Note["E"] = 330] = "E";
+        Note[Note["F"] = 349] = "F";
+        Note[Note["FSharp"] = 370] = "FSharp";
+        Note[Note["G"] = 392] = "G";
+        Note[Note["GSharp"] = 415] = "GSharp";
+        Note[Note["A"] = 440] = "A";
+        Note[Note["Bb"] = 466] = "Bb";
+        Note[Note["B"] = 494] = "B";
+        Note[Note["C3"] = 131] = "C3";
+        Note[Note["CSharp3"] = 139] = "CSharp3";
+        Note[Note["D3"] = 147] = "D3";
+        Note[Note["Eb3"] = 156] = "Eb3";
+        Note[Note["E3"] = 165] = "E3";
+        Note[Note["F3"] = 175] = "F3";
+        Note[Note["FSharp3"] = 185] = "FSharp3";
+        Note[Note["G3"] = 196] = "G3";
+        Note[Note["GSharp3"] = 208] = "GSharp3";
+        Note[Note["A3"] = 220] = "A3";
+        Note[Note["Bb3"] = 233] = "Bb3";
+        Note[Note["B3"] = 247] = "B3";
+        Note[Note["C4"] = 262] = "C4";
+        Note[Note["CSharp4"] = 277] = "CSharp4";
+        Note[Note["D4"] = 294] = "D4";
+        Note[Note["Eb4"] = 311] = "Eb4";
+        Note[Note["E4"] = 330] = "E4";
+        Note[Note["F4"] = 349] = "F4";
+        Note[Note["FSharp4"] = 370] = "FSharp4";
+        Note[Note["G4"] = 392] = "G4";
+        Note[Note["GSharp4"] = 415] = "GSharp4";
+        Note[Note["A4"] = 440] = "A4";
+        Note[Note["Bb4"] = 466] = "Bb4";
+        Note[Note["B4"] = 494] = "B4";
+        Note[Note["C5"] = 523] = "C5";
+        Note[Note["CSharp5"] = 555] = "CSharp5";
+        Note[Note["D5"] = 587] = "D5";
+        Note[Note["Eb5"] = 622] = "Eb5";
+        Note[Note["E5"] = 659] = "E5";
+        Note[Note["F5"] = 698] = "F5";
+        Note[Note["FSharp5"] = 740] = "FSharp5";
+        Note[Note["G5"] = 784] = "G5";
+        Note[Note["GSharp5"] = 831] = "GSharp5";
+        Note[Note["A5"] = 880] = "A5";
+        Note[Note["Bb5"] = 932] = "Bb5";
+        Note[Note["B5"] = 988] = "B5";
+    })(Note || (Note = {}));
     var PianoSize;
     (function (PianoSize) {
         PianoSize[PianoSize["small"] = 12] = "small";
         PianoSize[PianoSize["medium"] = 36] = "medium";
         PianoSize[PianoSize["large"] = 60] = "large";
     })(PianoSize || (PianoSize = {}));
+    var regex = /^Note\.(.+)$/;
     //  Class for a note input field.
     var FieldNote = (function (_super) {
         __extends(FieldNote, _super);
@@ -5848,7 +5992,7 @@ var pxtblockly;
                 }
                 for (var i = 0; i < thisField.nKeys_; i++) {
                     // set name of the i note
-                    thisField.noteName_.push(prefix + " " + curNote);
+                    thisField.noteName_.push(Util.rlf(prefix + " " + curNote));
                     // get frequency using math formula -> https://en.wikipedia.org/wiki/Piano_key_frequencies
                     var curFreq = Math.pow(2, (keyNumber - 49) / 12) * 440;
                     // set frequency of the i note
@@ -5860,6 +6004,79 @@ var pxtblockly;
                     // increment keyNumber
                     keyNumber++;
                 }
+                // Do not remove this comment.
+                // lf("C")
+                // lf("C#")
+                // lf("D")
+                // lf("D#")
+                // lf("E")
+                // lf("F")
+                // lf("F#")
+                // lf("G")
+                // lf("G#")
+                // lf("A")
+                // lf("A#")
+                // lf("B")
+                // lf("Deep C")
+                // lf("Deep C#")
+                // lf("Deep D")
+                // lf("Deep D#")
+                // lf("Deep E")
+                // lf("Deep F")
+                // lf("Deep F#")
+                // lf("Deep G")
+                // lf("Deep G#")
+                // lf("Deep A")
+                // lf("Deep A#")
+                // lf("Deep B")
+                // lf("Low C")
+                // lf("Low C#")
+                // lf("Low D")
+                // lf("Low D#")
+                // lf("Low E")
+                // lf("Low F")
+                // lf("Low F#")
+                // lf("Low G")
+                // lf("Low G#")
+                // lf("Low A")
+                // lf("Low A#")
+                // lf("Low B")
+                // lf("Middle C")
+                // lf("Middle C#")
+                // lf("Middle D")
+                // lf("Middle D#")
+                // lf("Middle E")
+                // lf("Middle F")
+                // lf("Middle F#")
+                // lf("Middle G")
+                // lf("Middle G#")
+                // lf("Middle A")
+                // lf("Middle A#")
+                // lf("Middle B")
+                // lf("Tenor C")
+                // lf("Tenor C#")
+                // lf("Tenor D")
+                // lf("Tenor D#")
+                // lf("Tenor E")
+                // lf("Tenor F")
+                // lf("Tenor F#")
+                // lf("Tenor G")
+                // lf("Tenor G#")
+                // lf("Tenor A")
+                // lf("Tenor A#")
+                // lf("Tenor B")
+                // lf("High C")
+                // lf("High C#")
+                // lf("High D")
+                // lf("High D#")
+                // lf("High E")
+                // lf("High F")
+                // lf("High F#")
+                // lf("High G")
+                // lf("High G#")
+                // lf("High A")
+                // lf("High A#")
+                // lf("High B")
             }
         };
         /**
@@ -5874,7 +6091,10 @@ var pxtblockly;
          * @param {string} note The new note in string format.
          */
         FieldNote.prototype.setValue = function (note) {
-            note = String(parseFloat(note || "0"));
+            // accommodate note strings like "Note.GSharp5" as well as numbers
+            var match = regex.exec(note);
+            var noteName = (match && match.length > 1) ? match[1] : null;
+            note = Note[noteName] ? Note[noteName] : String(parseFloat(note || "0"));
             if (isNaN(Number(note)) || Number(note) < 0)
                 return;
             if (this.sourceBlock_ && Blockly.Events.isEnabled() &&

@@ -87,6 +87,32 @@ var ts;
                 }
             }
             Util.assert = assert;
+            function fileReadAsBufferAsync(f) {
+                if (!f)
+                    return Promise.resolve(null);
+                else {
+                    return new Promise(function (resolve, reject) {
+                        var reader = new FileReader();
+                        reader.onerror = function (ev) { return resolve(null); };
+                        reader.onload = function (ev) { return resolve(new Uint8Array(reader.result)); };
+                        reader.readAsArrayBuffer(f);
+                    });
+                }
+            }
+            Util.fileReadAsBufferAsync = fileReadAsBufferAsync;
+            function fileReadAsTextAsync(f) {
+                if (!f)
+                    return Promise.resolve(null);
+                else {
+                    return new Promise(function (resolve, reject) {
+                        var reader = new FileReader();
+                        reader.onerror = function (ev) { return resolve(null); };
+                        reader.onload = function (ev) { return resolve(reader.result); };
+                        reader.readAsText(f);
+                    });
+                }
+            }
+            Util.fileReadAsTextAsync = fileReadAsTextAsync;
             function repeatMap(n, fn) {
                 n = n || 0;
                 var r = [];
@@ -791,18 +817,25 @@ var ts;
                 _localizeStrings = strs;
             }
             Util.setLocalizedStrings = setLocalizedStrings;
-            function updateLocalizationAsync(baseUrl, code, branch, live) {
+            function updateLocalizationAsync(targetId, simulator, baseUrl, code, pxtBranch, targetBranch, live) {
                 // normalize code (keep synched with localized files)
                 if (!/^(es|pt|si|sv|zh)/i.test(code))
                     code = code.split("-")[0];
+                var stringFiles = simulator
+                    ? [{ branch: targetBranch, path: targetId + "/sim-strings.json" }]
+                    : [
+                        { branch: pxtBranch, path: "strings.json" },
+                        { branch: targetBranch, path: targetId + "/target-strings.json" }
+                    ];
                 if (_localizeLang != code && live) {
-                    return downloadLiveTranslationsAsync(code, "strings.json", branch)
-                        .then(function (tr) {
-                        _localizeStrings = tr || {};
-                        _localizeLang = code;
-                        Util.localizeLive = true;
-                    }, function (e) {
-                        console.log('failed to load localizations');
+                    _localizeStrings = {};
+                    _localizeLang = code;
+                    Util.localizeLive = true;
+                    return Promise.mapSeries(stringFiles, function (file) {
+                        return downloadLiveTranslationsAsync(code, file.path, file.branch)
+                            .then(function (tr) { return Object.keys(tr)
+                            .filter(function (k) { return !!tr[k]; })
+                            .forEach(function (k) { return _localizeStrings[k] = tr[k]; }); }, function (e) { return console.log("failed to load localizations for file " + file); });
                     });
                 }
                 if (_localizeLang != code) {
@@ -1347,12 +1380,43 @@ var pxt;
     pxt.CLOUD_ID = "pxt/";
     pxt.BLOCKS_PROJECT_NAME = "blocksprj";
     pxt.JAVASCRIPT_PROJECT_NAME = "tsprj";
+    function outputName(trg) {
+        if (trg === void 0) { trg = null; }
+        if (!trg)
+            trg = pxt.appTarget.compile;
+        if (trg.useUF2)
+            return ts.pxtc.BINARY_UF2;
+        else if (trg.useELF)
+            return ts.pxtc.BINARY_ELF;
+        else
+            return ts.pxtc.BINARY_HEX;
+    }
+    pxt.outputName = outputName;
+    function isOutputText(trg) {
+        if (trg === void 0) { trg = null; }
+        return outputName(trg) == ts.pxtc.BINARY_HEX;
+    }
+    pxt.isOutputText = isOutputText;
 })(pxt || (pxt = {}));
 /// <reference path="main.ts"/>
 var pxt;
 (function (pxt) {
     var blocks;
     (function (blocks) {
+        function normalizeBlock(b) {
+            if (!b)
+                return b;
+            // normalize and validate common errors
+            // made while translating
+            var nb = b.replace(/%\s+/g, '%');
+            if (nb != b) {
+                pxt.log("block has extra spaces: " + b);
+                return b;
+            }
+            nb = nb.replace(/\s*\|\s*/g, '|');
+            return nb;
+        }
+        blocks.normalizeBlock = normalizeBlock;
         function parameterNames(fn) {
             // collect blockly parameter name mapping
             var instance = (fn.kind == ts.pxtc.SymbolKind.Method || fn.kind == ts.pxtc.SymbolKind.Property) && !fn.attributes.defaultInstance;
@@ -1391,13 +1455,7 @@ var pxt;
         function parseFields(b) {
             // normalize and validate common errors
             // made while translating
-            var nb = b.replace(/%\s+/g, '%');
-            if (nb != b)
-                pxt.log("block has extra spaces: " + b);
-            if (nb[0] == nb[0].toLocaleUpperCase() && nb[0] != nb[0].toLowerCase())
-                pxt.log("block is capitalized: " + b);
-            nb = nb.replace(/\s*\|\s*/g, '|');
-            return nb.split('|').map(function (n, ni) {
+            return b.split('|').map(function (n, ni) {
                 var m = /([^%]*)\s*%([a-zA-Z0-9_]+)/.exec(n);
                 if (!m)
                     return { n: n, ni: ni };
@@ -1976,13 +2034,17 @@ var pxt;
         BrowserUtils.isBrowserDownloadInSameWindow = isBrowserDownloadInSameWindow;
         function browserDownloadDataUri(uri, name, userContextWindow) {
             var windowOpen = isBrowserDownloadInSameWindow();
+            var versionString = browserVersion();
+            var v = parseInt(versionString || "0");
             if (windowOpen) {
                 if (userContextWindow)
                     userContextWindow.location.href = uri;
                 else
                     window.open(uri, "_self");
             }
-            else if (pxt.BrowserUtils.isSafari()) {
+            else if (pxt.BrowserUtils.isSafari()
+                && (v < 10 || (versionString.indexOf('10.0') == 0) || isMobile())) {
+                // For Safari versions prior to 10.1 and all Mobile Safari versions
                 // For mysterious reasons, the "link" trick closes the
                 // PouchDB database
                 var iframe = document.getElementById("downloader");
@@ -2076,6 +2138,24 @@ var pxt;
             });
         }
         BrowserUtils.loadScriptAsync = loadScriptAsync;
+        function loadAjaxAsync(url) {
+            return new Promise(function (resolve, reject) {
+                var httprequest = new XMLHttpRequest();
+                httprequest.onreadystatechange = function () {
+                    if (httprequest.readyState == XMLHttpRequest.DONE) {
+                        if (httprequest.status == 200) {
+                            resolve(httprequest.responseText);
+                        }
+                        else {
+                            reject(httprequest.status);
+                        }
+                    }
+                };
+                httprequest.open("GET", url, true);
+                httprequest.send();
+            });
+        }
+        BrowserUtils.loadAjaxAsync = loadAjaxAsync;
     })(BrowserUtils = pxt.BrowserUtils || (pxt.BrowserUtils = {}));
 })(pxt || (pxt = {}));
 var pxt;
@@ -2204,6 +2284,9 @@ var pxt;
             if (!v)
                 return null;
             v = v.trim();
+            var mm = /^\((.*)\)/.exec(v);
+            if (mm)
+                v = mm[1];
             if (/^-?(\d+|0[xX][0-9a-fA-F]+)$/.test(v))
                 return parseInt(v);
             return null;
@@ -2235,9 +2318,20 @@ var pxt;
             }
             pxt.debug("Generating new extinfo");
             var res = pxtc.emptyExtInfo();
-            var isPlatformio = pxt.appTarget.compileService && !!pxt.appTarget.compileService.platformioIni;
+            var compileService = pxt.appTarget.compileService;
+            if (!compileService)
+                compileService = {
+                    gittag: "none",
+                    serviceId: "nocompile"
+                };
+            var isPlatformio = !!compileService.platformioIni;
+            var isCodal = compileService.buildEngine == "codal";
+            var isDockerMake = compileService.buildEngine == "dockermake";
+            var isYotta = !isPlatformio && !isCodal && !isDockerMake;
             if (isPlatformio)
                 sourcePath = "/src/";
+            else if (isCodal || isDockerMake)
+                sourcePath = "/pxtapp/";
             var pxtConfig = "// Configuration defines\n";
             var pointersInc = "\nPXT_SHIMS_BEGIN\n";
             var includesInc = "#include \"pxt.h\"\n";
@@ -2251,12 +2345,6 @@ var pxt;
             var enumsDTS = nsWriter("declare namespace");
             var allErrors = "";
             var knownEnums = {};
-            var compileService = pxt.appTarget.compileService;
-            if (!compileService)
-                compileService = {
-                    gittag: "none",
-                    serviceId: "nocompile"
-                };
             var enumVals = {
                 "true": "1",
                 "false": "0",
@@ -2267,6 +2355,7 @@ var pxt;
             function toJs(name) {
                 return name.trim().replace(/[\_\*]$/, "");
             }
+            var makefile = "";
             for (var _b = 0, _c = mainPkg.sortedDeps(); _b < _c.length; _b++) {
                 var pkg = _c[_b];
                 if (pkg.getFiles().indexOf(constsName) >= 0) {
@@ -2278,6 +2367,9 @@ var pxt;
                             enumVals[m[1]] = m[2];
                         }
                     });
+                }
+                if (!makefile && pkg.getFiles().indexOf("Makefile") >= 0) {
+                    makefile = pkg.host().readFile(pkg, "Makefile");
                 }
             }
             function parseCpp(src, isHeader) {
@@ -2326,6 +2418,7 @@ var pxt;
                         case "sbyte": return "int8";
                         case "bool": return "boolean";
                         case "StringData*": return "string";
+                        case "String": return "string";
                         case "ImageLiteral": return "string";
                         case "Action": return "() => void";
                         case "TValue": return "any";
@@ -2416,7 +2509,7 @@ var pxt;
                             currAttrs = "";
                             currDocComment = "";
                         }
-                        enumsDTS.write("declare enum " + toJs(enM[2]) + " " + enM[3]);
+                        enumsDTS.write("declare const enum " + toJs(enM[2]) + " " + enM[3]);
                         if (!isHeader) {
                             protos.setNs(currNs);
                             protos.write("enum " + enM[2] + " : int;");
@@ -2565,10 +2658,10 @@ var pxt;
                             protos.write(retTp + " " + funName + "(" + origArgs + ");");
                         }
                         res.functions.push(fi);
-                        if (isPlatformio)
-                            pointersInc += "PXT_FNPTR(::" + fi.name + "),\n";
-                        else
+                        if (isYotta)
                             pointersInc += "(uint32_t)(void*)::" + fi.name + ",\n";
+                        else
+                            pointersInc += "PXT_FNPTR(::" + fi.name + "),\n";
                         return;
                     }
                     m = /^\s*(\w+)\s+(\w+)\s*;/.exec(ln);
@@ -2610,6 +2703,8 @@ var pxt;
                 if (j0 && j0.dependencies) {
                     U.jsonCopyFrom(res.platformio.dependencies, j0.dependencies);
                 }
+                if (res.npmDependencies && pkg.config.npmDependencies)
+                    U.jsonCopyFrom(res.npmDependencies, pkg.config.npmDependencies);
                 var json = pkg.config.yotta;
                 if (!json)
                     return;
@@ -2649,7 +2744,7 @@ var pxt;
                 }
             }
             // This is overridden on the build server, but we need it for command line build
-            if (!isPlatformio && pxt.appTarget.compile && pxt.appTarget.compile.hasHex) {
+            if (isYotta && pxt.appTarget.compile && pxt.appTarget.compile.hasHex) {
                 var cs = pxt.appTarget.compileService;
                 U.assert(!!cs.yottaCorePackage);
                 U.assert(!!cs.githubCorePackage);
@@ -2678,11 +2773,13 @@ var pxt;
                         var isHeader = U.endsWith(fn, ".h");
                         if (isHeader || U.endsWith(fn, ".cpp")) {
                             var fullName = pkg.config.name + "/" + fn;
-                            if (pkg.config.name == "core" && isHeader)
+                            if ((pkg.config.name == "base" || pkg.config.name == "core") && isHeader)
                                 fullName = fn;
                             if (isHeader)
-                                includesInc += "#include \"" + (isPlatformio ? "" : sourcePath.slice(1)) + fullName + "\"\n";
+                                includesInc += "#include \"" + (isYotta ? sourcePath.slice(1) : "") + fullName + "\"\n";
                             var src = pkg.readFile(fn);
+                            if (src == null)
+                                U.userError(lf("C++ file {0} is missing in package {1}.", fn, pkg.config.name));
                             fileName = fullName;
                             // parseCpp() will remove doc comments, to prevent excessive recompilation
                             src = parseCpp(src, isHeader);
@@ -2694,7 +2791,7 @@ var pxt;
                         }
                         if (U.endsWith(fn, ".c") || U.endsWith(fn, ".S") || U.endsWith(fn, ".s")) {
                             var src = pkg.readFile(fn);
-                            res.extensionFiles[sourcePath + pkg.config.name + "/" + fn] = src;
+                            res.extensionFiles[sourcePath + pkg.config.name + "/" + fn.replace(/\.S$/, ".s")] = src;
                         }
                     }
                     if (thisErrors) {
@@ -2707,7 +2804,32 @@ var pxt;
             // merge optional settings
             U.jsonCopyFrom(optSettings, currSettings);
             var configJson = U.jsonUnFlatten(optSettings);
-            if (isPlatformio) {
+            if (isDockerMake) {
+                var packageJson = {
+                    name: "pxt-app",
+                    private: true,
+                    dependencies: res.npmDependencies,
+                };
+                res.generatedFiles["/package.json"] = JSON.stringify(packageJson, null, 4) + "\n";
+            }
+            else if (isCodal) {
+                var cs = pxt.appTarget.compileService;
+                var codalJson_1 = {
+                    "target": cs.codalTarget + ".json",
+                    "definitions": U.clone(cs.codalDefinitions) || {},
+                    "application": "pxtapp",
+                    "output_folder": "build",
+                    // include these, because we use hash of this file to see if anything changed
+                    "pxt_gitrepo": cs.githubCorePackage,
+                    "pxt_gittag": cs.gittag,
+                };
+                U.iterMap(U.jsonFlatten(configJson), function (k, v) {
+                    k = k.toUpperCase().replace(/\./g, "_").replace("CODAL_", "DEVICE_");
+                    codalJson_1.definitions[k] = v;
+                });
+                res.generatedFiles["/codal.json"] = JSON.stringify(codalJson_1, null, 4) + "\n";
+            }
+            else if (isPlatformio) {
                 var iniLines_1 = pxt.appTarget.compileService.platformioIni.slice();
                 // TODO merge configjson
                 iniLines_1.push("lib_deps =");
@@ -2740,15 +2862,33 @@ var pxt;
             }
             res.generatedFiles[sourcePath + "pointers.cpp"] = includesInc + protos.finish() + pointersInc + "\nPXT_SHIMS_END\n";
             res.generatedFiles[sourcePath + "pxtconfig.h"] = pxtConfig;
-            res.generatedFiles["/config.json"] = JSON.stringify(configJson, null, 4) + "\n";
-            res.generatedFiles[sourcePath + "main.cpp"] = "\n#include \"pxt.h\"\n#ifdef PXT_MAIN\nPXT_MAIN\n#else\nint main() { \n    uBit.init(); \n    pxt::start(); \n    while (1) uBit.sleep(10000);    \n    return 0; \n}\n#endif\n";
+            if (isYotta)
+                res.generatedFiles["/config.json"] = JSON.stringify(configJson, null, 4) + "\n";
+            res.generatedFiles[sourcePath + "main.cpp"] = "\n#include \"pxt.h\"\n#ifdef PXT_MAIN\nPXT_MAIN\n#else\nint main() {\n    uBit.init();\n    pxt::start();\n    while (1) uBit.sleep(10000);\n    return 0;\n}\n#endif\n";
+            if (makefile) {
+                var allfiles_1 = Object.keys(res.extensionFiles).concat(Object.keys(res.generatedFiles));
+                var inc_1 = "";
+                var objs = [];
+                var add = function (name, ext) {
+                    var files = allfiles_1.filter(function (f) { return U.endsWith(f, ext); }).map(function (s) { return s.slice(1); });
+                    inc_1 += name + " = " + files.join(" ") + "\n";
+                };
+                add("PXT_C", ".c");
+                add("PXT_CPP", ".cpp");
+                add("PXT_S", ".s");
+                add("PXT_HEADERS", ".h");
+                inc_1 += "PXT_SOURCES = $(PXT_C) $(PXT_S) $(PXT_CPP)\n";
+                inc_1 += "PXT_OBJS = $(addprefix bld/, $(PXT_C:.c=.o) $(PXT_S:.s=.o) $(PXT_CPP:.cpp=.o))\n";
+                res.generatedFiles["/Makefile"] = makefile;
+                res.generatedFiles["/Makefile.inc"] = inc_1;
+            }
             var tmp = res.extensionFiles;
             U.jsonCopyFrom(tmp, res.generatedFiles);
             var creq = {
                 config: compileService.serviceId,
                 tag: compileService.gittag,
                 replaceFiles: tmp,
-                dependencies: (!isPlatformio ? res.yotta.dependencies : null)
+                dependencies: (isYotta ? res.yotta.dependencies : null)
             };
             var data = JSON.stringify(creq);
             res.sha = U.sha256(data);
@@ -2879,11 +3019,18 @@ var pxt;
                 return Promise.reject(new Error(e));
             }
             var rawEmbed;
-            var bin = pxt.appTarget.compile.useUF2 ? ts.pxtc.UF2.toBin(dat) : undefined;
-            if (bin) {
-                rawEmbed = extractSourceFromBin(bin.buf);
+            // UF2?
+            if (pxt.HF2.read32(dat, 0) == ts.pxtc.UF2.UF2_MAGIC_START0) {
+                var bin = ts.pxtc.UF2.toBin(dat);
+                if (bin)
+                    rawEmbed = extractSourceFromBin(bin.buf);
             }
-            else {
+            // ELF?
+            if (pxt.HF2.read32(dat, 0) == 0x464c457f) {
+                rawEmbed = extractSourceFromBin(dat);
+            }
+            // HEX? (check for colon)
+            if (dat[0] == 0x3a) {
                 var str = fromUTF8Bytes(dat);
                 rawEmbed = extractSource(str || "");
             }
@@ -3280,7 +3427,7 @@ var pxt;
                         return Promise.resolve();
                     }
                 }
-                var data = resp.json || { error: {} };
+                var data = resp.json || JSON.parse(resp.text) || { error: {} };
                 if (resp.statusCode == 404 && data.error.code == 17) {
                     pxt.log("parent directory missing for " + name);
                     var par = name.replace(/\/[^\/]+$/, "");
@@ -4034,6 +4181,15 @@ var pxt;
             return TOC;
         }
         docs.buildTOC = buildTOC;
+        function visitTOC(toc, fn) {
+            function visitEntry(entry) {
+                fn(entry);
+                if (entry.subitems)
+                    entry.subitems.forEach(fn);
+            }
+            toc.forEach(visitEntry);
+        }
+        docs.visitTOC = visitTOC;
         var testedAugment = false;
         function augmentDocs(baseMd, childMd) {
             if (!testedAugment)
@@ -4534,6 +4690,7 @@ var pxt;
                 this.io = io;
                 this.cmdSeq = pxt.U.randomUint32();
                 this.lock = new pxt.U.PromiseQueue();
+                this.rawMode = false;
                 this.maxMsgSize = 63; // when running in forwarding mode, we do not really know
                 this.bootloaderMode = false;
                 this.reconnectTries = 0;
@@ -4615,7 +4772,7 @@ var pxt;
                 this.resetState();
                 if (first)
                     return this.initAsync();
-                log("reconnect");
+                log("reconnect raw=" + this.rawMode);
                 return this.io.reconnectAsync()
                     .then(function () { return _this.initAsync(); })
                     .catch(function (e) {
@@ -4798,6 +4955,8 @@ var pxt;
             };
             Wrapper.prototype.initAsync = function () {
                 var _this = this;
+                if (this.rawMode)
+                    return Promise.resolve();
                 return Promise.resolve()
                     .then(function () { return _this.talkAsync(HF2.HF2_CMD_BININFO); })
                     .then(function (binfo) {
@@ -5838,7 +5997,7 @@ var pxt;
         };
         /**
          * For the given package config or ID, looks through all the currently installed packages to find conflicts in
-         * Yotta settings
+         * Yotta settings and version spec
          */
         Package.prototype.findConflictsAsync = function (pkgOrId, version) {
             var _this = this;
@@ -5857,24 +6016,34 @@ var pxt;
                 .then(function (cfg) {
                 pkgCfg = cfg;
                 // Iterate through all installed packages and check for conflicting settings
-                if (pkgCfg && pkgCfg.yotta) {
-                    var yottaCfg_1 = pxt.U.jsonFlatten(pkgCfg.yotta.config);
+                if (pkgCfg) {
+                    var yottaCfg_1 = pkgCfg.yotta ? pxt.U.jsonFlatten(pkgCfg.yotta.config) : null;
                     _this.parent.sortedDeps().forEach(function (depPkg) {
-                        var depConfig = depPkg.config || JSON.parse(depPkg.readFile(pxt.CONFIG_NAME));
-                        var hasYottaSettings = !!depConfig && !!depConfig.yotta && !!depPkg.config.yotta.config;
-                        if (hasYottaSettings) {
-                            var depYottaCfg = pxt.U.jsonFlatten(depConfig.yotta.config);
-                            for (var _i = 0, _a = Object.keys(yottaCfg_1); _i < _a.length; _i++) {
-                                var settingName = _a[_i];
-                                var depSetting = depYottaCfg[settingName];
-                                var isJustDefaults = pkgCfg.yotta.configIsJustDefaults || depConfig.yotta.configIsJustDefaults;
-                                if (depYottaCfg.hasOwnProperty(settingName) && depSetting !== yottaCfg_1[settingName] && !isJustDefaults && (!depPkg.parent.config.yotta || !depPkg.parent.config.yotta.ignoreConflicts)) {
-                                    var conflict = new pxt.cpp.PkgConflictError(lf("conflict on yotta setting {0} between packages {1} and {2}", settingName, pkgCfg.name, depPkg.id));
-                                    conflict.pkg0 = depPkg;
-                                    conflict.settingName = settingName;
-                                    conflicts.push(conflict);
+                        var foundYottaConflict = false;
+                        if (yottaCfg_1) {
+                            var depConfig = depPkg.config || JSON.parse(depPkg.readFile(pxt.CONFIG_NAME));
+                            var hasYottaSettings = !!depConfig && !!depConfig.yotta && !!depPkg.config.yotta.config;
+                            if (hasYottaSettings) {
+                                var depYottaCfg = pxt.U.jsonFlatten(depConfig.yotta.config);
+                                for (var _i = 0, _a = Object.keys(yottaCfg_1); _i < _a.length; _i++) {
+                                    var settingName = _a[_i];
+                                    var depSetting = depYottaCfg[settingName];
+                                    var isJustDefaults = pkgCfg.yotta.configIsJustDefaults || depConfig.yotta.configIsJustDefaults;
+                                    if (depYottaCfg.hasOwnProperty(settingName) && depSetting !== yottaCfg_1[settingName] && !isJustDefaults && (!depPkg.parent.config.yotta || !depPkg.parent.config.yotta.ignoreConflicts)) {
+                                        var conflict = new pxt.cpp.PkgConflictError(lf("conflict on yotta setting {0} between packages {1} and {2}", settingName, pkgCfg.name, depPkg.id));
+                                        conflict.pkg0 = depPkg;
+                                        conflict.settingName = settingName;
+                                        conflicts.push(conflict);
+                                        foundYottaConflict = true;
+                                    }
                                 }
                             }
+                        }
+                        if (!foundYottaConflict && pkgCfg.name === depPkg.id && depPkg._verspec != version && !/^file:/.test(depPkg._verspec) && !/^file:/.test(version)) {
+                            var conflict = new pxt.cpp.PkgConflictError(lf("version mismatch for package {0} (installed: {1}, installing: {2})", depPkg, depPkg._verspec, version));
+                            conflict.pkg0 = depPkg;
+                            conflict.isVersionConflict = true;
+                            conflicts.push(conflict);
                         }
                     });
                 }
@@ -5902,7 +6071,9 @@ var pxt;
                 var additionalConflicts = [];
                 conflicts.forEach(function (c) {
                     additionalConflicts.push.apply(additionalConflicts, allAncestors(c.pkg0).map(function (anc) {
-                        var confl = new pxt.cpp.PkgConflictError(lf("conflict on yotta setting {0} between packages {1} and {2}", c.settingName, pkgCfg.name, c.pkg0.id));
+                        var confl = new pxt.cpp.PkgConflictError(c.isVersionConflict ?
+                            lf("a dependency of {0} has a version mismatch with package {1} (installed: {1}, installing: {2})", anc.id, pkgCfg.name, c.pkg0._verspec, version) :
+                            lf("conflict on yotta setting {0} between packages {1} and {2}", c.settingName, pkgCfg.name, c.pkg0.id));
                         confl.pkg0 = anc;
                         return confl;
                     }));
@@ -6451,9 +6622,10 @@ var ts;
         pxtc.TS_STATEMENT_TYPE = "typescript_statement";
         pxtc.TS_OUTPUT_TYPE = "typescript_expression";
         pxtc.BINARY_JS = "binary.js";
-        pxtc.BINARY_HEX = "binary.hex";
         pxtc.BINARY_ASM = "binary.asm";
+        pxtc.BINARY_HEX = "binary.hex";
         pxtc.BINARY_UF2 = "binary.uf2";
+        pxtc.BINARY_ELF = "binary.elf";
         (function (SymbolKind) {
             SymbolKind[SymbolKind["None"] = 0] = "None";
             SymbolKind[SymbolKind["Method"] = 1] = "Method";
@@ -6541,14 +6713,27 @@ var ts;
                     }
                 }
                 else if (fn.attributes.block && locBlock) {
-                    fn.attributes.block = locBlock;
+                    var ps = pxt.blocks.parameterNames(fn);
+                    var oldBlock = fn.attributes.block;
+                    fn.attributes.block = pxt.blocks.normalizeBlock(locBlock);
+                    if (oldBlock != fn.attributes.block) {
+                        var locps = pxt.blocks.parameterNames(fn);
+                        if (JSON.stringify(ps) != JSON.stringify(locps)) {
+                            pxt.log("block has non matching arguments: " + oldBlock + " vs " + fn.attributes.block);
+                            fn.attributes.block = oldBlock;
+                        }
+                    }
                 }
             }); })
                 .then(function () { return apis; });
         }
         pxtc.localizeApisAsync = localizeApisAsync;
         function emptyExtInfo() {
-            var pio = pxt.appTarget.compileService && !!pxt.appTarget.compileService.platformioIni;
+            var cs = pxt.appTarget.compileService;
+            if (!cs)
+                cs = {};
+            var pio = !!cs.platformioIni;
+            var docker = cs.buildEngine == "dockermake";
             var r = {
                 functions: [],
                 generatedFiles: {},
@@ -6561,13 +6746,15 @@ var ts;
             };
             if (pio)
                 r.platformio = { dependencies: {} };
+            else if (docker)
+                r.npmDependencies = {};
             else
                 r.yotta = { config: {}, dependencies: {} };
             return r;
         }
         pxtc.emptyExtInfo = emptyExtInfo;
         var numberAttributes = ["weight", "imageLiteral"];
-        var booleanAttributes = ["advanced", "externallyLoadedBlock"];
+        var booleanAttributes = ["advanced", "externallyLoadedBlock", "handlerStatement"];
         function parseCommentString(cmt) {
             var res = {
                 paramDefl: {},
@@ -6754,6 +6941,9 @@ var ts;
             UF2.UF2_MAGIC_START0 = 0x0A324655; // "UF2\n"
             UF2.UF2_MAGIC_START1 = 0x9E5D5157; // Randomly selected
             UF2.UF2_MAGIC_END = 0x0AB16F30; // Ditto
+            UF2.UF2_FLAG_NONE = 0x00000000;
+            UF2.UF2_FLAG_NOFLASH = 0x00000001;
+            UF2.UF2_FLAG_FILE = 0x00001000;
             function parseBlock(block) {
                 var wordAt = function (k) {
                     return (block[k] + (block[k + 1] << 8) + (block[k + 2] << 16) + (block[k + 3] << 24)) >>> 0;
@@ -6762,13 +6952,28 @@ var ts;
                     wordAt(0) != UF2.UF2_MAGIC_START0 || wordAt(4) != UF2.UF2_MAGIC_START1 ||
                     wordAt(block.length - 4) != UF2.UF2_MAGIC_END)
                     return null;
+                var flags = wordAt(8);
+                var payloadSize = wordAt(16);
+                if (payloadSize > 476)
+                    payloadSize = 256;
+                var filename = null;
+                if (flags & UF2.UF2_FLAG_FILE) {
+                    var fnbuf = block.slice(32 + payloadSize);
+                    var len = fnbuf.indexOf(0);
+                    if (len >= 0) {
+                        fnbuf = fnbuf.slice(0, len);
+                    }
+                    filename = pxtc.U.fromUTF8(pxtc.U.uint8ArrayToString(fnbuf));
+                }
                 return {
-                    flags: wordAt(8),
+                    flags: flags,
                     targetAddr: wordAt(12),
-                    payloadSize: wordAt(16),
+                    payloadSize: payloadSize,
                     blockNo: wordAt(20),
                     numBlocks: wordAt(24),
-                    data: block.slice(32, 512 - 4)
+                    fileSize: wordAt(28),
+                    data: block.slice(32, 32 + payloadSize),
+                    filename: filename
                 };
             }
             UF2.parseBlock = parseBlock;
@@ -6842,6 +7047,155 @@ var ts;
                 return res;
             }
             UF2.readBytes = readBytes;
+            function setWord(block, ptr, v) {
+                block[ptr] = (v & 0xff);
+                block[ptr + 1] = ((v >> 8) & 0xff);
+                block[ptr + 2] = ((v >> 16) & 0xff);
+                block[ptr + 3] = ((v >> 24) & 0xff);
+            }
+            function newBlockFile() {
+                return {
+                    currBlock: null,
+                    currPtr: -1,
+                    blocks: [],
+                    ptrs: [],
+                    filesize: 0
+                };
+            }
+            UF2.newBlockFile = newBlockFile;
+            function finalizeFile(f) {
+                for (var i = 0; i < f.blocks.length; ++i) {
+                    setWord(f.blocks[i], 20, i);
+                    setWord(f.blocks[i], 24, f.blocks.length);
+                    if (f.filename)
+                        setWord(f.blocks[i], 28, f.filesize);
+                }
+            }
+            UF2.finalizeFile = finalizeFile;
+            function concatFiles(fs) {
+                for (var _i = 0, fs_1 = fs; _i < fs_1.length; _i++) {
+                    var f = fs_1[_i];
+                    finalizeFile(f);
+                    f.filename = null;
+                }
+                var r = newBlockFile();
+                r.blocks = pxtc.U.concat(fs.map(function (f) { return f.blocks; }));
+                for (var _a = 0, fs_2 = fs; _a < fs_2.length; _a++) {
+                    var f = fs_2[_a];
+                    f.blocks = [];
+                }
+                return r;
+            }
+            UF2.concatFiles = concatFiles;
+            function serializeFile(f) {
+                finalizeFile(f);
+                var res = "";
+                for (var _i = 0, _a = f.blocks; _i < _a.length; _i++) {
+                    var b = _a[_i];
+                    res += pxtc.Util.uint8ArrayToString(b);
+                }
+                return res;
+            }
+            UF2.serializeFile = serializeFile;
+            function readBytesFromFile(f, addr, length) {
+                //console.log(`read @${addr} len=${length}`)
+                var needAddr = addr >> 8;
+                var bl;
+                if (needAddr == f.currPtr)
+                    bl = f.currBlock;
+                else {
+                    for (var i = 0; i < f.ptrs.length; ++i) {
+                        if (f.ptrs[i] == needAddr) {
+                            bl = f.blocks[i];
+                            break;
+                        }
+                    }
+                    if (bl) {
+                        f.currPtr = needAddr;
+                        f.currBlock = bl;
+                    }
+                }
+                if (!bl)
+                    return null;
+                var res = new Uint8Array(length);
+                var toRead = Math.min(length, 256 - (addr & 0xff));
+                pxtc.U.memcpy(res, 0, bl, (addr & 0xff) + 32, toRead);
+                var leftOver = length - toRead;
+                if (leftOver > 0) {
+                    var le = readBytesFromFile(f, addr + toRead, leftOver);
+                    pxtc.U.memcpy(res, toRead, le);
+                }
+                return res;
+            }
+            UF2.readBytesFromFile = readBytesFromFile;
+            function writeBytes(f, addr, bytes) {
+                var currBlock = f.currBlock;
+                var needAddr = addr >> 8;
+                // account for unaligned writes
+                var thisChunk = 256 - (addr & 0xff);
+                if (bytes.length > thisChunk) {
+                    var b = new Uint8Array(bytes);
+                    writeBytes(f, addr, b.slice(0, thisChunk));
+                    while (thisChunk < bytes.length) {
+                        var nextOff = Math.min(thisChunk + 256, bytes.length);
+                        writeBytes(f, addr + thisChunk, b.slice(thisChunk, nextOff));
+                        thisChunk = nextOff;
+                    }
+                    return;
+                }
+                if (needAddr != f.currPtr) {
+                    var i = 0;
+                    currBlock = null;
+                    for (var i_1 = 0; i_1 < f.ptrs.length; ++i_1) {
+                        if (f.ptrs[i_1] == needAddr) {
+                            currBlock = f.blocks[i_1];
+                            break;
+                        }
+                    }
+                    if (!currBlock) {
+                        currBlock = new Uint8Array(512);
+                        setWord(currBlock, 0, UF2.UF2_MAGIC_START0);
+                        setWord(currBlock, 4, UF2.UF2_MAGIC_START1);
+                        setWord(currBlock, 8, f.filename ? UF2.UF2_FLAG_FILE : UF2.UF2_FLAG_NONE);
+                        setWord(currBlock, 12, needAddr << 8);
+                        setWord(currBlock, 16, 256);
+                        setWord(currBlock, 20, f.blocks.length);
+                        setWord(currBlock, 512 - 4, UF2.UF2_MAGIC_END);
+                        if (f.filename) {
+                            pxtc.U.memcpy(currBlock, 32 + 256, pxtc.U.stringToUint8Array(pxtc.U.toUTF8(f.filename)));
+                        }
+                        f.blocks.push(currBlock);
+                        f.ptrs.push(needAddr);
+                    }
+                    f.currPtr = needAddr;
+                    f.currBlock = currBlock;
+                }
+                var p = (addr & 0xff) + 32;
+                for (var i = 0; i < bytes.length; ++i)
+                    currBlock[p + i] = bytes[i];
+                f.filesize = Math.max(f.filesize, bytes.length + addr);
+            }
+            UF2.writeBytes = writeBytes;
+            function writeHex(f, hex) {
+                var upperAddr = "0000";
+                for (var i = 0; i < hex.length; ++i) {
+                    var m = /:02000004(....)/.exec(hex[i]);
+                    if (m) {
+                        upperAddr = m[1];
+                    }
+                    m = /^:..(....)00(.*)[0-9A-F][0-9A-F]$/.exec(hex[i]);
+                    if (m) {
+                        var newAddr = parseInt(upperAddr + m[1], 16);
+                        var hh = m[2];
+                        var arr = [];
+                        for (var j = 0; j < hh.length; j += 2) {
+                            arr.push(parseInt(hh[j] + hh[j + 1], 16));
+                        }
+                        writeBytes(f, newAddr, arr);
+                    }
+                }
+            }
+            UF2.writeHex = writeHex;
         })(UF2 = pxtc.UF2 || (pxtc.UF2 = {}));
     })(pxtc = ts.pxtc || (ts.pxtc = {}));
 })(ts || (ts = {}));
@@ -6924,6 +7278,29 @@ var ts;
                 ch > 127 /* maxAsciiCharacter */ && isUnicodeIdentifierPart(ch, languageVersion);
         }
         pxtc.isIdentifierPart = isIdentifierPart;
+        pxtc.reservedWords = ["abstract", "any", "as", "break",
+            "case", "catch", "class", "continue", "const", "constructor", "debugger",
+            "declare", "default", "delete", "do", "else", "enum", "export", "extends",
+            "false", "finally", "for", "from", "function", "get", "if", "implements",
+            "import", "in", "instanceof", "interface", "is", "let", "module", "namespace",
+            "new", "null", "package", "private", "protected", "public",
+            "require", "global", "return", "set", "static", "super", "switch",
+            "symbol", "this", "throw", "true", "try", "type", "typeof", "var", "void",
+            "while", "with", "yield", "async", "await", "of",
+            // PXT Specific
+            "Math"];
+        function escapeIdentifier(name) {
+            if (!name)
+                return '_';
+            var n = name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_$]/g, function (a) {
+                return ts.pxtc.isIdentifierPart(a.charCodeAt(0), ts.pxtc.ScriptTarget.ES5) ? a : "";
+            });
+            if (!n || !ts.pxtc.isIdentifierStart(n.charCodeAt(0), ts.pxtc.ScriptTarget.ES5) || pxtc.reservedWords.indexOf(n) !== -1) {
+                n = "_" + n;
+            }
+            return n;
+        }
+        pxtc.escapeIdentifier = escapeIdentifier;
         var unicodeES5IdentifierStart = [170, 170, 181, 181, 186, 186, 192, 214, 216, 246, 248, 705, 710, 721, 736, 740, 748, 748, 750, 750, 880, 884, 886, 887, 890, 893, 902, 902, 904, 906, 908, 908, 910, 929, 931, 1013, 1015, 1153, 1162, 1319, 1329, 1366, 1369, 1369, 1377, 1415, 1488, 1514, 1520, 1522, 1568, 1610, 1646, 1647, 1649, 1747, 1749, 1749, 1765, 1766, 1774, 1775, 1786, 1788, 1791, 1791, 1808, 1808, 1810, 1839, 1869, 1957, 1969, 1969, 1994, 2026, 2036, 2037, 2042, 2042, 2048, 2069, 2074, 2074, 2084, 2084, 2088, 2088, 2112, 2136, 2208, 2208, 2210, 2220, 2308, 2361, 2365, 2365, 2384, 2384, 2392, 2401, 2417, 2423, 2425, 2431, 2437, 2444, 2447, 2448, 2451, 2472, 2474, 2480, 2482, 2482, 2486, 2489, 2493, 2493, 2510, 2510, 2524, 2525, 2527, 2529, 2544, 2545, 2565, 2570, 2575, 2576, 2579, 2600, 2602, 2608, 2610, 2611, 2613, 2614, 2616, 2617, 2649, 2652, 2654, 2654, 2674, 2676, 2693, 2701, 2703, 2705, 2707, 2728, 2730, 2736, 2738, 2739, 2741, 2745, 2749, 2749, 2768, 2768, 2784, 2785, 2821, 2828, 2831, 2832, 2835, 2856, 2858, 2864, 2866, 2867, 2869, 2873, 2877, 2877, 2908, 2909, 2911, 2913, 2929, 2929, 2947, 2947, 2949, 2954, 2958, 2960, 2962, 2965, 2969, 2970, 2972, 2972, 2974, 2975, 2979, 2980, 2984, 2986, 2990, 3001, 3024, 3024, 3077, 3084, 3086, 3088, 3090, 3112, 3114, 3123, 3125, 3129, 3133, 3133, 3160, 3161, 3168, 3169, 3205, 3212, 3214, 3216, 3218, 3240, 3242, 3251, 3253, 3257, 3261, 3261, 3294, 3294, 3296, 3297, 3313, 3314, 3333, 3340, 3342, 3344, 3346, 3386, 3389, 3389, 3406, 3406, 3424, 3425, 3450, 3455, 3461, 3478, 3482, 3505, 3507, 3515, 3517, 3517, 3520, 3526, 3585, 3632, 3634, 3635, 3648, 3654, 3713, 3714, 3716, 3716, 3719, 3720, 3722, 3722, 3725, 3725, 3732, 3735, 3737, 3743, 3745, 3747, 3749, 3749, 3751, 3751, 3754, 3755, 3757, 3760, 3762, 3763, 3773, 3773, 3776, 3780, 3782, 3782, 3804, 3807, 3840, 3840, 3904, 3911, 3913, 3948, 3976, 3980, 4096, 4138, 4159, 4159, 4176, 4181, 4186, 4189, 4193, 4193, 4197, 4198, 4206, 4208, 4213, 4225, 4238, 4238, 4256, 4293, 4295, 4295, 4301, 4301, 4304, 4346, 4348, 4680, 4682, 4685, 4688, 4694, 4696, 4696, 4698, 4701, 4704, 4744, 4746, 4749, 4752, 4784, 4786, 4789, 4792, 4798, 4800, 4800, 4802, 4805, 4808, 4822, 4824, 4880, 4882, 4885, 4888, 4954, 4992, 5007, 5024, 5108, 5121, 5740, 5743, 5759, 5761, 5786, 5792, 5866, 5870, 5872, 5888, 5900, 5902, 5905, 5920, 5937, 5952, 5969, 5984, 5996, 5998, 6000, 6016, 6067, 6103, 6103, 6108, 6108, 6176, 6263, 6272, 6312, 6314, 6314, 6320, 6389, 6400, 6428, 6480, 6509, 6512, 6516, 6528, 6571, 6593, 6599, 6656, 6678, 6688, 6740, 6823, 6823, 6917, 6963, 6981, 6987, 7043, 7072, 7086, 7087, 7098, 7141, 7168, 7203, 7245, 7247, 7258, 7293, 7401, 7404, 7406, 7409, 7413, 7414, 7424, 7615, 7680, 7957, 7960, 7965, 7968, 8005, 8008, 8013, 8016, 8023, 8025, 8025, 8027, 8027, 8029, 8029, 8031, 8061, 8064, 8116, 8118, 8124, 8126, 8126, 8130, 8132, 8134, 8140, 8144, 8147, 8150, 8155, 8160, 8172, 8178, 8180, 8182, 8188, 8305, 8305, 8319, 8319, 8336, 8348, 8450, 8450, 8455, 8455, 8458, 8467, 8469, 8469, 8473, 8477, 8484, 8484, 8486, 8486, 8488, 8488, 8490, 8493, 8495, 8505, 8508, 8511, 8517, 8521, 8526, 8526, 8544, 8584, 11264, 11310, 11312, 11358, 11360, 11492, 11499, 11502, 11506, 11507, 11520, 11557, 11559, 11559, 11565, 11565, 11568, 11623, 11631, 11631, 11648, 11670, 11680, 11686, 11688, 11694, 11696, 11702, 11704, 11710, 11712, 11718, 11720, 11726, 11728, 11734, 11736, 11742, 11823, 11823, 12293, 12295, 12321, 12329, 12337, 12341, 12344, 12348, 12353, 12438, 12445, 12447, 12449, 12538, 12540, 12543, 12549, 12589, 12593, 12686, 12704, 12730, 12784, 12799, 13312, 19893, 19968, 40908, 40960, 42124, 42192, 42237, 42240, 42508, 42512, 42527, 42538, 42539, 42560, 42606, 42623, 42647, 42656, 42735, 42775, 42783, 42786, 42888, 42891, 42894, 42896, 42899, 42912, 42922, 43000, 43009, 43011, 43013, 43015, 43018, 43020, 43042, 43072, 43123, 43138, 43187, 43250, 43255, 43259, 43259, 43274, 43301, 43312, 43334, 43360, 43388, 43396, 43442, 43471, 43471, 43520, 43560, 43584, 43586, 43588, 43595, 43616, 43638, 43642, 43642, 43648, 43695, 43697, 43697, 43701, 43702, 43705, 43709, 43712, 43712, 43714, 43714, 43739, 43741, 43744, 43754, 43762, 43764, 43777, 43782, 43785, 43790, 43793, 43798, 43808, 43814, 43816, 43822, 43968, 44002, 44032, 55203, 55216, 55238, 55243, 55291, 63744, 64109, 64112, 64217, 64256, 64262, 64275, 64279, 64285, 64285, 64287, 64296, 64298, 64310, 64312, 64316, 64318, 64318, 64320, 64321, 64323, 64324, 64326, 64433, 64467, 64829, 64848, 64911, 64914, 64967, 65008, 65019, 65136, 65140, 65142, 65276, 65313, 65338, 65345, 65370, 65382, 65470, 65474, 65479, 65482, 65487, 65490, 65495, 65498, 65500,];
         var unicodeES5IdentifierPart = [170, 170, 181, 181, 186, 186, 192, 214, 216, 246, 248, 705, 710, 721, 736, 740, 748, 748, 750, 750, 768, 884, 886, 887, 890, 893, 902, 902, 904, 906, 908, 908, 910, 929, 931, 1013, 1015, 1153, 1155, 1159, 1162, 1319, 1329, 1366, 1369, 1369, 1377, 1415, 1425, 1469, 1471, 1471, 1473, 1474, 1476, 1477, 1479, 1479, 1488, 1514, 1520, 1522, 1552, 1562, 1568, 1641, 1646, 1747, 1749, 1756, 1759, 1768, 1770, 1788, 1791, 1791, 1808, 1866, 1869, 1969, 1984, 2037, 2042, 2042, 2048, 2093, 2112, 2139, 2208, 2208, 2210, 2220, 2276, 2302, 2304, 2403, 2406, 2415, 2417, 2423, 2425, 2431, 2433, 2435, 2437, 2444, 2447, 2448, 2451, 2472, 2474, 2480, 2482, 2482, 2486, 2489, 2492, 2500, 2503, 2504, 2507, 2510, 2519, 2519, 2524, 2525, 2527, 2531, 2534, 2545, 2561, 2563, 2565, 2570, 2575, 2576, 2579, 2600, 2602, 2608, 2610, 2611, 2613, 2614, 2616, 2617, 2620, 2620, 2622, 2626, 2631, 2632, 2635, 2637, 2641, 2641, 2649, 2652, 2654, 2654, 2662, 2677, 2689, 2691, 2693, 2701, 2703, 2705, 2707, 2728, 2730, 2736, 2738, 2739, 2741, 2745, 2748, 2757, 2759, 2761, 2763, 2765, 2768, 2768, 2784, 2787, 2790, 2799, 2817, 2819, 2821, 2828, 2831, 2832, 2835, 2856, 2858, 2864, 2866, 2867, 2869, 2873, 2876, 2884, 2887, 2888, 2891, 2893, 2902, 2903, 2908, 2909, 2911, 2915, 2918, 2927, 2929, 2929, 2946, 2947, 2949, 2954, 2958, 2960, 2962, 2965, 2969, 2970, 2972, 2972, 2974, 2975, 2979, 2980, 2984, 2986, 2990, 3001, 3006, 3010, 3014, 3016, 3018, 3021, 3024, 3024, 3031, 3031, 3046, 3055, 3073, 3075, 3077, 3084, 3086, 3088, 3090, 3112, 3114, 3123, 3125, 3129, 3133, 3140, 3142, 3144, 3146, 3149, 3157, 3158, 3160, 3161, 3168, 3171, 3174, 3183, 3202, 3203, 3205, 3212, 3214, 3216, 3218, 3240, 3242, 3251, 3253, 3257, 3260, 3268, 3270, 3272, 3274, 3277, 3285, 3286, 3294, 3294, 3296, 3299, 3302, 3311, 3313, 3314, 3330, 3331, 3333, 3340, 3342, 3344, 3346, 3386, 3389, 3396, 3398, 3400, 3402, 3406, 3415, 3415, 3424, 3427, 3430, 3439, 3450, 3455, 3458, 3459, 3461, 3478, 3482, 3505, 3507, 3515, 3517, 3517, 3520, 3526, 3530, 3530, 3535, 3540, 3542, 3542, 3544, 3551, 3570, 3571, 3585, 3642, 3648, 3662, 3664, 3673, 3713, 3714, 3716, 3716, 3719, 3720, 3722, 3722, 3725, 3725, 3732, 3735, 3737, 3743, 3745, 3747, 3749, 3749, 3751, 3751, 3754, 3755, 3757, 3769, 3771, 3773, 3776, 3780, 3782, 3782, 3784, 3789, 3792, 3801, 3804, 3807, 3840, 3840, 3864, 3865, 3872, 3881, 3893, 3893, 3895, 3895, 3897, 3897, 3902, 3911, 3913, 3948, 3953, 3972, 3974, 3991, 3993, 4028, 4038, 4038, 4096, 4169, 4176, 4253, 4256, 4293, 4295, 4295, 4301, 4301, 4304, 4346, 4348, 4680, 4682, 4685, 4688, 4694, 4696, 4696, 4698, 4701, 4704, 4744, 4746, 4749, 4752, 4784, 4786, 4789, 4792, 4798, 4800, 4800, 4802, 4805, 4808, 4822, 4824, 4880, 4882, 4885, 4888, 4954, 4957, 4959, 4992, 5007, 5024, 5108, 5121, 5740, 5743, 5759, 5761, 5786, 5792, 5866, 5870, 5872, 5888, 5900, 5902, 5908, 5920, 5940, 5952, 5971, 5984, 5996, 5998, 6000, 6002, 6003, 6016, 6099, 6103, 6103, 6108, 6109, 6112, 6121, 6155, 6157, 6160, 6169, 6176, 6263, 6272, 6314, 6320, 6389, 6400, 6428, 6432, 6443, 6448, 6459, 6470, 6509, 6512, 6516, 6528, 6571, 6576, 6601, 6608, 6617, 6656, 6683, 6688, 6750, 6752, 6780, 6783, 6793, 6800, 6809, 6823, 6823, 6912, 6987, 6992, 7001, 7019, 7027, 7040, 7155, 7168, 7223, 7232, 7241, 7245, 7293, 7376, 7378, 7380, 7414, 7424, 7654, 7676, 7957, 7960, 7965, 7968, 8005, 8008, 8013, 8016, 8023, 8025, 8025, 8027, 8027, 8029, 8029, 8031, 8061, 8064, 8116, 8118, 8124, 8126, 8126, 8130, 8132, 8134, 8140, 8144, 8147, 8150, 8155, 8160, 8172, 8178, 8180, 8182, 8188, 8204, 8205, 8255, 8256, 8276, 8276, 8305, 8305, 8319, 8319, 8336, 8348, 8400, 8412, 8417, 8417, 8421, 8432, 8450, 8450, 8455, 8455, 8458, 8467, 8469, 8469, 8473, 8477, 8484, 8484, 8486, 8486, 8488, 8488, 8490, 8493, 8495, 8505, 8508, 8511, 8517, 8521, 8526, 8526, 8544, 8584, 11264, 11310, 11312, 11358, 11360, 11492, 11499, 11507, 11520, 11557, 11559, 11559, 11565, 11565, 11568, 11623, 11631, 11631, 11647, 11670, 11680, 11686, 11688, 11694, 11696, 11702, 11704, 11710, 11712, 11718, 11720, 11726, 11728, 11734, 11736, 11742, 11744, 11775, 11823, 11823, 12293, 12295, 12321, 12335, 12337, 12341, 12344, 12348, 12353, 12438, 12441, 12442, 12445, 12447, 12449, 12538, 12540, 12543, 12549, 12589, 12593, 12686, 12704, 12730, 12784, 12799, 13312, 19893, 19968, 40908, 40960, 42124, 42192, 42237, 42240, 42508, 42512, 42539, 42560, 42607, 42612, 42621, 42623, 42647, 42655, 42737, 42775, 42783, 42786, 42888, 42891, 42894, 42896, 42899, 42912, 42922, 43000, 43047, 43072, 43123, 43136, 43204, 43216, 43225, 43232, 43255, 43259, 43259, 43264, 43309, 43312, 43347, 43360, 43388, 43392, 43456, 43471, 43481, 43520, 43574, 43584, 43597, 43600, 43609, 43616, 43638, 43642, 43643, 43648, 43714, 43739, 43741, 43744, 43759, 43762, 43766, 43777, 43782, 43785, 43790, 43793, 43798, 43808, 43814, 43816, 43822, 43968, 44010, 44012, 44013, 44016, 44025, 44032, 55203, 55216, 55238, 55243, 55291, 63744, 64109, 64112, 64217, 64256, 64262, 64275, 64279, 64285, 64296, 64298, 64310, 64312, 64316, 64318, 64318, 64320, 64321, 64323, 64324, 64326, 64433, 64467, 64829, 64848, 64911, 64914, 64967, 65008, 65019, 65024, 65039, 65056, 65062, 65075, 65076, 65101, 65103, 65136, 65140, 65142, 65276, 65296, 65305, 65313, 65338, 65343, 65343, 65345, 65370, 65382, 65470, 65474, 65479, 65482, 65487, 65490, 65495, 65498, 65500,];
         var unicodeES3IdentifierStart = [170, 170, 181, 181, 186, 186, 192, 214, 216, 246, 248, 543, 546, 563, 592, 685, 688, 696, 699, 705, 720, 721, 736, 740, 750, 750, 890, 890, 902, 902, 904, 906, 908, 908, 910, 929, 931, 974, 976, 983, 986, 1011, 1024, 1153, 1164, 1220, 1223, 1224, 1227, 1228, 1232, 1269, 1272, 1273, 1329, 1366, 1369, 1369, 1377, 1415, 1488, 1514, 1520, 1522, 1569, 1594, 1600, 1610, 1649, 1747, 1749, 1749, 1765, 1766, 1786, 1788, 1808, 1808, 1810, 1836, 1920, 1957, 2309, 2361, 2365, 2365, 2384, 2384, 2392, 2401, 2437, 2444, 2447, 2448, 2451, 2472, 2474, 2480, 2482, 2482, 2486, 2489, 2524, 2525, 2527, 2529, 2544, 2545, 2565, 2570, 2575, 2576, 2579, 2600, 2602, 2608, 2610, 2611, 2613, 2614, 2616, 2617, 2649, 2652, 2654, 2654, 2674, 2676, 2693, 2699, 2701, 2701, 2703, 2705, 2707, 2728, 2730, 2736, 2738, 2739, 2741, 2745, 2749, 2749, 2768, 2768, 2784, 2784, 2821, 2828, 2831, 2832, 2835, 2856, 2858, 2864, 2866, 2867, 2870, 2873, 2877, 2877, 2908, 2909, 2911, 2913, 2949, 2954, 2958, 2960, 2962, 2965, 2969, 2970, 2972, 2972, 2974, 2975, 2979, 2980, 2984, 2986, 2990, 2997, 2999, 3001, 3077, 3084, 3086, 3088, 3090, 3112, 3114, 3123, 3125, 3129, 3168, 3169, 3205, 3212, 3214, 3216, 3218, 3240, 3242, 3251, 3253, 3257, 3294, 3294, 3296, 3297, 3333, 3340, 3342, 3344, 3346, 3368, 3370, 3385, 3424, 3425, 3461, 3478, 3482, 3505, 3507, 3515, 3517, 3517, 3520, 3526, 3585, 3632, 3634, 3635, 3648, 3654, 3713, 3714, 3716, 3716, 3719, 3720, 3722, 3722, 3725, 3725, 3732, 3735, 3737, 3743, 3745, 3747, 3749, 3749, 3751, 3751, 3754, 3755, 3757, 3760, 3762, 3763, 3773, 3773, 3776, 3780, 3782, 3782, 3804, 3805, 3840, 3840, 3904, 3911, 3913, 3946, 3976, 3979, 4096, 4129, 4131, 4135, 4137, 4138, 4176, 4181, 4256, 4293, 4304, 4342, 4352, 4441, 4447, 4514, 4520, 4601, 4608, 4614, 4616, 4678, 4680, 4680, 4682, 4685, 4688, 4694, 4696, 4696, 4698, 4701, 4704, 4742, 4744, 4744, 4746, 4749, 4752, 4782, 4784, 4784, 4786, 4789, 4792, 4798, 4800, 4800, 4802, 4805, 4808, 4814, 4816, 4822, 4824, 4846, 4848, 4878, 4880, 4880, 4882, 4885, 4888, 4894, 4896, 4934, 4936, 4954, 5024, 5108, 5121, 5740, 5743, 5750, 5761, 5786, 5792, 5866, 6016, 6067, 6176, 6263, 6272, 6312, 7680, 7835, 7840, 7929, 7936, 7957, 7960, 7965, 7968, 8005, 8008, 8013, 8016, 8023, 8025, 8025, 8027, 8027, 8029, 8029, 8031, 8061, 8064, 8116, 8118, 8124, 8126, 8126, 8130, 8132, 8134, 8140, 8144, 8147, 8150, 8155, 8160, 8172, 8178, 8180, 8182, 8188, 8319, 8319, 8450, 8450, 8455, 8455, 8458, 8467, 8469, 8469, 8473, 8477, 8484, 8484, 8486, 8486, 8488, 8488, 8490, 8493, 8495, 8497, 8499, 8505, 8544, 8579, 12293, 12295, 12321, 12329, 12337, 12341, 12344, 12346, 12353, 12436, 12445, 12446, 12449, 12538, 12540, 12542, 12549, 12588, 12593, 12686, 12704, 12727, 13312, 19893, 19968, 40869, 40960, 42124, 44032, 55203, 63744, 64045, 64256, 64262, 64275, 64279, 64285, 64285, 64287, 64296, 64298, 64310, 64312, 64316, 64318, 64318, 64320, 64321, 64323, 64324, 64326, 64433, 64467, 64829, 64848, 64911, 64914, 64967, 65008, 65019, 65136, 65138, 65140, 65140, 65142, 65276, 65313, 65338, 65345, 65370, 65382, 65470, 65474, 65479, 65482, 65487, 65490, 65495, 65498, 65500,];
