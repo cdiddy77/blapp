@@ -47,7 +47,7 @@ module.exports = {
       // We ship a few polyfills by default:
       require.resolve('./polyfills'),
       // Finally, this is your app's code:
-      paths.appIndexTs
+      paths.simIndexTs
       // We include the app code last so that if there is a runtime error during
       // initialization, it doesn't blow up the WebpackDevServer client, and
       // changing JS code would still trigger a refresh.
@@ -234,23 +234,23 @@ module.exports = {
     // In development, this will be an empty string.
     new InterpolateHtmlPlugin(env.raw),
     // Generates an `index.html` file with the <script> injected.
-    new HtmlWebpackPlugin({
-      inject: true,
-      template: paths.appHtml,
-      chunks: ['main']
-    }),
+    // new HtmlWebpackPlugin({
+    //   inject: true,
+    //   template: paths.appHtml,
+    //   chunks: ['main']
+    // }),
     // NEWPAGE : copy this, change template, chunks, filename
     new HtmlWebpackPlugin({
       inject: true,
       template: paths.appSim,
       chunks: ['sim'],
-      filename: 'pxt/simulator.html'
+      filename: 'simulator.html'
     }),
     new HtmlWebpackPlugin({
       inject: true,
       template: paths.appPair,
       chunks: ['pair'],
-      filename: 'pxt/pair.html'
+      filename: 'pair.html'
     }),
     // Makes some environment variables available to the JS code, for example:
     // if (process.env.NODE_ENV === 'development') { ... }. See `./env.js`.

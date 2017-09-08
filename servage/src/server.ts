@@ -15,7 +15,7 @@ var server = http.createServer(function (req, res) {
         // console.log('got a /', JSON.stringify(urlObj));
         // pathName = 'index.html';
         res.writeHead(301,
-            { Location: '/pxt/index.html' }
+            { Location: '/index.html' }
         );
         res.end();
     } else if (urlObj.pathname == '/downloadapk') {
@@ -24,7 +24,7 @@ var server = http.createServer(function (req, res) {
     } else {
         pathName = urlObj.pathname;
     };
-    console.log(`serving file:${rootDir + pathName}`);
+    //console.log(`serving file:${rootDir + pathName}`);
     fs.readFile(rootDir + pathName, function (err, data) {
         if (err) {
             console.log('error trying to serve with pathname=', urlObj.pathname);

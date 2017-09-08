@@ -12,7 +12,7 @@ var server = http.createServer(function (req, res) {
     if (urlObj.pathname == '/') {
         // console.log('got a /', JSON.stringify(urlObj));
         // pathName = 'index.html';
-        res.writeHead(301, { Location: '/pxt/index.html' });
+        res.writeHead(301, { Location: '/index.html' });
         res.end();
     }
     else if (urlObj.pathname == '/downloadapk') {

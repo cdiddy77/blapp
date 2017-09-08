@@ -53,10 +53,10 @@ module.exports = {
   devtool: 'source-map',
   // In production, we only want to load the polyfills and the app code.
   entry: {
-    main: [
-      require.resolve('./polyfills'),
-      paths.appIndexTs
-    ],
+    // main: [
+    //   require.resolve('./polyfills'),
+    //   paths.simIndexTs
+    // ],
     // NEWPAGE : copy this, change paths.simIndexTs to your root control
     sim: [
       require.resolve('./polyfills'),
@@ -207,29 +207,29 @@ module.exports = {
     // in `package.json`, in which case it will be the pathname of that URL.
     new InterpolateHtmlPlugin(env.raw),
     // Generates an `index.html` file with the <script> injected.
-    new HtmlWebpackPlugin({
-      inject: true,
-      template: paths.appHtml,
-      chunks: ['main'],
-      minify: {
-        removeComments: true,
-        collapseWhitespace: true,
-        removeRedundantAttributes: true,
-        useShortDoctype: true,
-        removeEmptyAttributes: true,
-        removeStyleLinkTypeAttributes: true,
-        keepClosingSlash: true,
-        minifyJS: true,
-        minifyCSS: true,
-        minifyURLs: true
-      }
-    }),
+    // new HtmlWebpackPlugin({
+    //   inject: true,
+    //   template: paths.appHtml,
+    //   chunks: ['main'],
+    //   minify: {
+    //     removeComments: true,
+    //     collapseWhitespace: true,
+    //     removeRedundantAttributes: true,
+    //     useShortDoctype: true,
+    //     removeEmptyAttributes: true,
+    //     removeStyleLinkTypeAttributes: true,
+    //     keepClosingSlash: true,
+    //     minifyJS: true,
+    //     minifyCSS: true,
+    //     minifyURLs: true
+    //   }
+    // }),
     // NEWPAGE : copy this, change template, chunks, filename
     new HtmlWebpackPlugin({
       inject: true,
       template: paths.appSim,
       chunks: ['sim'],
-      filename: 'pxt/simulator.html',
+      filename: 'simulator.html',
       minify: {
         removeComments: true,
         collapseWhitespace: true,
@@ -247,7 +247,7 @@ module.exports = {
       inject: true,
       template: paths.appPair,
       chunks: ['pair'],
-      filename: 'pxt/pair.html',
+      filename: 'pair.html',
       minify: {
         removeComments: true,
         collapseWhitespace: true,

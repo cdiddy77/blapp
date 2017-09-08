@@ -76,8 +76,7 @@
     "build": "node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom",
     "build-server": "tsc -p servage",
-    "build-pxt": "pxt clean && pxt staticpkg --output pxt-build --route pxt && ncp pxt-build/pxt public/pxt",
-    "build-pxt2": "pxt clean && pxt staticpkg --output pxt-build --route pxt && ncp pxt-build/pxt public/pxt"
+    "build-pxt": "pxt clean && pxt staticpkg --output pxt-build && ncp pxt-build public"
   },
   "jest": {
     "collectCoverageFrom": [

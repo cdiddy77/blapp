@@ -24,7 +24,7 @@ var printFileSizesAfterBuild = FileSizeReporter.printFileSizesAfterBuild;
 var useYarn = fs.existsSync(paths.yarnLockFile);
 
 // Warn and crash if required files are missing
-if (!checkRequiredFiles([paths.appHtml, paths.appIndexTs])) {
+if (!checkRequiredFiles([paths.appSim, paths.simIndexTs])) {
   process.exit(1);
 }
 
@@ -153,6 +153,6 @@ function build(previousFileSizes) {
 function copyPublicFolder() {
   fs.copySync(paths.appPublic, paths.appBuild, {
     dereference: true,
-    filter: file => file !== paths.appHtml
+    filter: file => true // file !== paths.appSim
   });
 }
