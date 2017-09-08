@@ -13,11 +13,11 @@ var server = http.createServer(function (req, res) {
     let pathName: string;
     if (urlObj.pathname == '/') {
         // console.log('got a /', JSON.stringify(urlObj));
-        // pathName = 'index.html';
-        res.writeHead(301,
-            { Location: '/pxt/index.html' }
-        );
-        res.end();
+        pathName = 'index.html';
+        // res.writeHead(301,
+        //     { Location: '/index.html' }
+        // );
+        // res.end();
     } else if (urlObj.pathname == '/downloadapk') {
         pathName = 'app-release.apk';
         isApk = true;
