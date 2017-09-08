@@ -1,4 +1,3 @@
-import { AppModel } from '../models/AppModel';
 import * as svcTypes from '../../../shared/src/ServiceTypes';
 import * as io from 'socket.io-client';
 import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';

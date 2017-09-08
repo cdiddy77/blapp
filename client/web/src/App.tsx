@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { AppModel } from './AppModel';
-import { TabbedArea, TabPane } from './components/TabbedArea';
 import { Target } from './Target';
 import * as constants from './../../shared/src/util/constants'
 
