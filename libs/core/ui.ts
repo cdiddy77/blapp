@@ -168,6 +168,26 @@ namespace UI {
         updateUIImpl();
     }
 
+     /**
+     * A block for making a video element
+     * @param width the width of the image, eg. 80
+     * @param height the height of the image, eg. 60
+     */
+    //% weight=60
+    //% color=#8080FF
+    //% blockId=video_element
+    //% block="VIDEO flex %flex|width %width|height %height|style %style=lists_create_emptyt|image URL %imageurl|video URL %videourl"
+    //% acceptArrays=true
+     export function videoElement(
+        flex: boolean,
+        width: number,
+        height: number,
+        style: string[],
+        imageurl: string,
+        videourl: string): void {
+        videoElementImpl(flex, width, height, style, imageurl, videourl);
+    }
+
     /**
      * Action Icon
      * @param size the size of the icon, eg: 24
@@ -359,5 +379,4 @@ namespace UI {
     export function toggleIcon(name: ToggleIconCategory, size: number, type: IconType, style: string[]) {
         iconElementImpl('toggle', name, type, size, style);
     }
-
 }
