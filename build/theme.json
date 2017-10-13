@@ -7,6 +7,10 @@
   "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
   "docMenu": [
     {
+      "name": "Download APK",
+      "path": "/downloadapk"
+    },
+    {
       "name": "About",
       "path": "/about"
     },
@@ -429,7 +433,7 @@
     }
   ],
   "id": "blapp",
-  "title": "MakeCode Apps Target",
-  "name": "MakeCode Apps",
+  "title": "Phone Apps Target",
+  "name": "Phone Apps",
   "htmlDocIncludes": {}
 }

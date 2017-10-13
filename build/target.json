@@ -1,7 +1,7 @@
 {
   "id": "blapp",
-  "name": "MakeCode Apps",
-  "title": "MakeCode Apps Target",
+  "name": "Phone Apps",
+  "title": "Phone Apps Target",
   "corepkg": "core",
   "cloud": {
     "workspace": false,
@@ -31,6 +31,10 @@
     "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
     "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
     "docMenu": [
+      {
+        "name": "Download APK",
+        "path": "/docs/downloadapk.html"
+      },
       {
         "name": "About",
         "path": "/docs/about.html"
@@ -454,8 +458,8 @@
       }
     ],
     "id": "blapp",
-    "title": "MakeCode Apps Target",
-    "name": "MakeCode Apps",
+    "title": "Phone Apps Target",
+    "name": "Phone Apps",
     "htmlDocIncludes": {}
   },
   "blocksprj": {

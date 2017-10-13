@@ -1,7 +1,7 @@
 {
     "id": "blapp",
-    "name": "MakeCode Apps",
-    "title": "MakeCode Apps Target",
+    "name": "Phone Apps",
+    "title": "Phone Apps Target",
     "corepkg": "core",
     "cloud": {
         "workspace": false,
@@ -24,13 +24,17 @@
         "autoRun": true
     },
     "appTheme": {
-        "logoUrl": "http://theblapp.azurewebsites.net/",
+        "logoUrl": "http://theblapp-pxt.azurewebsites.net/",
         "shareUrl": "http://localhost:3000/foo/bar",
-        "homeUrl": "http://theblapp.azurewebsites.net/",
-        "embedUrl": "http://theblapp.azurewebsites.net/",
+        "homeUrl": "http://theblapp-pxt.azurewebsites.net/",
+        "embedUrl": "http://theblapp-pxt.azurewebsites.net/",
         "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
         "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
         "docMenu": [
+            {
+                "name": "Download APK",
+                "path": "/downloadapk"
+            },
             {
                 "name": "About",
                 "path": "/about"
