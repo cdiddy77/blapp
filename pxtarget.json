@@ -1,7 +1,7 @@
 {
     "id": "blapp",
-    "name": "Phone Apps",
-    "title": "Phone Apps Target",
+    "name": "App Blocks",
+    "title": "App Blocks Target",
     "corepkg": "core",
     "cloud": {
         "workspace": false,
@@ -31,10 +31,6 @@
         "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
         "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
         "docMenu": [
-            {
-                "name": "Download APK",
-                "path": "/downloadapk"
-            },
             {
                 "name": "About",
                 "path": "/about"

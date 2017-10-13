@@ -59,7 +59,7 @@ body {
   margin: 10px;
 }
 
-.codeWrapper{
+.codeWrapper {
   height: 100%;
   overflow: scroll;
 }
@@ -67,6 +67,11 @@ body {
 .previewWrapper {
   height: 100%;
   display: flex;
+}
+
+#bottomToolbar {
+  margin-top: 10px;
+  padding:100px;
 }
 
 
@@ -145,7 +150,6 @@ body {
   float: right;
   text-align: right;
 }
-
 
 /*.clearfix:after {
   content: "";

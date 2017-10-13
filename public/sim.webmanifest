@@ -1,8 +1,8 @@
 {
   "lang": "en",
   "dir": "ltr",
-  "name": "Phone Apps",
-  "short_name": "Phone Apps",
+  "name": "App Blocks",
+  "short_name": "App Blocks",
   "icons": [
     {
       "src": "/static/icons/android-chrome-36x36.png",

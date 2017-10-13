@@ -1,7 +1,7 @@
 {
   "id": "blapp",
-  "name": "Phone Apps",
-  "title": "Phone Apps Target",
+  "name": "App Blocks",
+  "title": "App Blocks Target",
   "corepkg": "core",
   "cloud": {
     "workspace": false,
@@ -27,14 +27,10 @@
     "logoUrl": "/",
     "shareUrl": "http://localhost:3000/foo/bar",
     "homeUrl": "/",
-    "embedUrl": "http://theblapp.azurewebsites.net/",
+    "embedUrl": "http://theblapp-pxt.azurewebsites.net/",
     "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
     "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
     "docMenu": [
-      {
-        "name": "Download APK",
-        "path": "/docs/downloadapk.html"
-      },
       {
         "name": "About",
         "path": "/docs/about.html"
@@ -458,8 +454,8 @@
       }
     ],
     "id": "blapp",
-    "title": "Phone Apps Target",
-    "name": "Phone Apps",
+    "title": "App Blocks Target",
+    "name": "App Blocks",
     "htmlDocIncludes": {}
   },
   "blocksprj": {

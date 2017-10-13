@@ -33,7 +33,7 @@ var server = http.createServer(function (req, res) {
             return;
         }
         if (isApk) {
-            res.setHeader('Content-Disposition', 'attachment; filename="blockapps.apk"');
+            res.setHeader('Content-Disposition', 'attachment; filename="appblocks.apk"');
             res.setHeader('Content-Type', 'application/vnd.android.package-archive');
         }
         res.writeHead(200);

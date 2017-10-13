@@ -41,6 +41,10 @@ body {
   flex: 1;
 }
 
+#bottomToolbar {
+  margin-top: 10px;
+}
+
 .TabbedArea {
   margin: 5px auto;
   width: 90%;

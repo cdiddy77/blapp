@@ -4564,8 +4564,8 @@ var pxsim;
             var frame = document.createElement('iframe');
             frame.id = 'sim-frame-' + this.nextId();
             frame.allowFullscreen = true;
-            frame.setAttribute('sandbox', 'allow-same-origin allow-scripts');
-            frame.sandbox.value = "allow-scripts allow-same-origin";
+            frame.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-popups');
+            frame.sandbox.value = "allow-scripts allow-same-origin allow-popups";
             var simUrl = this.options.simUrl || (window.pxtConfig || {}).simUrl || "/sim/simulator.html";
             if (this.runOptions.aspectRatio)
                 wrapper.style.paddingBottom = (100 / this.runOptions.aspectRatio) + "%";

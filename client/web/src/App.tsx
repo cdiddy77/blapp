@@ -29,14 +29,15 @@ export default class App extends React.Component<AppProps, AppState>{
     render() {
         let modelData = this.props.model.data;
         let displayShareMsg = null;
+        let pairLink = `${constants.serverHost}/pair.html?pairingCode=${modelData.pairingCode}`;
         if (this.state.isDisplayShareMessage) {
-            let link = `${constants.serverHost}/pxt/pair.html?pairingCode=!${modelData.sharingCode}`;
+            let shareLink = `${constants.serverHost}/pair.html?pairingCode=!${modelData.sharingCode}`;
             displayShareMsg = (
                 <div id='sharingMsg'>
                     Your project was shared.
                     <ul>
                         <li>To access it from the Android App, enter pairing code: <em>!{modelData.sharingCode}</em></li>
-                        <li>To access it via a web browser on your phone or PC, go to:<br /> <a href={link}>{link}</a></li>
+                        <li>To access it via a web browser on your phone or PC, go to:<br /> <a target='_blank' href={shareLink}>{shareLink}</a></li>
                     </ul>
                     <button type='button' className='btn btn-link' onClick={() => this.setState({ isDisplayShareMessage: false })}>done</button>
                 </div>
@@ -45,12 +46,13 @@ export default class App extends React.Component<AppProps, AppState>{
 
         return (
             <div id='appRoot'>
-                <div id='pairingCode'>Pairing code: {modelData.pairingCode}&nbsp;&nbsp;&nbsp;
+                <div id='pairingCode'>Pairing code: <a target='_blank' href={pairLink}>{modelData.pairingCode}</a>&nbsp;&nbsp;&nbsp;
                     <button type='button' className='btn btn-link' onClick={() => this.props.model.resetPairingCode()}>reset</button>
                     <button type='button' className='btn btn-link' onClick={() => this.props.model.shareLink()}>share</button>
                 </div>
                 {displayShareMsg}
                 <div className='previewWrapper'><Target model={this.props.model} /></div>
+                <div id='bottomToolbar'><a className='btn btn-link' href='/downloadapk'>Download Android APK</a></div>
             </div>
         );
     }
