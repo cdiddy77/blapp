@@ -778,6 +778,13 @@ var ProjectView = (function (_super) {
         pxt.tickEvent("menu.open");
         this.projects.showOpenProject(tab);
     };
+    ProjectView.prototype.callCustomCommand = function (cmd) {
+        pxt.tickEvent("menu.customCommand");
+        cmd.activateAsync().then(function (v) {
+            console.log('returned from custom command call');
+            return v;
+        });
+    };
     ProjectView.prototype.exportProjectToFileAsync = function () {
         var mpkg = pkg.mainPkg;
         return mpkg.compressToFileAsync(this.getPreferredEditor());
@@ -1530,6 +1537,15 @@ var ProjectView = (function (_super) {
             pxt.storage.setLocal(cookieKey, "1");
             _this.forceUpdate();
         };
+        var renderCustomCommands = function () {
+            if (inTutorial)
+                return null;
+            if (!_this.customCommands || !_this.customCommands.all)
+                return null;
+            return _this.customCommands.all.map(function (v) {
+                return (React.createElement(sui.Item, {class: v.classValueCb(), role: "menuitem", textClass: "landscape only", icon: v.iconValueCb(), text: v.buttonTextCb(), onClick: function () { _this.callCustomCommand(v); }}));
+            });
+        };
         var showSideDoc = sideDocs && this.state.sideDocsLoadUrl && !this.state.sideDocsCollapsed;
         // update window title
         document.title = this.state.header ? this.state.header.name + " - " + pxt.appTarget.name : pxt.appTarget.name;
@@ -1548,10 +1564,11 @@ var ProjectView = (function (_super) {
             'full-abs',
             'dimmable'
         ]);
+        // ASSETS: replace openassets with iterate over custom UI creating items
         return (React.createElement("div", {id: 'root', className: rootClasses}, useModulator ? React.createElement("audio", {id: "modulatorAudioOutput", controls: true}) : undefined, useModulator ? React.createElement("div", {id: "modulatorWrapper"}, React.createElement("div", {id: "modulatorBubble"}, React.createElement("canvas", {id: "modulatorWavStrip"}))) : undefined, hideMenuBar ? undefined :
             React.createElement("div", {id: "menubar", role: "banner"}, React.createElement("div", {className: "ui borderless fixed " + (targetTheme.invertedMenu ? "inverted" : '') + " menu", role: "menubar"}, !sandbox ? React.createElement("div", {className: "left menu"}, React.createElement("span", {id: "logo", className: "ui item logo"}, targetTheme.logo || targetTheme.portraitLogo
                 ? React.createElement("a", {className: "ui image", target: "_blank", rel: "noopener", href: targetTheme.logoUrl}, React.createElement("img", {className: "ui logo " + (targetTheme.portraitLogo ? " portrait hide" : ''), src: Util.toDataUri(targetTheme.logo || targetTheme.portraitLogo), alt: targetTheme.boardName + " Logo"}))
-                : React.createElement("span", {className: "name"}, targetTheme.name), targetTheme.portraitLogo ? (React.createElement("a", {className: "ui", target: "_blank", rel: "noopener", href: targetTheme.logoUrl}, React.createElement("img", {className: 'ui mini image portrait only', src: Util.toDataUri(targetTheme.portraitLogo), alt: targetTheme.boardName + " Logo"}))) : null), !inTutorial ? React.createElement(sui.Item, {class: "icon openproject", role: "menuitem", textClass: "landscape only", icon: "folder open large", text: lf("Projects"), onClick: function () { return _this.openProject(); }}) : null, !inTutorial && this.state.header && sharingEnabled ? React.createElement(sui.Item, {class: "icon shareproject", role: "menuitem", textClass: "widedesktop only", text: lf("Share"), icon: "share alternate large", onClick: function () { return _this.embed(); }}) : null, inTutorial ? React.createElement(sui.Item, {class: "tutorialname", role: "menuitem", textClass: "landscape only", text: tutorialOptions.tutorialName}) : null) : React.createElement("div", {className: "left menu"}, React.createElement("span", {id: "logo", className: "ui item logo"}, React.createElement("img", {className: "ui mini image", src: Util.toDataUri(rightLogo), onClick: function () { return _this.launchFullEditor(); }, alt: targetTheme.boardName + " Logo"}))), !inTutorial && !targetTheme.blocksOnly ? React.createElement(sui.Item, {class: "editor-menuitem"}, React.createElement("div", {className: "ui grid padded"}, sandbox ? React.createElement(sui.Item, {class: "sim-menuitem thin portrait only", textClass: "landscape only", text: lf("Simulator"), icon: simActive && this.state.running ? "stop" : "play", active: simActive, onClick: function () { return _this.openSimView(); }, title: !simActive ? lf("Show Simulator") : runTooltip}) : undefined, React.createElement(sui.Item, {class: "blocks-menuitem", textClass: "landscape only", text: lf("Blocks"), icon: "xicon blocks", active: blockActive, onClick: function () { return _this.openBlocks(); }, title: lf("Convert code to Blocks")}), React.createElement(sui.Item, {class: "javascript-menuitem", textClass: "landscape only", text: lf("JavaScript"), icon: "xicon js", active: javascriptActive, onClick: function () { return _this.openJavaScript(); }, title: lf("Convert code to JavaScript")}), React.createElement("div", {className: "ui item toggle"}))) : undefined, inTutorial ? React.createElement(tutorial.TutorialMenuItem, {parent: this}) : undefined, React.createElement("div", {className: "right menu"}, docMenu ? React.createElement(container.DocsMenuItem, {parent: this}) : undefined, sandbox || inTutorial ? undefined :
+                : React.createElement("span", {className: "name"}, targetTheme.name), targetTheme.portraitLogo ? (React.createElement("a", {className: "ui", target: "_blank", rel: "noopener", href: targetTheme.logoUrl}, React.createElement("img", {className: 'ui mini image portrait only', src: Util.toDataUri(targetTheme.portraitLogo), alt: targetTheme.boardName + " Logo"}))) : null), !inTutorial ? React.createElement(sui.Item, {class: "icon openproject", role: "menuitem", textClass: "landscape only", icon: "folder open large", text: lf("Projects"), onClick: function () { return _this.openProject(); }}) : null, renderCustomCommands(), !inTutorial && this.state.header && sharingEnabled ? React.createElement(sui.Item, {class: "icon shareproject", role: "menuitem", textClass: "widedesktop only", text: lf("Share"), icon: "share alternate large", onClick: function () { return _this.embed(); }}) : null, inTutorial ? React.createElement(sui.Item, {class: "tutorialname", role: "menuitem", textClass: "landscape only", text: tutorialOptions.tutorialName}) : null) : React.createElement("div", {className: "left menu"}, React.createElement("span", {id: "logo", className: "ui item logo"}, React.createElement("img", {className: "ui mini image", src: Util.toDataUri(rightLogo), onClick: function () { return _this.launchFullEditor(); }, alt: targetTheme.boardName + " Logo"}))), !inTutorial && !targetTheme.blocksOnly ? React.createElement(sui.Item, {class: "editor-menuitem"}, React.createElement("div", {className: "ui grid padded"}, sandbox ? React.createElement(sui.Item, {class: "sim-menuitem thin portrait only", textClass: "landscape only", text: lf("Simulator"), icon: simActive && this.state.running ? "stop" : "play", active: simActive, onClick: function () { return _this.openSimView(); }, title: !simActive ? lf("Show Simulator") : runTooltip}) : undefined, React.createElement(sui.Item, {class: "blocks-menuitem", textClass: "landscape only", text: lf("Blocks"), icon: "xicon blocks", active: blockActive, onClick: function () { return _this.openBlocks(); }, title: lf("Convert code to Blocks")}), React.createElement(sui.Item, {class: "javascript-menuitem", textClass: "landscape only", text: lf("JavaScript"), icon: "xicon js", active: javascriptActive, onClick: function () { return _this.openJavaScript(); }, title: lf("Convert code to JavaScript")}), React.createElement("div", {className: "ui item toggle"}))) : undefined, inTutorial ? React.createElement(tutorial.TutorialMenuItem, {parent: this}) : undefined, React.createElement("div", {className: "right menu"}, docMenu ? React.createElement(container.DocsMenuItem, {parent: this}) : undefined, sandbox || inTutorial ? undefined :
                 React.createElement(sui.DropdownMenuItem, {icon: 'setting large', title: lf("More..."), class: "more-dropdown-menuitem"}, this.state.header ? React.createElement(sui.Item, {role: "menuitem", icon: "options", text: lf("Project Settings"), onClick: function () { return _this.setFile(pkg.mainEditorPkg().lookupFile("this/pxt.json")); }}) : undefined, this.state.header && packages ? React.createElement(sui.Item, {role: "menuitem", icon: "disk outline", text: lf("Add Package..."), onClick: function () { return _this.addPackage(); }}) : undefined, this.state.header ? React.createElement(sui.Item, {role: "menuitem", icon: "trash", text: lf("Delete Project"), onClick: function () { return _this.removeProject(); }}) : undefined, reportAbuse ? React.createElement(sui.Item, {role: "menuitem", icon: "warning circle", text: lf("Report Abuse..."), onClick: function () { return _this.showReportAbuse(); }}) : undefined, React.createElement("div", {className: "ui divider"}), selectLanguage ? React.createElement(sui.Item, {icon: "xicon globe", role: "menuitem", text: lf("Language"), onClick: function () { return _this.selectLang(); }}) : undefined, targetTheme.highContrast ? React.createElement(sui.Item, {role: "menuitem", text: this.state.highContrast ? lf("High Contrast Off") : lf("High Contrast On"), onClick: function () { return _this.toggleHighContrast(); }}) : undefined, React.createElement(sui.Item, {role: "menuitem", icon: 'sign out', text: lf("Reset"), onClick: function () { return _this.reset(); }}), React.createElement("div", {className: "ui divider"}), targetTheme.privacyUrl ? React.createElement("a", {className: "ui item", href: targetTheme.privacyUrl, role: "menuitem", title: lf("Privacy & Cookies"), target: "_blank"}, lf("Privacy & Cookies")) : undefined, targetTheme.termsOfUseUrl ? React.createElement("a", {className: "ui item", href: targetTheme.termsOfUseUrl, role: "menuitem", title: lf("Terms Of Use"), target: "_blank"}, lf("Terms Of Use")) : undefined, React.createElement(sui.Item, {role: "menuitem", text: lf("About..."), onClick: function () { return _this.about(); }}), electron.isElectron ? React.createElement(sui.Item, {role: "menuitem", text: lf("Check for updates..."), onClick: function () { return electron.checkForUpdate(); }}) : undefined, targetTheme.feedbackUrl ? React.createElement("div", {className: "ui divider"}) : undefined, targetTheme.feedbackUrl ? React.createElement("a", {className: "ui item", href: targetTheme.feedbackUrl, role: "menuitem", title: lf("Give Feedback"), target: "_blank", rel: "noopener"}, lf("Give Feedback")) : undefined), sandbox && !targetTheme.hideEmbedEdit ? React.createElement(sui.Item, {role: "menuitem", icon: "external", textClass: "mobile hide", text: lf("Edit"), onClick: function () { return _this.launchFullEditor(); }}) : undefined, inTutorial ? React.createElement(sui.ButtonMenuItem, {class: "exit-tutorial-btn", role: "menuitem", icon: "external", text: lf("Exit tutorial"), textClass: "landscape only", onClick: function () { return _this.exitTutorial(true); }}) : undefined, !sandbox ? React.createElement("a", {id: "organization", href: targetTheme.organizationUrl, target: "blank", rel: "noopener", className: "ui item logo", onClick: function () { return pxt.tickEvent("menu.org"); }}, targetTheme.organizationWideLogo || targetTheme.organizationLogo
                 ? React.createElement("img", {className: "ui logo " + (targetTheme.organizationWideLogo ? " portrait hide" : ''), src: Util.toDataUri(targetTheme.organizationWideLogo || targetTheme.organizationLogo), alt: targetTheme.organization + " Logo"})
                 : React.createElement("span", {className: "name"}, targetTheme.organization), targetTheme.organizationLogo ? (React.createElement("img", {className: 'ui mini image portrait only', src: Util.toDataUri(targetTheme.organizationLogo), alt: targetTheme.organization + " Logo"})) : null) : undefined, betaUrl ? React.createElement("a", {href: "" + betaUrl, className: "ui red mini corner top left attached label betalabel"}, lf("Beta")) : undefined))), gettingStarted ?
@@ -1914,6 +1931,16 @@ function initExtensionsAsync() {
         }
     });
 }
+function initCustomCommandsAsync() {
+    if (!pxt.appTarget.appTheme.customCommands)
+        return Promise.resolve();
+    pxt.debug('loading custom commands...');
+    return pxt.BrowserUtils.loadScriptAsync(pxt.webConfig.commitCdnUrl + "customcommands.js")
+        .then(function () { return pxt.editor.initCustomCommandsAsync(); })
+        .then(function (res) {
+        theEditor.customCommands = res.commands;
+    });
+}
 pxt.winrt.captureInitialActivation();
 $(document).ready(function () {
     pxt.setupWebConfig(window.pxtConfig);
@@ -1992,7 +2019,10 @@ $(document).ready(function () {
         initScreenshots();
         initHashchange();
         electron.init();
-        return initExtensionsAsync();
+        return Promise.all([
+            initExtensionsAsync(),
+            initCustomCommandsAsync()
+        ]);
     })
         .then(function () { return pxt.winrt.initAsync(importHex); })
         .then(function () { return pxt.winrt.hasActivationProjectAsync(); })

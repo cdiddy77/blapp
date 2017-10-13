@@ -57,6 +57,7 @@ var pxtTargetBundle = {
       }
     },
     "extendEditor": true,
+    "customCommands": true,
     "TOC": [
       {
         "name": "Blocks",

@@ -56,6 +56,7 @@
                 "snap": true
             }
         },
-        "extendEditor": true
+        "extendEditor": true,
+        "customCommands": true
     }
 }
