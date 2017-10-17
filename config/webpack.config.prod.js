@@ -57,11 +57,7 @@ module.exports = {
       require.resolve('./polyfills'),
       paths.appIndexTs
     ],
-    // NEWPAGE : copy this, change paths.simIndexTs to your root control
-    sim: [
-      require.resolve('./polyfills'),
-      paths.simIndexTs
-    ],
+    // NEWPAGE : copy this, change paths.pairIndexTs to your root control
     pair: [
       require.resolve('./polyfills'),
       paths.pairIndexTs
@@ -227,27 +223,9 @@ module.exports = {
     // NEWPAGE : copy this, change template, chunks, filename
     new HtmlWebpackPlugin({
       inject: true,
-      template: paths.appSim,
-      chunks: ['sim'],
-      filename: 'pxt/simulator.html',
-      minify: {
-        removeComments: true,
-        collapseWhitespace: true,
-        removeRedundantAttributes: true,
-        useShortDoctype: true,
-        removeEmptyAttributes: true,
-        removeStyleLinkTypeAttributes: true,
-        keepClosingSlash: true,
-        minifyJS: true,
-        minifyCSS: true,
-        minifyURLs: true
-      }
-    }),
-    new HtmlWebpackPlugin({
-      inject: true,
       template: paths.appPair,
       chunks: ['pair'],
-      filename: 'pxt/pair.html',
+      filename: 'pair.html',
       minify: {
         removeComments: true,
         collapseWhitespace: true,

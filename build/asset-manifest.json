@@ -1,14 +1,10 @@
 {
   "main.css": "static/css/main.4ba9ff02.css",
   "main.css.map": "static/css/main.4ba9ff02.css.map",
-  "main.js": "static/js/main.4e1c0080.js",
-  "main.js.map": "static/js/main.4e1c0080.js.map",
-  "pair.css": "static/css/pair.c51f7dd5.css",
-  "pair.css.map": "static/css/pair.c51f7dd5.css.map",
-  "pair.js": "static/js/pair.a76393ec.js",
-  "pair.js.map": "static/js/pair.a76393ec.js.map",
-  "sim.css": "static/css/sim.c51f7dd5.css",
-  "sim.css.map": "static/css/sim.c51f7dd5.css.map",
-  "sim.js": "static/js/sim.f4804379.js",
-  "sim.js.map": "static/js/sim.f4804379.js.map"
+  "main.js": "static/js/main.99102be7.js",
+  "main.js.map": "static/js/main.99102be7.js.map",
+  "pair.css": "static/css/pair.65027555.css",
+  "pair.css.map": "static/css/pair.65027555.css.map",
+  "pair.js": "static/js/pair.8839c0b7.js",
+  "pair.js.map": "static/js/pair.8839c0b7.js.map"
 }

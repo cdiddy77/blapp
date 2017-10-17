@@ -2,7 +2,6 @@
 import { AsyncStorage, Platform } from 'react-native';
 import { ModelBase } from './ModelBase';
 import { CodegenRuntime, CodegenHost } from '../util/CodegenRuntime';
-import * as pxtexec from '../util/PxtExec';
 import * as constants from '../util/constants';
 
 
@@ -63,13 +62,8 @@ export class AppModel extends ModelBase implements CodegenHost {
             console.log('evaluating new code');
             // console.log(this.code);
             this.setProperty('lastEvalError', null);
-            var pxsim: any = pxtexec.pxsim;
-            pxtexec.executeCode(this.code, (e) => {
-                console.log('execCode:errCB:', JSON.stringify(e));
-                this.setProperty('lastEvalError', e);
-            });
+            eval(this.code);
             // eval(this.testCode());
-
         } catch (e) {
             this.setProperty('lastEvalError', e);
         }
@@ -85,26 +79,6 @@ export class AppModel extends ModelBase implements CodegenHost {
 
     // CodegenHost interface ///////////////////////////////////////////////////
     //
-    runFiberAsync(a: any, arg0?: any, arg1?: any, arg2?: any): Promise<any> {
-        return pxtexec.pxsim.runtime.runFiberAsync(a, arg0, arg1, arg2);
-    }
-    runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void {
-        // HACK: this shouldn't be necessary and it doesn't actually prevent an RSOD (why??)
-        pxtexec.pxsim.runtime.errorHandler = (e) => {
-            console.log('runFiberSync Err:EXCEPTION', JSON.stringify(e));
-        }
-        try {
-            let savedYieldState = pxtexec.pxsim.runtime.yieldingDisabled;
-            pxtexec.pxsim.runtime.yieldingDisabled = true;
-            pxtexec.pxsim.runtime.runFiberSync(a, resolve, arg0, arg1, arg2);
-            pxtexec.pxsim.runtime.yieldingDisabled = savedYieldState;
-        } catch (e) {
-            console.log('runFiberSync EXCEPTION', JSON.stringify(e));
-        }
-    }
-    createRefCollection(): any {
-        return new pxtexec.pxsim.RefCollection();
-    }
     //
     ////////////////////////////////////////////////////////////////////////////
 }

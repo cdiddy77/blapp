@@ -29,9 +29,6 @@ import { CanvasBlock } from '../components/CanvasBlock';
 import * as BlockThemes from '../util/BlockThemes';
 
 export interface CodegenHost {
-    runFiberAsync(a: any, arg0?: any, arg1?: any, arg2?: any): Promise<any>;
-    runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void;
-    createRefCollection(): any;
 }
 
 export type EdgeKind = 'none' | 'left' | 'top' | 'right' | 'bottom';
@@ -294,11 +291,11 @@ export namespace CodegenRuntime {
     var intervalHandlers: number[] = [];
     var timeoutHandlers: number[] = [];
     export function setTimeoutr(fn: () => void, delayMs: number) {
-        timeoutHandlers.push(setTimeout(fn, delayMs));
+        timeoutHandlers.push(window.setTimeout(fn, delayMs));
     }
 
     export function setIntervalr(fn: () => void, delayMs: number) {
-        intervalHandlers.push(setInterval(fn, delayMs));
+        intervalHandlers.push(window.setInterval(fn, delayMs));
     }
 
     function clearAllIntervalHandlers() {

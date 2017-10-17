@@ -68,11 +68,9 @@ module.exports = {
   appBuild: resolveApp('build'),
   appPublic: resolveApp('public'),
   appHtml: resolveApp('public/index.html'),
-  appSim:resolveApp('public/pxt/simulator.html'),
-  appPair:resolveApp('public/pxt/pair.html'),
+  appPair:resolveApp('public/pair.html'),
   appIndexTs: resolveApp('client/web/src/index.tsx'),
-  simIndexTs: resolveApp('client/web/src/pxt/index.tsx'),
-  pairIndexTs: resolveApp('client/web/src/pxt/pair.tsx'),
+  pairIndexTs: resolveApp('client/web/src/pair.tsx'),
   // NEWPAGE: add new root here
   appPackageJson: resolveApp('package.json'),
   appSrc: resolveApp('client/web/src'),

@@ -31,7 +31,12 @@ var cli = useYarn ? 'yarn' : 'npm';
 var isInteractive = process.stdout.isTTY;
 
 // Warn and crash if required files are missing
-if (!checkRequiredFiles([paths.appHtml, paths.appIndexTs])) {
+if (!checkRequiredFiles([
+  paths.appHtml,
+  paths.appIndexTs,
+  paths.appPair,
+  paths.pairIndexTs
+])) {
   process.exit(1);
 }
 
@@ -250,7 +255,7 @@ function runDevServer(host, port, protocol) {
     // Enable HTTPS if the HTTPS environment variable is set to 'true'
     https: protocol === "https",
     host: host,
-    watchContentBase:true
+    watchContentBase: true
   });
 
   // Our custom middleware proxies requests to /index.html or a remote API.
