@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { View, Text, Image, Button } from 'react-native';
 
 import { AppModel } from '../models/AppModel';
 import { CodegenRuntime } from '../../../shared/src/util/CodegenRuntime';
@@ -25,13 +24,9 @@ export class Target extends React.Component<TargetProps, TargetState>{
         this.props.model.on('change', this.onModelChange);
         this.onModelChange('lastEvalError');
 
-        CodegenRuntime.setForceTargetUpdateProc(() => {
-            this.forceUpdate();
-        });
     }
     componentWillUnmount() {
         this.props.model.off('change', this.onModelChange);
-        CodegenRuntime.setForceTargetUpdateProc(null);
     }
 
     onModelChange(prop: string) {
@@ -44,36 +39,20 @@ export class Target extends React.Component<TargetProps, TargetState>{
 
     renderErrorMessage(err: Error) {
         return (
-            <View>
-                <Text>{err.name} : {err.message}</Text>
-            </View>
+            <div className='errorMessage'>
+                <span>{err.name} : {err.message}</span>
+            </div>
         );
     }
 
     render() {
-        let result: any;
         if (this.state.evalErrMsg != null) {
             return this.renderErrorMessage(this.state.evalErrMsg);
         }
-        else if (CodegenRuntime.getTargetRenderProc() != null) {
-            try {
-                result = CodegenRuntime.getTargetRenderProc()();
-                return result;
-            } catch (e) {
-                // this will trigger a re-render, so 
-                // we wait until we are done rendering.
-                setTimeout(() => {
-                    this.setState({ evalErrMsg: e });
-                    this.props.model.setProperty('lastEvalError', e);
-                });
-                return this.renderErrorMessage(e);
-            }
+        else {
+            return (
+                <div id="webglTarget"></div>
+            );
         }
-        const someText = 'No UI';
-        return (
-            <View>
-                <Text>{someText}</Text>
-            </View>
-        );
     }
 }

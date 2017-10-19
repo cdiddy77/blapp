@@ -81,7 +81,7 @@ export function init(host: ServiceConnectionHost) {
         console.log('simctrlmsg');
     });
     socket.on('shareVarUpdated', (data: svcTypes.ShareVarUpdatedMessage) => {
-        CodegenRuntime.handleUpdateSharevarDiags(data.clientTime, data.serverTime);
+        // CodegenRuntime.handleUpdateSharevarDiags(data.clientTime, data.serverTime);
         CodegenRuntime.onVarUpdated(data.name, data.value);
     });
     socket.on('publishSessionResponse', (data: svcTypes.PublishSessionResponseMessage) => {

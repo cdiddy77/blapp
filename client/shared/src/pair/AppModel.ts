@@ -55,7 +55,6 @@ export class AppModel extends ModelBase implements CodegenHost {
     private evalCode() {
         let CgRt = CodegenRuntime;
         CgRt.resetCodeState();
-        CgRt.updateUI();
 
         // need to figure out a way to know whether we are pxt or not
         try {
@@ -79,6 +78,22 @@ export class AppModel extends ModelBase implements CodegenHost {
 
     // CodegenHost interface ///////////////////////////////////////////////////
     //
+    insertRendererElement(domElement: HTMLCanvasElement): void {
+        let hostElem = document.getElementById('webglTarget');
+        hostElem.innerHTML = '';
+        hostElem.appendChild(domElement);
+    }
+    getRenderWidth(): number {
+        let hostElem = document.getElementById('webglTarget');
+        return hostElem.clientWidth;
+    }
+    getRenderHeight(): number {
+        let hostElem = document.getElementById('webglTarget');
+        return hostElem.clientHeight;
+    }
+    setExecutionError(e: any): void {
+        this.setProperty('lastEvalError', e);
+    }
     //
     ////////////////////////////////////////////////////////////////////////////
 }

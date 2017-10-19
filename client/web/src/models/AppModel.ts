@@ -4,10 +4,7 @@
 import * as jsutil from '../../../shared/src/util/jsutil';
 import { ModelWithEvents } from './ModelWithEvents';
 import * as BlocklyConfig from '../blocks/BlocklyConfig';
-import * as UIBlockConfig from '../blocks/UIBlockConfig';
-import * as UIBlockDefs from '../blocks/UIBlockDefs';
-import * as UIMethodDefs from '../blocks/UIMethodDefs';
-import * as SpriteCanvasDefs from '../blocks/SpriteCanvasDefs';
+import * as Config3d from '../blocks/Config3d';
 import { CodegenRuntime, CodegenHost } from '../../../shared/src/util/CodegenRuntime';
 import { SimplePromptModel } from './SimplePromptModel';
 import { InputFilePromptModel } from './InputFilePromptModel';
@@ -42,16 +39,21 @@ export class AppModel extends ModelWithEvents<AppModelData>
 
     // CodegenHost interface ///////////////////////////////////////////////////
     //
-    runFiberAsync(a: any, arg0?: any, arg1?: any, arg2?: any): Promise<any> {
-        jsutil.notYetImplemented('runFiberAsync');
-        return null;
+    insertRendererElement(domElement: HTMLCanvasElement): void {
+        let hostElem = document.getElementById('webglTarget');
+        hostElem.innerHTML = '';
+        hostElem.appendChild(domElement);
     }
-    runFiberSync(a: any, resolve: (thenableOrResult?: any) => void, arg0?: any, arg1?: any, arg2?: any): void {
-        jsutil.notYetImplemented('runFiberSync');
+    getRenderWidth(): number {
+        let hostElem = document.getElementById('webglTarget');
+        return hostElem.clientWidth;
     }
-    createRefCollection(): any {
-        jsutil.notYetImplemented('createRefCollection');
-        return null;
+    getRenderHeight(): number {
+        let hostElem = document.getElementById('webglTarget');
+        return hostElem.clientHeight;
+    }
+    setExecutionError(e: any): void {
+        this.setProperty('lastEvalError', e);
     }
     //
     ////////////////////////////////////////////////////////////////////////////
@@ -126,19 +128,11 @@ export class AppModel extends ModelWithEvents<AppModelData>
             let getStorageVarsProc = this.getNormalAndSharedVariables.bind(this);
 
             this.initDynamicCategories();
-            BlocklyConfig.initBlockDefinitions();
+
+            BlocklyConfig.initUtilityBlockDefinitions();
             this.initSharedVariableBlocks();
             BlocklyConfig.initCodeGenerators();
-            BlocklyConfig.initStyleBlockDefinitions();
-            BlocklyConfig.initStyleBlockCodeGenerators();
-            BlocklyConfig.initIconBlockDefinitions();
-            BlocklyConfig.initIconBlockCodeGenerators();
-            UIBlockDefs.initAllUIBlockDefs(getStorageVarsProc);
-            UIMethodDefs.initUIMethodDefs(this);
-            UIBlockDefs.initUIBlockCodegen();
-            UIMethodDefs.initUIMethodCodegen();
-            SpriteCanvasDefs.initBlockDefs(this);
-            SpriteCanvasDefs.initCodegen();
+            Config3d.init3dBlocks();
             setTimeout(this.restoreWorkspace(), 0);
         });
 
@@ -207,12 +201,9 @@ export class AppModel extends ModelWithEvents<AppModelData>
     private evalCode() {
         let CgRt = CodegenRuntime;
         CgRt.resetCodeState();
-        // force a re-render, which will result in the old
-        // VDOM to be discarded. This is important
-        CgRt.updateUI();
         try {
-            eval(this.data.code);
             this.setProperty('lastEvalError', null);
+            eval(this.data.code);
             if (this._performResetOnLoad) {
                 let resetProc = CodegenRuntime.getResetApplicationProc();
                 if (resetProc)

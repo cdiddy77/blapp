@@ -134,9 +134,7 @@ export default class PairApp extends React.Component<AppProps, AppState> {
                         {connectionStatus}
                     </View >
                 </View>
-                <View style={[{}, styles.targetContainer]} >
-                    <Target model={this.model} />
-                </View>
+                <Target model={this.model} />
             </View >
         );
     }

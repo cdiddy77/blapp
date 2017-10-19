@@ -5,6 +5,6 @@ export var serverHost = function () {
     if (platformOs == 'web') {
         return document.location.origin;
     } else {
-        return __DEV__ ? 'http://localhost:3000' : 'https://theblapp.azurewebsites.net'
+        return __DEV__ ? 'http://localhost:3000' : 'https://theblapp-3d.azurewebsites.net'
     }
 }();

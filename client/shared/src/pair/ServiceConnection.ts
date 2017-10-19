@@ -65,7 +65,6 @@ export function resetConnection(appModel: AppModel) {
             }
         });
         socket.on('shareVarUpdated', (data: svcTypes.ShareVarUpdatedMessage) => {
-            CodegenRuntime.handleUpdateSharevarDiags(data.clientTime, data.serverTime);
             CodegenRuntime.onVarUpdated(data.name, data.value);
         });
         socket.on('disconnect', () => {

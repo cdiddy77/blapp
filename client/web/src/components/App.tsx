@@ -52,12 +52,10 @@ class App extends React.Component<AppProps, AppState> {
       <div className="App">
         <div className="App-header">
           <p className='rightLink'>
-            <a target='_blank' href='https://www.youtube.com/playlist?list=PLCRKPBgyt2IYvEp0Dw92HfSHb9zo25X4X'>Videos</a>
-            <br />
             pairing code: {modelData.pairingCode}&nbsp;
                <button type='button' className='btn btn-link' onClick={() => this.props.model.resetPairingCode()}>New Pairing Code</button>
           </p>
-          <p>PXTIFY BLAPP</p>
+          <p>BLAPP 3D</p>
         </div>
         <div id='blocksArea' ref={(elem) => { this.blocksArea = elem; }}
           style={{

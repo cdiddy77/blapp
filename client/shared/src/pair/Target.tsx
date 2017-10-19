@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { View, Text, Image } from 'react-native';
 
 import { AppModel } from './AppModel';
 import { styles } from './styles';
@@ -27,13 +26,9 @@ export class Target extends React.Component<TargetProps, TargetState>{
         this.props.model.on('change', this.onModelPropChange);
         this.onModelPropChange('lastEvalError');
 
-       CodegenRuntime.setForceTargetUpdateProc(() => {
-            this.forceUpdate();
-        });
      }
     componentWillUnmount() {
         this.props.model.off('change', this.onModelPropChange);
-         CodegenRuntime.setForceTargetUpdateProc(null);
    }
 
     onModelPropChange(prop: string) {
@@ -48,36 +43,36 @@ export class Target extends React.Component<TargetProps, TargetState>{
 
     renderErrorMessage(err: Error,context:string) {
         return (
-            <View>
-                <Text style={[styles.targetErrorText]}>{context} | {err.name} : {err.message} {JSON.stringify(err)}</Text>
-            </View>
+            <div>
+                <span style={[styles.targetErrorText]}>{context} | {err.name} : {err.message} {JSON.stringify(err)}</span>
+            </div>
         );
     }
 
     render() {
-        let result: any;
         if (this.state.evalErrMsg != null) {
             return this.renderErrorMessage(this.state.evalErrMsg,'load');
         }
-        else if (CodegenRuntime.getTargetRenderProc() != null) {
-            try {
-                result = CodegenRuntime.getTargetRenderProc()();
-                return result;
-            } catch (e) {
-                // this will trigger a re-render, so 
-                // we wait until we are done rendering.
-                setTimeout(() => {
-                    this.setState({ evalErrMsg: e });
-                    this.props.model.setProperty('lastEvalError', e);
-                });
-                return this.renderErrorMessage(e,'render');
-            }
+        else {
+            return (
+                <div id="webglTarget" style={{
+                    position:'absolute',
+                    left:0,
+                    top:0,
+                    width:'100%',
+                    height:'100%'
+                }}>foobar foobar foobar foobar foobar 
+                foobar foobar foobar foobar foobar foobar foobar 
+                foobar foobar foobar foobar foobar foobar foobar
+                 foobar foobar foobar foobar foobar foobar foobar foobar
+                  foobar foobar foobar foobar foobar foobar foobar foobar
+                   foobar foobar foobar foobar foobar foobar foobar foobar
+                    foobar foobar foobar foobar foobar foobar
+                     foobar foobar foobar foobar foobar foobar foobar foobar
+                      foobar foobar foobar foobar foobar foobar foobar
+                       foobar foobar foobar foobar foobar foobar foobar foobar 
+                       </div>
+            );
         }
-        const someText = 'No UI defined';
-        return (
-            <View>
-                <Text>{someText}</Text>
-            </View>
-        );
     }
 }
