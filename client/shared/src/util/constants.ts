@@ -5,6 +5,7 @@ export var serverHost = function () {
     if (platformOs == 'web') {
         return document.location.origin;
     } else {
-        return __DEV__ ? 'http://localhost:3000' : 'https://theblapp.azurewebsites.net'
+        // The URI is different for the PXT branch
+        return __DEV__ ? 'http://localhost:3000' : 'https://theblapp-pxt.azurewebsites.net'
     }
 }();
