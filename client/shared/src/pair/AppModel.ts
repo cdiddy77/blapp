@@ -62,6 +62,7 @@ export class AppModel extends ModelBase implements CodegenHost {
             // console.log(this.code);
             this.setProperty('lastEvalError', null);
             eval(this.code);
+            CgRt.initialize();
             // eval(this.testCode());
         } catch (e) {
             this.setProperty('lastEvalError', e);
@@ -85,11 +86,11 @@ export class AppModel extends ModelBase implements CodegenHost {
     }
     getRenderWidth(): number {
         let hostElem = document.getElementById('webglTarget');
-        return hostElem.clientWidth;
+        return hostElem ? hostElem.clientWidth : 0;
     }
     getRenderHeight(): number {
         let hostElem = document.getElementById('webglTarget');
-        return hostElem.clientHeight;
+        return hostElem ? hostElem.clientHeight : 0;
     }
     setExecutionError(e: any): void {
         this.setProperty('lastEvalError', e);

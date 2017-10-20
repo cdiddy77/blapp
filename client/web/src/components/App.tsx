@@ -12,6 +12,7 @@ import { TestTarget } from './TestTarget';
 // import * as svcConn from '../util/ServiceConnection';
 import { SimplePrompt } from './SimplePrompt';
 import { InputFilePrompt } from './InputFilePrompt';
+import * as constants from '../../../shared/src/util/constants';
 
 interface AppProps {
   model: AppModel;
@@ -47,12 +48,13 @@ class App extends React.Component<AppProps, AppState> {
     let headerHeight = 60;
     let footerHeight = 60;
     let modelData = this.props.model.data;
-
+    let pairLink = `${constants.serverHost}/pair.html?pairingCode=${modelData.pairingCode}`;
+    
     return (
       <div className="App">
         <div className="App-header">
           <p className='rightLink'>
-            pairing code: {modelData.pairingCode}&nbsp;
+            pairing code: <a target='_blank' href={pairLink}>{modelData.pairingCode}</a>&nbsp;
                <button type='button' className='btn btn-link' onClick={() => this.props.model.resetPairingCode()}>New Pairing Code</button>
           </p>
           <p>BLAPP 3D</p>

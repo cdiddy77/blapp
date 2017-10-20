@@ -56,22 +56,9 @@ export class Target extends React.Component<TargetProps, TargetState>{
         else {
             return (
                 <div id="webglTarget" style={{
-                    position:'absolute',
-                    left:0,
-                    top:0,
-                    width:'100%',
-                    height:'100%'
-                }}>foobar foobar foobar foobar foobar 
-                foobar foobar foobar foobar foobar foobar foobar 
-                foobar foobar foobar foobar foobar foobar foobar
-                 foobar foobar foobar foobar foobar foobar foobar foobar
-                  foobar foobar foobar foobar foobar foobar foobar foobar
-                   foobar foobar foobar foobar foobar foobar foobar foobar
-                    foobar foobar foobar foobar foobar foobar
-                     foobar foobar foobar foobar foobar foobar foobar foobar
-                      foobar foobar foobar foobar foobar foobar foobar
-                       foobar foobar foobar foobar foobar foobar foobar foobar 
-                       </div>
+                    flex:1,
+                    overflow:'hidden'
+                }}></div>
             );
         }
     }

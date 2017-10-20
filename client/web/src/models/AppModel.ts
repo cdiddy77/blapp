@@ -46,11 +46,11 @@ export class AppModel extends ModelWithEvents<AppModelData>
     }
     getRenderWidth(): number {
         let hostElem = document.getElementById('webglTarget');
-        return hostElem.clientWidth;
+        return hostElem ? hostElem.clientWidth : 0;
     }
     getRenderHeight(): number {
         let hostElem = document.getElementById('webglTarget');
-        return hostElem.clientHeight;
+        return hostElem ? hostElem.clientHeight : 0;
     }
     setExecutionError(e: any): void {
         this.setProperty('lastEvalError', e);
@@ -211,6 +211,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
 
                 this._performResetOnLoad = false;
             }
+            CgRt.initialize();
         } catch (e) {
             this.setProperty('lastEvalError', e);
         }

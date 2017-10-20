@@ -17,14 +17,12 @@ export const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     borderWidth: 0,
-    margin: 2,
     alignItems: 'flex-start'
   },
   column: {
     flexDirection: 'column',
     // borderColor: 'green',
     // borderWidth: 1,
-    margin: 2
   }, 
   redBorder: {
     borderColor: 'red',
@@ -37,10 +35,13 @@ export const styles = StyleSheet.create({
     margin: 2
   },
   rootContainer: {
-    flex: 1,
+    width:"100%",
+    height:"100%",
     justifyContent: 'center',
     alignItems: 'stretch',
     backgroundColor: '#F5FCFF',
+    margin:0,
+    padding:0,
     marginTop: (Platform.OS === 'ios') ? 20 : 0
   },
   textInput: {

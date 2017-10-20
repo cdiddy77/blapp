@@ -74,8 +74,11 @@ export namespace CodegenRuntime {
         // DOM if necessary
         let width = cgHost.getRenderWidth();
         let height = cgHost.getRenderHeight();
+        console.log('CodegenRuntime.initialize', width, height);
         if (!renderer) {
-            renderer = new THREE.WebGLRenderer();
+            renderer = new THREE.WebGLRenderer({
+                clearColor: 0xeeeeee
+            });
             cgHost.insertRendererElement(renderer.domElement);
         }
         renderer.setSize(width, height);
@@ -84,6 +87,8 @@ export namespace CodegenRuntime {
         scene = new THREE.Scene();
         // create a new camera
         camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+
+        // scene.add(new THREE.AxisHelper(20));
 
         try {
             // execute the on start
@@ -98,6 +103,10 @@ export namespace CodegenRuntime {
 
     function renderScene() {
         window.requestAnimationFrame(renderScene);
+        let width = cgHost.getRenderWidth();
+        let height = cgHost.getRenderHeight();
+        renderer.setSize(width, height);
+
         try {
             // execute the on start
             if (getOnFrameProc())
@@ -108,6 +117,104 @@ export namespace CodegenRuntime {
         if (renderer && scene && camera) {
             renderer.render(scene, camera);
         }
+    }
+
+    export function createPlaneGeometry(width: number, height: number): THREE.Geometry {
+        return new THREE.PlaneGeometry(width, height);
+    }
+
+    export function createCubeGeometry(width: number, height: number, depth: number): THREE.Geometry {
+        return new THREE.CubeGeometry(width, height, depth);
+    }
+
+    export function createSphereGeometry(radius: number, width: number, height: number): THREE.Geometry {
+        return new THREE.SphereGeometry(radius, width, height);
+    }
+
+    export function createMeshBasicMaterial(color: number, wireframe: boolean) {
+        return new THREE.MeshBasicMaterial({
+            color: new THREE.Color(color),
+            wireframe: wireframe
+        })
+    }
+
+    export function createMesh(geometry: THREE.Geometry, material: THREE.Material): THREE.Mesh {
+        return new THREE.Mesh(geometry, material);
+    }
+
+    export function sceneAdd(elem: THREE.Object3D) {
+        scene.add(elem);
+    }
+
+    export function setRotation(obj: THREE.Object3D, x: number, y: number, z: number) {
+        obj.rotation.x = x;
+        obj.rotation.y = y;
+        obj.rotation.z = z;
+    }
+
+    export function setPosition(obj: THREE.Object3D, x: number, y: number, z: number) {
+        obj.position.x = x;
+        obj.position.y = y;
+        obj.position.z = z;
+    }
+
+    export function setRotationX(obj: THREE.Object3D, value: number) {
+        obj.rotation.x = value;
+    }
+
+    export function setRotationY(obj: THREE.Object3D, value: number) {
+        obj.rotation.y = value;
+    }
+
+    export function setRotationZ(obj: THREE.Object3D, value: number) {
+        obj.rotation.z = value;
+    }
+
+    export function setPositionX(obj: THREE.Object3D, value: number) {
+        obj.position.x = value;
+    }
+
+    export function setPositionY(obj: THREE.Object3D, value: number) {
+        obj.position.y = value;
+    }
+
+    export function setPositionZ(obj: THREE.Object3D, value: number) {
+        obj.position.z = value;
+    }
+
+    export function getPosition(obj: THREE.Object3D): THREE.Vector3 {
+        if (!obj) return new THREE.Vector3();
+        return obj.position;
+    }
+
+    export function getScenePosition(): THREE.Vector3 {
+        if (!scene) return new THREE.Vector3();
+        return scene.position;
+    }
+
+    export function getCameraPosition(): THREE.Vector3 {
+        if (!camera) return new THREE.Vector3();
+        return camera.position;
+    }
+
+    export function setCameraPositionX(v: number) {
+        camera.position.x = v;
+    }
+
+    export function setCameraPositionY(v: number) {
+        camera.position.y = v;
+    }
+
+    export function setCameraPositionZ(v: number) {
+        camera.position.z = v;
+    }
+
+    export function cameraLookAtObject(obj: THREE.Object3D) {
+        camera.lookAt(obj.position);
+    }
+
+    export function cameraLookAtPosition(pos: THREE.Vector3) {
+        camera.lookAt(pos);
     }
 
     export function onVarUpdated(name: string, value: any) {

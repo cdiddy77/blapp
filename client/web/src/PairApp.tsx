@@ -114,7 +114,7 @@ export default class PairApp extends React.Component<AppProps, AppState> {
         let connectionStatus = this.renderConnectionStatus();
         return (
             <View style={[styles.rootContainer, styles.column]}>
-                <View style={[styles.row, { alignItems: 'center', borderBottomWidth: 1 }]}>
+                <View style={[styles.row, { alignItems: 'center', borderBottomWidth: 1, padding: 3 }]}>
                     <TouchableHighlight
                         style={{
                             backgroundColor: 'grey',
