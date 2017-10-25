@@ -51,7 +51,7 @@ export class Target extends React.Component<TargetProps, TargetState>{
         }
         else {
             return (
-                <div id="webglTarget" style={{width:'100%'}}></div>
+                <div id="webglTarget" style={{position:'relative',width:'100%'}}></div>
             );
         }
     }

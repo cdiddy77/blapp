@@ -1,6 +1,4 @@
-/// <reference path="../refs.d.ts" />
 /// <reference path="../localtypings/blockly.d.ts" />
-/// <reference path="../../../../node_modules/@types/jquery/index.d.ts" />
 import * as jsutil from '../../../shared/src/util/jsutil';
 import { ModelWithEvents } from './ModelWithEvents';
 import * as BlocklyConfig from '../blocks/BlocklyConfig';
@@ -9,7 +7,7 @@ import { CodegenRuntime, CodegenHost } from '../../../shared/src/util/CodegenRun
 import { SimplePromptModel } from './SimplePromptModel';
 import { InputFilePromptModel } from './InputFilePromptModel';
 import * as svcConn from '../util/ServiceConnection';
-
+import * as ThreeUtil from '../../../shared/src/util/ThreeUtil';
 export interface AppModelData {
     lastEvalError: Error;
     code: string;
@@ -41,8 +39,17 @@ export class AppModel extends ModelWithEvents<AppModelData>
     //
     insertRendererElement(domElement: HTMLCanvasElement): void {
         let hostElem = document.getElementById('webglTarget');
+        //if(!hostElem) return;
+
         hostElem.innerHTML = '';
         hostElem.appendChild(domElement);
+        let stats = ThreeUtil.Stats();
+        stats.setMode(0);
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.left = '0px';
+        stats.domElement.style.bottom = '0px';
+        hostElem.appendChild(stats.domElement);
+        CodegenRuntime.setStats(stats);
     }
     getRenderWidth(): number {
         let hostElem = document.getElementById('webglTarget');
@@ -203,7 +210,9 @@ export class AppModel extends ModelWithEvents<AppModelData>
         CgRt.resetCodeState();
         try {
             this.setProperty('lastEvalError', null);
+            CgRt.preEval();
             eval(this.data.code);
+            CgRt.postEval();
             if (this._performResetOnLoad) {
                 let resetProc = CodegenRuntime.getResetApplicationProc();
                 if (resetProc)
@@ -211,7 +220,6 @@ export class AppModel extends ModelWithEvents<AppModelData>
 
                 this._performResetOnLoad = false;
             }
-            CgRt.initialize();
         } catch (e) {
             this.setProperty('lastEvalError', e);
         }

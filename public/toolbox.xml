@@ -3,6 +3,7 @@
   <category name="Events" colour="#935ba5">
     <block type="on_start"/>
     <block type="on_frame"/>
+    <block type="on_mouse_event"/>
   </category>
   <category name="Objects">
     <block type="create_plane_geometry">
@@ -132,6 +133,48 @@
         </shadow>
       </value>
     </block>
+    <block type="change_position_x">
+      <value name="value">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="change_position_y">
+      <value name="value">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="change_position_z">
+      <value name="value">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="change_rotation_x">
+      <value name="value">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="change_rotation_y">
+      <value name="value">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="change_rotation_z">
+      <value name="value">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+    </block>
     <block type="object_position"/>
     <block type="scene_position"/>
   </category>
@@ -159,6 +202,10 @@
       </value>
     </block>
     <block type="camera_position"/>
+  </category>
+  <category name="Lighting">
+    <block type="create_spotlight"/>
+    <block type="create_ambientlight"/>
   </category>
   <category name="Utility" colour="#5CA65C">
     <block type="console_log"/>
@@ -466,7 +513,6 @@
     <block type="colour_picker">
       <field name="COLOUR">#ff0000</field>
     </block>
-    <block type="colour_random"/>
     <block type="colour_random"/>
     <block type="colour_rgb">
       <value name="RED">

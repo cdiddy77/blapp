@@ -3,6 +3,7 @@ import { AsyncStorage, Platform } from 'react-native';
 import { ModelBase } from './ModelBase';
 import { CodegenRuntime, CodegenHost } from '../util/CodegenRuntime';
 import * as constants from '../util/constants';
+import * as ThreeUtil from '../util/ThreeUtil';
 
 
 export type AppRuntimeEnv = 'web' | 'native';
@@ -61,8 +62,9 @@ export class AppModel extends ModelBase implements CodegenHost {
             console.log('evaluating new code');
             // console.log(this.code);
             this.setProperty('lastEvalError', null);
+            CgRt.preEval();
             eval(this.code);
-            CgRt.initialize();
+            CgRt.postEval();
             // eval(this.testCode());
         } catch (e) {
             this.setProperty('lastEvalError', e);
@@ -83,6 +85,13 @@ export class AppModel extends ModelBase implements CodegenHost {
         let hostElem = document.getElementById('webglTarget');
         hostElem.innerHTML = '';
         hostElem.appendChild(domElement);
+        let stats = ThreeUtil.Stats();
+        stats.setMode(0);
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.left = '0px';
+        stats.domElement.style.bottom = '0px';
+        hostElem.appendChild(stats.domElement);
+        CodegenRuntime.setStats(stats);
     }
     getRenderWidth(): number {
         let hostElem = document.getElementById('webglTarget');

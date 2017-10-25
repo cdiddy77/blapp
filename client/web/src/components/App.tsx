@@ -44,7 +44,7 @@ class App extends React.Component<AppProps, AppState> {
 
   render() {
     let width = window.innerWidth;
-    let divider = width * 2 / 3;
+    let divider = width * 3 / 5;
     let headerHeight = 60;
     let footerHeight = 60;
     let modelData = this.props.model.data;
@@ -76,18 +76,18 @@ class App extends React.Component<AppProps, AppState> {
             overflow: 'scroll',
             top: headerHeight
           }}>
-          <TabbedArea activeIndex={1}>
+          <TabbedArea activeIndex={0}>
+            <TabPane display={modelData.lastEvalError ? 'Preview(ERR)' : 'Preview'}>
+              <div className='previewWrapper'><Target model={this.props.model} /></div>
+            </TabPane>
             <TabPane display="Code">
               <div className='codeWrapper'>
                 <pre className='codePre'>{modelData.code}</pre>
               </div>
             </TabPane>
-            <TabPane display={modelData.lastEvalError ? 'Preview(ERR)' : 'Preview'}>
-              <div className='previewWrapper'><Target model={this.props.model} /></div>
-            </TabPane>
-            <TabPane display="Test">
+            {/* <TabPane display="Test">
               <div><TestTarget /></div>
-            </TabPane>
+            </TabPane> */}
           </TabbedArea>
         </div>
         <SimplePrompt {...modelData.simplePrompt} />
