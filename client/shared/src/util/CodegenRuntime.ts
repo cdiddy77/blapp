@@ -9,101 +9,10 @@ export interface CodegenHost {
     setExecutionError(e: any): void;
 }
 
-export type MouseEventValue = "DOWN" | "MOVE" | "UP";
-export type KeyEventValue = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "any" | "up" | "down" | "left" | "right" | "space" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z";
-export var KeyNames: string[] = [
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "<any>",
-    "Arrow Up",
-    "Arrow Down",
-    "Arrow Left",
-    "Arrow Right",
-    "<enter>",
-    "<space>",
-    "a",
-    "b",
-    "c",
-    "d",
-    "e",
-    "f",
-    "g",
-    "h",
-    "i",
-    "j",
-    "k",
-    "l",
-    "m",
-    "n",
-    "o",
-    "p",
-    "q",
-    "r",
-    "s",
-    "t",
-    "u",
-    "v",
-    "w",
-    "x",
-    "y",
-    "z"
-];
-export var KeyValues: string[] = [
-    "0",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "*",
-    "ArrowUp",
-    "ArrowDown",
-    "ArrowLeft",
-    "ArrowRight",
-    "Enter",
-    " ",
-    "a",
-    "b",
-    "c",
-    "d",
-    "e",
-    "f",
-    "g",
-    "h",
-    "i",
-    "j",
-    "k",
-    "l",
-    "m",
-    "n",
-    "o",
-    "p",
-    "q",
-    "r",
-    "s",
-    "t",
-    "u",
-    "v",
-    "w",
-    "x",
-    "y",
-    "z"
-];
-
 export namespace CodegenRuntime {
     type ShareVarUpdatedCallback = () => void;
+
+    type MouseEventValue = "DOWN" | "MOVE" | "UP";
 
     var sharedVars: any = {};
     var cgHost: CodegenHost = null;
@@ -199,9 +108,9 @@ export namespace CodegenRuntime {
         renderer.domElement.addEventListener(eventName, cb);
     }
 
-    export function setKeyboardEventProc(ev: KeyEventValue, cb: () => void) {
-        let cbs = keyEventProcs[ev];
-        if (!cbs) cbs = keyEventProcs[ev] = [];
+    export function setKeyboardEventProc(eventName: string, cb: () => void) {
+        let cbs = keyEventProcs[eventName];
+        if (!cbs) cbs = keyEventProcs[eventName] = [];
         cbs.push(cb);
     }
     function onKeyEvent(ev: KeyboardEvent): any {
@@ -232,10 +141,10 @@ export namespace CodegenRuntime {
             renderer.shadowMap.enabled = true;
             // renderer.shadowMapType=THREE.PCFShadowMap;
             cgHost.insertRendererElement(renderer.domElement);
+            renderer.domElement.addEventListener('keydown', onKeyEvent);
         }
         renderer.setSize(width, height);
-        renderer.domElement.addEventListener('keydown', onKeyEvent);
-
+ 
         // create a new scene
         scene = new THREE.Scene();
         // create a new camera

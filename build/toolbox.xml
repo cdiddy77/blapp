@@ -4,6 +4,7 @@
     <block type="on_start"/>
     <block type="on_frame"/>
     <block type="on_mouse_event"/>
+    <block type="on_keyboard_event"/>
   </category>
   <category name="Objects">
     <block type="create_plane_geometry">

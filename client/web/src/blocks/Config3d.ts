@@ -1,5 +1,51 @@
 /// <reference path="../localtypings/blockly.d.ts" />
 
+const KeyboardEvents: string[][] = [
+    ["<any>", "<any>"],
+    ["0", "0"],
+    ["1", "1"],
+    ["2", "2"],
+    ["3", "3"],
+    ["4", "4"],
+    ["5", "5"],
+    ["6", "6"],
+    ["7", "7"],
+    ["8", "8"],
+    ["9", "9"],
+    ["Arrow Up", "Arrow Up"],
+    ["Arrow Down", "Arrow Down"],
+    ["Arrow Left", "Arrow Left"],
+    ["Arrow Right", "Arrow Right"],
+    ["<ENTER>", "<ENTER>"],
+    ["<SPACE>", "<SPACE>"],
+    ["a", "a"],
+    ["b", "b"],
+    ["c", "c"],
+    ["d", "d"],
+    ["e", "e"],
+    ["f", "f"],
+    ["g", "g"],
+    ["h", "h"],
+    ["i", "i"],
+    ["j", "j"],
+    ["k", "k"],
+    ["l", "l"],
+    ["m", "m"],
+    ["n", "n"],
+    ["o", "o"],
+    ["p", "p"],
+    ["q", "q"],
+    ["r", "r"],
+    ["s", "s"],
+    ["t", "t"],
+    ["u", "u"],
+    ["v", "v"],
+    ["w", "w"],
+    ["x", "x"],
+    ["y", "y"],
+    ["z", "z"]
+];
+
 export function init3dBlocks() {
     Blockly.Blocks['on_start'] = {
         init: function () {
@@ -40,25 +86,45 @@ export function init3dBlocks() {
         return code;
     };
     Blockly.Blocks['on_mouse_event'] = {
-        init: function() {
-          this.appendDummyInput()
-              .appendField("On Mouse Event")
-              .appendField(new Blockly.FieldDropdown([["down","DOWN"], ["move","MOVE"], ["up","UP"]]), "EVENTTYPE");
-          this.appendStatementInput("statements")
-              .setCheck(null);
-          this.setColour(230);
-       this.setTooltip("");
-       this.setHelpUrl("");
+        init: function () {
+            this.appendDummyInput()
+                .appendField("On Mouse Event")
+                .appendField(new Blockly.FieldDropdown([["down", "DOWN"], ["move", "MOVE"], ["up", "UP"]]), "EVENTTYPE");
+            this.appendStatementInput("statements")
+                .setCheck(null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
         }
-      };
-      Blockly.JavaScript['on_mouse_event'] = function(block:Blockly.Block) {
+    };
+    Blockly.JavaScript['on_mouse_event'] = function (block: Blockly.Block) {
         var dropdown_eventtype = block.getFieldValue('EVENTTYPE');
         var statements_statements = Blockly.JavaScript.statementToCode(block, 'statements');
-        let code = `\nCgRt.setOnFrameProc(function(){\n`;
+        let code = `\nCgRt.setMouseEventProc('${dropdown_eventtype}',function(){\n`;
         code += statements_statements;
         code += '\n});';
         return code;
-      };
+    }; 
+    Blockly.Blocks['on_keyboard_event'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("On Key Down")
+                .appendField(new Blockly.FieldDropdown(KeyboardEvents), "EVENTTYPE");
+            this.appendStatementInput("statements")
+                .setCheck(null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['on_keyboard_event'] = function (block: Blockly.Block) {
+        var dropdown_eventtype = block.getFieldValue('EVENTTYPE');
+        var statements_statements = Blockly.JavaScript.statementToCode(block, 'statements');
+        let code = `\nCgRt.setKeyboardEventProc('${dropdown_eventtype}',function(){\n`;
+        code += statements_statements;
+        code += '\n});';
+        return code;
+    };
     Blockly.Blocks['create_plane_geometry'] = {
         init: function () {
             this.appendDummyInput()
