@@ -144,13 +144,13 @@ export namespace CodegenRuntime {
             renderer.domElement.addEventListener('keydown', onKeyEvent);
         }
         renderer.setSize(width, height);
- 
+
         // create a new scene
         scene = new THREE.Scene();
         // create a new camera
         camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
 
-        // scene.add(new THREE.AxisHelper(20));
+        //scene.add(new THREE.AxisHelper(20));
 
     }
     export function postEval() {
@@ -216,6 +216,47 @@ export namespace CodegenRuntime {
         return result;
     }
 
+    export function createPlane(
+        width: number,
+        height: number,
+        material: string | THREE.Material,
+        position: THREE.Vector3): THREE.Mesh {
+        if (!(material instanceof THREE.Material)) {
+            material = createMeshBasicMaterial(material, false);
+        }
+        let result = createMesh(createPlaneGeometry(width, height), material);
+        result.position.set(position.x, position.y, position.z);
+        return result;
+    }
+
+    export function createCube(
+        width: number,
+        height: number,
+        depth:number,
+        material: string | THREE.Material,
+        position: THREE.Vector3): THREE.Mesh {
+        if (!(material instanceof THREE.Material)) {
+            material = createMeshBasicMaterial(material, false);
+        }
+        let result = createMesh(createCubeGeometry(width, height,depth), material);
+        result.position.set(position.x, position.y, position.z);
+        return result;
+    }
+
+    export function createSphere(
+        radius:number,
+        widthSegments: number,
+        heightSegments: number,
+        material: string | THREE.Material,
+        position: THREE.Vector3): THREE.Mesh {
+        if (!(material instanceof THREE.Material)) {
+            material = createMeshBasicMaterial(material, false);
+        }
+        let result = createMesh(createSphereGeometry(radius,widthSegments, heightSegments), material);
+        result.position.set(position.x, position.y, position.z);
+        return result;
+    }
+
     export function createSpotlight(color: string) {
         var result = new THREE.SpotLight(color);
         result.castShadow = true;
@@ -229,7 +270,11 @@ export namespace CodegenRuntime {
     }
 
     export function sceneAdd(elem: THREE.Object3D) {
-        if (scene) scene.add(elem);
+        if (scene && elem) scene.add(elem);
+    }
+
+    export function sceneRemove(elem: THREE.Object3D) {
+        if (scene && elem) scene.remove(elem);
     }
 
     export function setRotation(obj: THREE.Object3D, x: number, y: number, z: number) {
@@ -296,6 +341,15 @@ export namespace CodegenRuntime {
     export function getScenePosition(): THREE.Vector3 {
         if (!scene) return new THREE.Vector3();
         return scene.position;
+    }
+
+    export function definePosition(x: number, y: number, z: number): THREE.Vector3 {
+        return new THREE.Vector3(x, y, z);
+    }
+
+    export function getSceneElements(): THREE.Object3D[] {
+        if (!scene) return [];
+        return scene.children;
     }
 
     export function getCameraPosition(): THREE.Vector3 {
