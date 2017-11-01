@@ -17,6 +17,7 @@ export interface AppModelData {
     statusMessage: string;
     // not implemented in this version
     sharingCode: string;
+    previewEnabled: boolean;
 }
 
 export class AppModel extends ModelWithEvents<AppModelData>
@@ -30,7 +31,8 @@ export class AppModel extends ModelWithEvents<AppModelData>
             simplePrompt: null,
             inputFilePrompt: null,
             statusMessage: null,
-            sharingCode: null
+            sharingCode: null,
+            previewEnabled: false,
         });
         CodegenRuntime.setCodegenHost(this);
     }
@@ -50,6 +52,9 @@ export class AppModel extends ModelWithEvents<AppModelData>
         stats.domElement.style.bottom = '0px';
         hostElem.appendChild(stats.domElement);
         CodegenRuntime.setStats(stats);
+    }
+    getRendererHostElement(): HTMLElement {
+        return document.getElementById('webglTarget');
     }
     getRenderWidth(): number {
         let hostElem = document.getElementById('webglTarget');
@@ -201,7 +206,8 @@ export class AppModel extends ModelWithEvents<AppModelData>
 
     protected onPropertySet(prop: keyof AppModelData) {
         if (prop == 'code') {
-            this.evalCode();
+            if (this.data.previewEnabled)
+                this.evalCode();
         }
     }
 
@@ -344,7 +350,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
         let getSharedVarsListProc = this.getSharedVariablesList.bind(this);
         let getSharedVarsListWithWildcardProc = this.getSharedVariablesListWithWildcard.bind(this);
         Blockly.Blocks['sharvar_get'] = {
-            init: function () {
+            init: function() {
                 this.appendDummyInput()
                     .appendField(new Blockly.FieldImage("media/social/ic_share_white_48dp.png", 16, 16, "*"))
                     .appendField(new Blockly.FieldDropdown(getSharedVarsListProc), "varname");
@@ -355,7 +361,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
             }
         };
         Blockly.Blocks['sharvar_set'] = {
-            init: function () {
+            init: function() {
                 this.appendValueInput("value")
                     .setCheck(null)
                     .appendField(new Blockly.FieldImage("media/social/ic_share_white_48dp.png", 16, 16, "*"))
@@ -371,7 +377,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
             }
         };
         Blockly.Blocks['sharvar_force_update'] = {
-            init: function () {
+            init: function() {
                 this.appendDummyInput()
                     .appendField(new Blockly.FieldImage("media/social/ic_share_white_48dp.png", 16, 16, "*"))
                     .appendField("update shared")
@@ -384,7 +390,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
             }
         };
         Blockly.Blocks['on_sharvar_change'] = {
-            init: function () {
+            init: function() {
                 this.appendStatementInput("statements")
                     .setCheck(null)
                     .appendField(new Blockly.FieldImage("media/social/ic_share_white_48dp.png", 16, 16, "*"))
@@ -552,6 +558,9 @@ export class AppModel extends ModelWithEvents<AppModelData>
     }
     //
     ////////////////////////////////////////////////////////////////////
+    togglePreview() {
+        this.setProperty('previewEnabled', !this.data.previewEnabled);
+    }
 
     undo() {
         this._workspace.undo();

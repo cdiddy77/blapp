@@ -369,8 +369,26 @@ export function init3dBlocks() {
         var value_position = Blockly.JavaScript.valueToCode(block, 'position', Blockly.JavaScript.ORDER_ATOMIC);
         let code = `CgRt.createSphere(${value_radius},${value_width_segments},${value_height_segments},${value_material},${value_position})`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
-      };
+    };
 
+    Blockly.Blocks['load_object'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("load object")
+                .appendField(new Blockly.FieldDropdown([["dropship", "DROPSHIP"]]), "asset");
+            this.setInputsInline(false);
+            this.setOutput(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+
+    Blockly.JavaScript['load_object'] = function(block: Blockly.Block) {
+        var dropdown_asset = block.getFieldValue('asset');
+        let code = `CgRt.createOBJ(CgRt.knownObjs['${dropdown_asset}'])`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
 
     Blockly.Blocks['create_spotlight'] = {
         init: function() {
@@ -540,6 +558,69 @@ export function init3dBlocks() {
         let code = `CgRt.setPosition(${value_object},${value_x},${value_y},${value_z});\n`;
         return code;
     };
+
+    Blockly.Blocks['set_scale'] = {
+        init: function() {
+            this.appendValueInput("object")
+                .setCheck(null)
+                .appendField("object");
+            this.appendDummyInput()
+                .appendField("set scale");
+            this.appendValueInput("x")
+                .setCheck("Number")
+                .appendField("x");
+            this.appendValueInput("y")
+                .setCheck("Number")
+                .appendField("y");
+            this.appendValueInput("z")
+                .setCheck("Number")
+                .appendField("z");
+            this.setInputsInline(true);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['set_scale'] = function(block: Blockly.Block) {
+        let value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_COMMA);
+        let value_x = Blockly.JavaScript.valueToCode(block, 'x', Blockly.JavaScript.ORDER_COMMA);
+        let value_y = Blockly.JavaScript.valueToCode(block, 'y', Blockly.JavaScript.ORDER_COMMA);
+        let value_z = Blockly.JavaScript.valueToCode(block, 'z', Blockly.JavaScript.ORDER_COMMA);
+        if (!block.parentBlock_ || !value_object || value_object == '')
+            return '';
+        let code = `CgRt.setScale(${value_object},${value_x},${value_y},${value_z});\n`;
+        return code;
+    };
+
+    Blockly.Blocks['set_scale_all'] = {
+        init: function() {
+            this.appendValueInput("object")
+                .setCheck(null)
+                .appendField("object");
+            this.appendDummyInput()
+                .appendField("set scale");
+            this.appendValueInput("value")
+                .setCheck("Number")
+                .appendField("value");
+            this.setInputsInline(true);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['set_scale_all'] = function(block: Blockly.Block) {
+        let value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_COMMA);
+        let value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_COMMA);
+        if (!block.parentBlock_ || !value_object || value_object == '')
+            return '';
+        let code = `CgRt.setScale(${value_object},${value_value},${value_value},${value_value});\n`;
+        return code;
+    };
+
     Blockly.Blocks['set_rotation_x'] = {
         init: function() {
             this.appendValueInput("object")
@@ -1003,6 +1084,109 @@ export function init3dBlocks() {
         if (!block.parentBlock_)
             return '';
         let code = `CgRt.cameraLookAtPosition(${value_value});\n`;
+        return code;
+    };
+
+    Blockly.Blocks['trackball_controls'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("Trackball Controls");
+            this.appendValueInput("rotate_speed")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("rotate speed");
+            this.appendValueInput("zoom_speed")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("zoom speed");
+            this.appendValueInput("pan_speed")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("pan speed");
+            this.setOutput(true, "CameraControls");
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+
+    Blockly.JavaScript['trackball_controls'] = function(block: Blockly.Block) {
+        let value_rotate_speed = Blockly.JavaScript.valueToCode(block, 'rotate_speed', Blockly.JavaScript.ORDER_COMMA);
+        let value_zoom_speed = Blockly.JavaScript.valueToCode(block, 'zoom_speed', Blockly.JavaScript.ORDER_COMMA);
+        let value_pan_speed = Blockly.JavaScript.valueToCode(block, 'pan_speed', Blockly.JavaScript.ORDER_COMMA);
+        let code = `CgRt.createTrackballControls(${value_rotate_speed},${value_zoom_speed},${value_pan_speed})`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+
+    Blockly.Blocks['fly_controls'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("Fly Controls");
+            this.appendValueInput("movement_speed")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("movement speed");
+            this.appendValueInput("roll_speed")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("roll speed");
+            this.appendDummyInput()
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("auto-forward")
+                .appendField(new Blockly.FieldCheckbox("TRUE"), "auto_forward")
+                .appendField("drag-to-look")
+                .appendField(new Blockly.FieldCheckbox("FALSE"), "drag_to_look");
+            this.setOutput(true, "CameraControls");
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['fly_controls'] = function(block: Blockly.Block) {
+        let value_movement_speed = Blockly.JavaScript.valueToCode(block, 'movement_speed', Blockly.JavaScript.ORDER_COMMA);
+        let value_roll_speed = Blockly.JavaScript.valueToCode(block, 'roll_speed', Blockly.JavaScript.ORDER_COMMA);
+        let checkbox_auto_forward = block.getFieldValue('auto_forward') == 'TRUE';
+        let checkbox_drag_to_look = block.getFieldValue('drag_to_look') == 'TRUE';
+        let code = `CgRt.createFlyControls(${value_movement_speed},${value_roll_speed},${checkbox_auto_forward},${checkbox_drag_to_look})`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+
+    Blockly.Blocks['camera_enable_controls'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("camera enable controls");
+            this.appendValueInput("controls")
+                .setCheck("CameraControls");
+            this.setInputsInline(true);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+
+    Blockly.JavaScript['camera_enable_controls'] = function(block: Blockly.Block) {
+        let value_controls = Blockly.JavaScript.valueToCode(block, 'controls', Blockly.JavaScript.ORDER_COMMA);
+        let code = `CgRt.cameraEnableControls(${value_controls});\n`;
+        return code;
+    };
+
+    Blockly.Blocks['camera_disable_controls'] = {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("camera disable controls");
+            this.setInputsInline(true);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+
+    Blockly.JavaScript['camera_disable_controls'] = function(block: Blockly.Block) {
+        let code = `CgRt.cameraDisableControls();\n`;
         return code;
     };
 }

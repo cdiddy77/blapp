@@ -93,6 +93,9 @@ export class AppModel extends ModelBase implements CodegenHost {
         hostElem.appendChild(stats.domElement);
         CodegenRuntime.setStats(stats);
     }
+    getRendererHostElement():HTMLElement{
+        return document.getElementById('webglTarget');
+    }
     getRenderWidth(): number {
         let hostElem = document.getElementById('webglTarget');
         return hostElem ? hostElem.clientWidth : 0;

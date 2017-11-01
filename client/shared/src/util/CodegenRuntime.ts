@@ -1,9 +1,18 @@
 import * as jsutil from './jsutil';
 import * as THREE from 'three';
+// double hack and a half 
+(<any>global).THREE = THREE;
+
 import * as ThreeUtil from './ThreeUtil';
+import * as Rto from './RuntimeObjects';
+
+
+import 'three/examples/js/loaders/MTLLoader';
+import 'three/examples/js/loaders/OBJLoader';
 
 export interface CodegenHost {
     insertRendererElement(domElement: HTMLCanvasElement): void;
+    getRendererHostElement(): HTMLElement;
     getRenderWidth(): number;
     getRenderHeight(): number;
     setExecutionError(e: any): void;
@@ -13,6 +22,13 @@ export namespace CodegenRuntime {
     type ShareVarUpdatedCallback = () => void;
 
     type MouseEventValue = "DOWN" | "MOVE" | "UP";
+
+    interface ObjInfo {
+        path: string,
+        objname: string,
+        mtlname: string,
+        cache: THREE.Object3D
+    };
 
     var sharedVars: any = {};
     var cgHost: CodegenHost = null;
@@ -27,12 +43,22 @@ export namespace CodegenRuntime {
 
     var renderer: THREE.WebGLRenderer = null;
     var scene: THREE.Scene = null;
-    var camera: THREE.PerspectiveCamera = null;
+    var camera: Rto.CameraObject = null;
     var stats: { update: () => void } = null;
+    var cameraControls: Rto.CameraControls = null;
+    var clock: THREE.Clock = null;
 
     var shareVarUpdateWildCardHandlers: ShareVarUpdatedCallback[] = [];
     var shareVarUpdateHandlers: jsutil.Map<ShareVarUpdatedCallback[]> = {};
 
+    export const knownObjs: jsutil.Map<ObjInfo> = {
+        DROPSHIP: {
+            path: 'assets/dropship/surface/',
+            objname: 'DROPSHIP',
+            mtlname: 'DROPSHIP',
+            cache: null
+        }
+    };
     export function setCodegenHost(host: CodegenHost): void {
         cgHost = host;
     }
@@ -50,9 +76,14 @@ export namespace CodegenRuntime {
         setOnStartProc(null);
         setOnFrameProc(null);
         resetKeyEventProcs();
+        
         camera = null;
-        scene = null;
-        renderer = null;
+        if (scene) {
+            while (scene.children.length > 0) {
+                scene.remove(scene.children[0]);
+            }
+        } 
+        
         clearAllShareVarUpdateHandlers();
         clearAllIntervalHandlers();
     }
@@ -139,21 +170,28 @@ export namespace CodegenRuntime {
                 clearColor: 0xeeeeee
             });
             renderer.shadowMap.enabled = true;
+            // renderer.shadowMapType = THREE.PCFSoftShadowMap;
             // renderer.shadowMapType=THREE.PCFShadowMap;
             cgHost.insertRendererElement(renderer.domElement);
             renderer.domElement.addEventListener('keydown', onKeyEvent);
         }
         renderer.setSize(width, height);
 
-        // create a new scene
-        scene = new THREE.Scene();
+        if (cameraControls && camera)
+            cameraControls.disconnectFromCamera(camera);
         // create a new camera
-        camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+        camera = new Rto.CameraObject(new THREE.PerspectiveCamera(45, width / height, 0.1, 1000));
+        if (cameraControls)
+            cameraControls.connectToCamera(camera);
 
         //scene.add(new THREE.AxisHelper(20));
+        clock = new THREE.Clock();
 
     }
     export function postEval() {
+        // create a new scene
+        scene = new THREE.Scene();
+
         // execute the on start
         if (getOnStartProc())
             getOnStartProc()();
@@ -167,16 +205,23 @@ export namespace CodegenRuntime {
         let width = cgHost.getRenderWidth();
         let height = cgHost.getRenderHeight();
         if (width != renderer.getSize().width || height != renderer.getSize().height) {
+            if (camera) {
+                let perspectCam = <THREE.PerspectiveCamera>camera.getCamera();
+                perspectCam.aspect = width / height;
+                perspectCam.updateProjectionMatrix();
+            }
             renderer.setSize(width, height);
             console.log("changing aspect", width / height);
-            // nothing seems to work here
-            if (camera) camera.aspect = width / height;
-            // if(camera){
-            //     let newCam = camera.clone();
-            //     newCam.aspect = width/height;
-            //     camera = newCam;
-            // }
+
         }
+
+        // code that needs to get executed before the render should go here
+        //
+        if (cameraControls)
+            cameraControls.updateForRender(clock.getDelta());
+        //
+        //////////////////////////////////////////
+
         try {
             // execute the on start
             if (getOnFrameProc())
@@ -186,20 +231,20 @@ export namespace CodegenRuntime {
         }
         if (stats) stats.update();
         if (renderer && scene && camera) {
-            renderer.render(scene, camera);
+            renderer.render(scene, camera.getCamera());
         }
     }
 
-    export function createPlaneGeometry(width: number, height: number): THREE.Geometry {
-        return new THREE.PlaneGeometry(width, height);
+    export function createPlaneGeometry(width: number, height: number): THREE.BufferGeometry {
+        return new THREE.PlaneBufferGeometry(width, height);
     }
 
     export function createCubeGeometry(width: number, height: number, depth: number): THREE.Geometry {
         return new THREE.CubeGeometry(width, height, depth);
     }
 
-    export function createSphereGeometry(radius: number, width: number, height: number): THREE.Geometry {
-        return new THREE.SphereGeometry(radius, width, height);
+    export function createSphereGeometry(radius: number, width: number, height: number): THREE.BufferGeometry {
+        return new THREE.SphereBufferGeometry(radius, width, height);
     }
 
     export function createMeshBasicMaterial(color: string, wireframe: boolean) {
@@ -209,133 +254,177 @@ export namespace CodegenRuntime {
         })
     }
 
-    export function createMesh(geometry: THREE.Geometry, material: THREE.Material): THREE.Mesh {
+    export function createMesh(geometry: THREE.Geometry | THREE.BufferGeometry, material: THREE.Material): Rto.SceneObject {
         var result = new THREE.Mesh(geometry, material);
         result.receiveShadow = true;
         result.castShadow = true;
-        return result;
+        return new Rto.SceneObject(result);
     }
 
     export function createPlane(
         width: number,
         height: number,
         material: string | THREE.Material,
-        position: THREE.Vector3): THREE.Mesh {
+        position: THREE.Vector3): Rto.SceneObject {
         if (!(material instanceof THREE.Material)) {
             material = createMeshBasicMaterial(material, false);
         }
         let result = createMesh(createPlaneGeometry(width, height), material);
-        result.position.set(position.x, position.y, position.z);
+        result.o3d.position.set(position.x, position.y, position.z);
         return result;
     }
 
     export function createCube(
         width: number,
         height: number,
-        depth:number,
+        depth: number,
         material: string | THREE.Material,
-        position: THREE.Vector3): THREE.Mesh {
+        position: THREE.Vector3): Rto.SceneObject {
         if (!(material instanceof THREE.Material)) {
             material = createMeshBasicMaterial(material, false);
         }
-        let result = createMesh(createCubeGeometry(width, height,depth), material);
-        result.position.set(position.x, position.y, position.z);
+        let result = createMesh(createCubeGeometry(width, height, depth), material);
+        result.o3d.position.set(position.x, position.y, position.z);
         return result;
     }
 
     export function createSphere(
-        radius:number,
+        radius: number,
         widthSegments: number,
         heightSegments: number,
         material: string | THREE.Material,
-        position: THREE.Vector3): THREE.Mesh {
+        position: THREE.Vector3): Rto.SceneObject {
         if (!(material instanceof THREE.Material)) {
             material = createMeshBasicMaterial(material, false);
         }
-        let result = createMesh(createSphereGeometry(radius,widthSegments, heightSegments), material);
-        result.position.set(position.x, position.y, position.z);
+        let result = createMesh(createSphereGeometry(radius, widthSegments, heightSegments), material);
+        result.o3d.position.set(position.x, position.y, position.z);
         return result;
     }
 
-    export function createSpotlight(color: string) {
+    export function createOBJ(objInfo: ObjInfo): Rto.SceneObject {
+        // create a placeholder object
+        if (objInfo.cache) {
+            // clean it out?
+            let retval = new Rto.SceneObject(objInfo.cache);
+            retval.resetProps();
+            return retval;
+        }
+        let material = createMeshBasicMaterial("#00ff00", false);
+        let result = createMesh(new THREE.TorusKnotGeometry(10), material);
+        var mtlLoader = new THREE.MTLLoader();
+        mtlLoader.setPath(objInfo.path);
+        mtlLoader.load(objInfo.mtlname + '.mtl', (materials) => {
+            materials.preload();
+
+            var objLoader = new THREE.OBJLoader();
+            objLoader.setMaterials(materials);
+            objLoader.setPath(objInfo.path);
+            objLoader.load(objInfo.objname + '.obj', function(object) {
+                let oldobj = result.o3d;
+                object.receiveShadow = true;
+                object.castShadow = true;
+                result.o3d = object;
+                result.copyProps(oldobj);
+                result.updateInScene(scene);
+                objInfo.cache = object;
+            },
+                (ev) => { },
+                (err) => {
+                    console.log('error downloading:', JSON.stringify(err));
+                });
+
+        }, (ev) => { },
+            (errEv) => {
+                console.log('error downloading:', JSON.stringify(errEv));
+            });
+
+        return result;
+    }
+
+    export function createSpotlight(color: string): Rto.LightObject {
         var result = new THREE.SpotLight(color);
         result.castShadow = true;
         result.shadow.mapSize.height = 4096;
-        return result;
+        return new Rto.LightObject(result);
     }
 
-    export function createAmbientlight(color: string) {
+    export function createAmbientlight(color: string): Rto.LightObject {
         var result = new THREE.AmbientLight(color);
-        return result;
+        return new Rto.LightObject(result);
     }
 
-    export function sceneAdd(elem: THREE.Object3D) {
-        if (scene && elem) scene.add(elem);
+    export function sceneAdd(elem: Rto.SceneObject) {
+        if (scene && elem) scene.add(elem.o3d);
     }
 
-    export function sceneRemove(elem: THREE.Object3D) {
-        if (scene && elem) scene.remove(elem);
+    export function sceneRemove(elem: Rto.SceneObject) {
+        if (scene && elem) scene.remove(elem.o3d);
     }
 
-    export function setRotation(obj: THREE.Object3D, x: number, y: number, z: number) {
-        if (obj) obj.rotation.set(x, y, z);
+    export function setRotation(obj: Rto.SceneObject, x: number, y: number, z: number) {
+        if (obj) obj.o3d.rotation.set(x, y, z);
     }
 
-    export function setPosition(obj: THREE.Object3D, x: number, y: number, z: number) {
-        if (obj) obj.position.set(x, y, z);
+    export function setPosition(obj: Rto.SceneObject, x: number, y: number, z: number) {
+        if (obj) obj.o3d.position.set(x, y, z);
     }
 
-    export function setRotationX(obj: THREE.Object3D, value: number) {
-        if (obj) obj.rotation.x = value;
+    export function setScale(obj: Rto.SceneObject, x: number, y: number, z: number) {
+        if (obj) obj.o3d.scale.set(x, y, z);
     }
 
-    export function setRotationY(obj: THREE.Object3D, value: number) {
-        if (obj) obj.rotation.y = value;
+    export function setRotationX(obj: Rto.SceneObject, value: number) {
+        if (obj) obj.o3d.rotation.x = value;
     }
 
-    export function setRotationZ(obj: THREE.Object3D, value: number) {
-        if (obj) obj.rotation.z = value;
+    export function setRotationY(obj: Rto.SceneObject, value: number) {
+        if (obj) obj.o3d.rotation.y = value;
     }
 
-    export function setPositionX(obj: THREE.Object3D, value: number) {
-        if (obj) obj.position.x = value;
+    export function setRotationZ(obj: Rto.SceneObject, value: number) {
+        if (obj) obj.o3d.rotation.z = value;
     }
 
-    export function setPositionY(obj: THREE.Object3D, value: number) {
-        if (obj) obj.position.y = value;
+    export function setPositionX(obj: Rto.SceneObject, value: number) {
+        if (obj) obj.o3d.position.x = value;
     }
 
-    export function setPositionZ(obj: THREE.Object3D, value: number) {
-        if (obj) obj.position.z = value;
+    export function setPositionY(obj: Rto.SceneObject, value: number) {
+        if (obj) obj.o3d.position.y = value;
     }
 
-    export function changeRotationX(obj: THREE.Object3D, value: number) {
-        if (obj) obj.rotation.x += value;
+    export function setPositionZ(obj: Rto.SceneObject, value: number) {
+        if (obj) obj.o3d.position.z = value;
     }
 
-    export function changeRotationY(obj: THREE.Object3D, value: number) {
-        if (obj) obj.rotation.y += value;
+    export function changeRotationX(obj: Rto.SceneObject, value: number) {
+        if (obj) obj.o3d.rotation.x += value;
     }
 
-    export function changeRotationZ(obj: THREE.Object3D, value: number) {
-        if (obj) obj.rotation.z += value;
+    export function changeRotationY(obj: Rto.SceneObject, value: number) {
+        if (obj) obj.o3d.rotation.y += value;
     }
 
-    export function changePositionX(obj: THREE.Object3D, value: number) {
-        if (obj) obj.position.x += value;
+    export function changeRotationZ(obj: Rto.SceneObject, value: number) {
+        if (obj) obj.o3d.rotation.z += value;
     }
 
-    export function changePositionY(obj: THREE.Object3D, value: number) {
-        if (obj) obj.position.y += value;
+    export function changePositionX(obj: Rto.SceneObject, value: number) {
+        if (obj) obj.o3d.position.x += value;
     }
 
-    export function changePositionZ(obj: THREE.Object3D, value: number) {
-        if (obj) obj.position.z += value;
+    export function changePositionY(obj: Rto.SceneObject, value: number) {
+        if (obj) obj.o3d.position.y += value;
     }
 
-    export function getPosition(obj: THREE.Object3D): THREE.Vector3 {
+    export function changePositionZ(obj: Rto.SceneObject, value: number) {
+        if (obj) obj.o3d.position.z += value;
+    }
+
+    export function getPosition(obj: Rto.SceneObject): THREE.Vector3 {
         if (!obj) return new THREE.Vector3();
-        return obj.position;
+        return obj.o3d.position;
     }
 
     export function getScenePosition(): THREE.Vector3 {
@@ -347,34 +436,54 @@ export namespace CodegenRuntime {
         return new THREE.Vector3(x, y, z);
     }
 
-    export function getSceneElements(): THREE.Object3D[] {
+    export function getSceneElements(): Rto.SceneObject[] {
         if (!scene) return [];
-        return scene.children;
+        return scene.children.map(v => new Rto.SceneObject(v));
     }
 
     export function getCameraPosition(): THREE.Vector3 {
         if (!camera) return new THREE.Vector3();
-        return camera.position;
+        return camera.getCamera().position;
     }
 
     export function setCameraPositionX(v: number) {
-        camera.position.x = v;
+        camera.getCamera().position.x = v;
     }
 
     export function setCameraPositionY(v: number) {
-        camera.position.y = v;
+        camera.getCamera().position.y = v;
     }
 
     export function setCameraPositionZ(v: number) {
-        camera.position.z = v;
+        camera.getCamera().position.z = v;
     }
 
-    export function cameraLookAtObject(obj: THREE.Object3D) {
-        camera.lookAt(obj.position);
+    export function cameraLookAtObject(obj: Rto.SceneObject) {
+        camera.getCamera().lookAt(obj.o3d.position);
     }
 
     export function cameraLookAtPosition(pos: THREE.Vector3) {
-        camera.lookAt(pos);
+        camera.getCamera().lookAt(pos);
+    }
+
+    export function cameraEnableControls(controls: Rto.CameraControls) {
+        cameraControls = controls;
+        if (camera && cameraControls)
+            cameraControls.connectToCamera(camera);
+    }
+
+    export function cameraDisableControls() {
+        if (cameraControls) {
+            cameraControls.disconnectFromCamera(camera);
+        }
+    }
+
+    export function createTrackballControls(rotateSpeed: number, zoomSpeed: number, panSpeed: number): Rto.TrackballCameraControls {
+        return new Rto.TrackballCameraControls(rotateSpeed, zoomSpeed, panSpeed);
+    }
+
+    export function createFlyControls(movementSpeed: number, rollSpeed: number, autoForward: boolean, dragToLook: boolean) {
+        return new Rto.FlyCameraControls(movementSpeed, rollSpeed, autoForward, dragToLook, cgHost.getRendererHostElement());
     }
 
     export function onVarUpdated(name: string, value: any) {

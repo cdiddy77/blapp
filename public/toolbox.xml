@@ -125,6 +125,7 @@
         </shadow>
       </value>
     </block>
+    <block type="load_object"/>
     <block type="create_plane_geometry">
       <value name="width">
         <shadow type="math_number">
@@ -190,6 +191,30 @@
         </shadow>
       </value>
       <value name="z">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="set_scale">
+      <value name="x">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+      <value name="y">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+      <value name="z">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="set_scale_all">
+      <value name="value">
         <shadow type="math_number">
           <field name="NUM">0</field>
         </shadow>
@@ -340,6 +365,37 @@
       </value>
     </block>
     <block type="camera_position"/>
+    <block type="camera_enable_controls"/>
+    <block type="camera_disable_controls"/>
+    <block type="trackball_controls">
+      <value name="rotate_speed">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+      <value name="zoom_speed">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+      <value name="pan_speed">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="fly_controls">
+      <value name="movement_speed">
+        <shadow type="math_number">
+          <field name="NUM">25</field>
+        </shadow>
+      </value>
+      <value name="roll_speed">
+        <shadow type="math_number">
+          <field name="NUM">0.131</field>
+        </shadow>
+      </value>
+    </block>
   </category>
   <category name="Lighting">
     <block type="create_spotlight"/>
