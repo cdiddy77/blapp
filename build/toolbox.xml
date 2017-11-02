@@ -4,9 +4,128 @@
     <block type="on_start"/>
     <block type="on_frame"/>
     <block type="on_mouse_event"/>
-    <block type="on_keyboard_event"/>
+    <!-- <block type="on_keyboard_event"/> -->
   </category>
   <category name="Objects">
+    <block type="create_plane">
+      <value name="width">
+        <shadow type="math_number">
+          <field name="NUM">10</field>
+        </shadow>
+      </value>
+      <value name="height">
+        <shadow type="math_number">
+          <field name="NUM">10</field>
+        </shadow>
+      </value>
+      <value name="material">
+        <shadow type="colour_picker">
+          <field name="COLOUR">#ff0000</field>
+        </shadow>
+      </value>
+      <value name="position">
+        <shadow type="def_position">
+          <value name="x">
+            <shadow type="math_number">
+              <field name="NUM">0</field>
+            </shadow>
+          </value>
+          <value name="y">
+            <shadow type="math_number">
+              <field name="NUM">0</field>
+            </shadow>
+          </value>
+          <value name="z">
+            <shadow type="math_number">
+              <field name="NUM">0</field>
+            </shadow>
+          </value>
+        </shadow>
+      </value>
+    </block>
+    <block type="create_cube">
+      <value name="width">
+        <shadow type="math_number">
+          <field name="NUM">10</field>
+        </shadow>
+      </value>
+      <value name="height">
+        <shadow type="math_number">
+          <field name="NUM">10</field>
+        </shadow>
+      </value>
+      <value name="depth">
+        <shadow type="math_number">
+          <field name="NUM">10</field>
+        </shadow>
+      </value>
+      <value name="material">
+        <shadow type="colour_picker">
+          <field name="COLOUR">#ff0000</field>
+        </shadow>
+      </value>
+      <value name="position">
+        <shadow type="def_position">
+          <value name="x">
+            <shadow type="math_number">
+              <field name="NUM">0</field>
+            </shadow>
+          </value>
+          <value name="y">
+            <shadow type="math_number">
+              <field name="NUM">0</field>
+            </shadow>
+          </value>
+          <value name="z">
+            <shadow type="math_number">
+              <field name="NUM">0</field>
+            </shadow>
+          </value>
+        </shadow>
+      </value>
+    </block>
+    <block type="create_sphere">
+      <value name="radius">
+        <shadow type="math_number">
+          <field name="NUM">5</field>
+        </shadow>
+      </value>
+      <value name="width_segments">
+        <shadow type="math_number">
+          <field name="NUM">20</field>
+        </shadow>
+      </value>
+      <value name="height_segments">
+        <shadow type="math_number">
+          <field name="NUM">20</field>
+        </shadow>
+      </value>
+      <value name="material">
+        <shadow type="colour_picker">
+          <field name="COLOUR">#ff0000</field>
+        </shadow>
+      </value>
+      <value name="position">
+        <shadow type="def_position">
+          <value name="x">
+            <shadow type="math_number">
+              <field name="NUM">0</field>
+            </shadow>
+          </value>
+          <value name="y">
+            <shadow type="math_number">
+              <field name="NUM">0</field>
+            </shadow>
+          </value>
+          <value name="z">
+            <shadow type="math_number">
+              <field name="NUM">0</field>
+            </shadow>
+          </value>
+        </shadow>
+      </value>
+    </block>
+    <block type="load_object"/>
     <block type="create_plane_geometry">
       <value name="width">
         <shadow type="math_number">
@@ -56,6 +175,8 @@
     <block type="create_mesh_basic_material"/>
     <block type="create_mesh"/>
     <block type="scene_add"/>
+    <block type="scene_remove"/>
+    <block type="scene_elements"/>
   </category>
   <category name="Motion">
     <block type="set_position">
@@ -70,6 +191,30 @@
         </shadow>
       </value>
       <value name="z">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="set_scale">
+      <value name="x">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+      <value name="y">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+      <value name="z">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="set_scale_all">
+      <value name="value">
         <shadow type="math_number">
           <field name="NUM">0</field>
         </shadow>
@@ -176,6 +321,23 @@
         </shadow>
       </value>
     </block>
+    <block type="def_position">
+      <value name="x">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+      <value name="y">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+      <value name="z">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+    </block>
     <block type="object_position"/>
     <block type="scene_position"/>
   </category>
@@ -203,13 +365,74 @@
       </value>
     </block>
     <block type="camera_position"/>
+    <block type="camera_enable_controls"/>
+    <block type="camera_disable_controls"/>
+    <block type="trackball_controls">
+      <value name="rotate_speed">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+      <value name="zoom_speed">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+      <value name="pan_speed">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="fly_controls">
+      <value name="movement_speed">
+        <shadow type="math_number">
+          <field name="NUM">25</field>
+        </shadow>
+      </value>
+      <value name="roll_speed">
+        <shadow type="math_number">
+          <field name="NUM">0.131</field>
+        </shadow>
+      </value>
+    </block>
   </category>
   <category name="Lighting">
     <block type="create_spotlight"/>
     <block type="create_ambientlight"/>
   </category>
+  <category name="User Interface">
+    <block type="create_gui_var"/>
+    <block type="create_gui_choice_var"/>
+    <block type="create_gui_button"/>
+    <block type="create_gui_num_var">
+      <value name="initial_value">
+        <shadow type="math_number">
+          <field name="NUM">0.5</field>
+        </shadow>
+      </value>
+      <value name="min_value">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+      <value name="max_value">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="create_gui_color_var"/>
+    <block type="get_gui_var"/>
+  </category>
   <category name="Utility" colour="#5CA65C">
-    <block type="console_log"/>
+    <block type="console_log">
+      <value name="message">
+        <shadow type="text">
+          <field name="TEXT">message</field>
+        </shadow>
+      </value>
+    </block>
   </category>
   <category name="Logic" colour="#5C81A6">
     <block type="controls_if"/>

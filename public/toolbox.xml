@@ -401,6 +401,30 @@
     <block type="create_spotlight"/>
     <block type="create_ambientlight"/>
   </category>
+  <category name="User Interface">
+    <block type="create_gui_var"/>
+    <block type="create_gui_choice_var"/>
+    <block type="create_gui_button"/>
+    <block type="create_gui_num_var">
+      <value name="initial_value">
+        <shadow type="math_number">
+          <field name="NUM">0.5</field>
+        </shadow>
+      </value>
+      <value name="min_value">
+        <shadow type="math_number">
+          <field name="NUM">0</field>
+        </shadow>
+      </value>
+      <value name="max_value">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="create_gui_color_var"/>
+    <block type="get_gui_var"/>
+  </category>
   <category name="Utility" colour="#5CA65C">
     <block type="console_log">
       <value name="message">

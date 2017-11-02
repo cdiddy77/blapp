@@ -57,6 +57,7 @@ export class Target extends React.Component<TargetProps, TargetState>{
             return (
                 <div id="webglTarget" style={{
                     flex:1,
+                    position:'relative',
                     overflow:'hidden'
                 }}></div>
             );

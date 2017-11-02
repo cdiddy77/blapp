@@ -3,6 +3,7 @@ import * as jsutil from '../../../shared/src/util/jsutil';
 import { ModelWithEvents } from './ModelWithEvents';
 import * as BlocklyConfig from '../blocks/BlocklyConfig';
 import * as Config3d from '../blocks/Config3d';
+import * as ConfigGui from '../blocks/ConfigGui';
 import { CodegenRuntime, CodegenHost } from '../../../shared/src/util/CodegenRuntime';
 import { SimplePromptModel } from './SimplePromptModel';
 import { InputFilePromptModel } from './InputFilePromptModel';
@@ -142,9 +143,11 @@ export class AppModel extends ModelWithEvents<AppModelData>
             this.initDynamicCategories();
 
             BlocklyConfig.initUtilityBlockDefinitions();
+            // SHAREDVARS
             this.initSharedVariableBlocks();
             BlocklyConfig.initCodeGenerators();
             Config3d.init3dBlocks();
+            ConfigGui.initGuiBlocks(this);
             setTimeout(this.restoreWorkspace(), 0);
         });
 
@@ -198,6 +201,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
         })
     }
 
+    // SHAREDVARS
     initDynamicCategories(): void {
         this._workspace.registerToolboxCategoryCallback(
             'SHARED_VARS_PALETTE',
@@ -208,6 +212,15 @@ export class AppModel extends ModelWithEvents<AppModelData>
         if (prop == 'code') {
             if (this.data.previewEnabled)
                 this.evalCode();
+        } else if (prop == 'previewEnabled') {
+            if (!this.data.previewEnabled) {
+                CodegenRuntime.unsetWebGLObjects();
+            } else {
+                window.setTimeout(() => {
+                    // trigger a refresh
+                    this.setProperty('code', this.data.code);
+                }, 300);
+            }
         }
     }
 
@@ -237,6 +250,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
             var xml = Blockly.Xml.textToDom(window.localStorage[url]);
             Blockly.Xml.domToWorkspace(xml, this._workspace);
             this._performResetOnLoad = true;
+            // SHAREDVARS
             // and then walk the workspace, find all of the 
             // shared variables, and keep them in our own list
             this.findAllSharedVariables(true);
@@ -319,6 +333,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
 
     // shared variable stuffs ///////////////////////////////////////////
     //
+    // SHAREDVARS
     private getSharedVariablesList(): string[][] {
         if (this.sharedVariableNames.length == 0) {
             return [['dummy', 'dummy']];
@@ -478,7 +493,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
         });
         xmlList.push(button);
 
-        if (this.sharedVariableNames.length > 0) {
+        if (true) {//this.sharedVariableNames.length > 0) {
             let block = document.createElementNS(null, 'block');
             block.setAttribute('type', 'sharvar_get');
             xmlList.push(block);

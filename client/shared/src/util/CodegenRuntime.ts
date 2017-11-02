@@ -3,9 +3,10 @@ import * as THREE from 'three';
 // double hack and a half 
 (<any>global).THREE = THREE;
 
+import * as dat from 'dat-gui';
+
 import * as ThreeUtil from './ThreeUtil';
 import * as Rto from './RuntimeObjects';
-
 
 import 'three/examples/js/loaders/MTLLoader';
 import 'three/examples/js/loaders/OBJLoader';
@@ -47,6 +48,8 @@ export namespace CodegenRuntime {
     var stats: { update: () => void } = null;
     var cameraControls: Rto.CameraControls = null;
     var clock: THREE.Clock = null;
+    var datGui: dat.GUI = null;
+    var datGuiObject: any = {};
 
     var shareVarUpdateWildCardHandlers: ShareVarUpdatedCallback[] = [];
     var shareVarUpdateHandlers: jsutil.Map<ShareVarUpdatedCallback[]> = {};
@@ -71,19 +74,43 @@ export namespace CodegenRuntime {
         stats = s;
     }
 
+    export function unsetWebGLObjects() {
+        if (scene) {
+            while (scene.children.length > 0) {
+                scene.remove(scene.children[0]);
+            }
+            scene = null;
+        }
+        if (renderer) {
+            renderer.dispose();
+            renderer = null;
+        }
+        if (datGui) {
+            console.log('destroying datgui');
+            datGui.destroy();
+            datGui = null;
+        }
+    }
+
     export function resetCodeState() {
         setResetApplicationProc(null);
         setOnStartProc(null);
         setOnFrameProc(null);
         resetKeyEventProcs();
-        
+
         camera = null;
         if (scene) {
             while (scene.children.length > 0) {
                 scene.remove(scene.children[0]);
             }
-        } 
-        
+        }
+        datGuiObject = {};
+        if (datGui) {
+            console.log('destroying datgui');
+            datGui.destroy();
+            datGui = null;
+        }
+
         clearAllShareVarUpdateHandlers();
         clearAllIntervalHandlers();
     }
@@ -177,6 +204,10 @@ export namespace CodegenRuntime {
         }
         renderer.setSize(width, height);
 
+        if (!scene) {
+            scene = new THREE.Scene();
+        }
+
         if (cameraControls && camera)
             cameraControls.disconnectFromCamera(camera);
         // create a new camera
@@ -189,9 +220,6 @@ export namespace CodegenRuntime {
 
     }
     export function postEval() {
-        // create a new scene
-        scene = new THREE.Scene();
-
         // execute the on start
         if (getOnStartProc())
             getOnStartProc()();
@@ -235,6 +263,8 @@ export namespace CodegenRuntime {
         }
     }
 
+    // start of 3d apis ///////////////////////////////////////////////////////////
+    //
     export function createPlaneGeometry(width: number, height: number): THREE.BufferGeometry {
         return new THREE.PlaneBufferGeometry(width, height);
     }
@@ -485,7 +515,58 @@ export namespace CodegenRuntime {
     export function createFlyControls(movementSpeed: number, rollSpeed: number, autoForward: boolean, dragToLook: boolean) {
         return new Rto.FlyCameraControls(movementSpeed, rollSpeed, autoForward, dragToLook, cgHost.getRendererHostElement());
     }
+    //
+    // end of 3d stuff ///////////////////////////////////////////////////////////
 
+    // gui stuff /////////////////////////////////////////////////////////////////
+    //
+    function ensureDatGui() {
+        console.log('ensuring dat.gui');
+        if (!datGui) {
+            datGui = new dat.GUI({ autoPlace: false });
+            datGui.domElement.style.position = 'absolute';
+            datGui.domElement.style.top = '20px';
+            datGui.domElement.style.right = '0px';
+            cgHost.getRendererHostElement().appendChild(datGui.domElement);
+        }
+    }
+    export function createGuiVariable(name: string, val: any) {
+        ensureDatGui();
+        if (!val)
+            val = '';
+        datGuiObject[name] = val;
+        datGui.add(datGuiObject, name);
+    }
+    export function createGuiChoiceVariable(name: string, initial: string | number | boolean, choices: string[] | number[]) {
+        ensureDatGui();
+        datGuiObject[name] = initial;
+        if (!initial && choices.length > 0)
+            initial = choices[0];
+        datGui.add(datGuiObject, name, choices);
+    }
+    export function createGuiButton(name: string, fn: () => void) {
+        ensureDatGui();
+        datGuiObject[name] = fn;
+        datGui.add(datGuiObject, name);
+    }
+    export function createGuiNumberVariable(name: string, initial: number, min: number, max: number) {
+        ensureDatGui();
+        datGuiObject[name] = initial || 0;
+        datGui.add(datGuiObject, name, min, max);
+    }
+    export function createGuiColorVariable(name: string, initial: string) {
+        ensureDatGui();
+        datGuiObject[name] = initial || '#ffffff';
+        datGui.addColor(datGuiObject, name, initial);
+    }
+    export function getGuiVariable(name: string): any {
+        return datGuiObject[name];
+    }
+    //
+    // end of gui stuff //////////////////////////////////////////////////////////
+
+    // shared var stuff //////////////////////////////////////////////////////////
+    //
     export function onVarUpdated(name: string, value: any) {
         sharedVars[name] = value;
         for (let i = 0; i < shareVarUpdateWildCardHandlers.length; i++) {
@@ -535,6 +616,8 @@ export namespace CodegenRuntime {
             shareVarSetProc(name, val);
         }
     }
+    //
+    ///////////////////////////////////////////////////////////////////////////////////
 
     export function ensureString(v: any): string {
         if (!v) return null;
