@@ -265,67 +265,39 @@ export class AppModel extends ModelWithEvents<AppModelData>
 
     // dropdown populators //////////////////////////////////////////////
     //
-    spritesList: string[][] = null;
-    canvasList: string[][] = null;
-    scrollerList: string[][] = null;
+    guiVarList: string[][] = null;
 
     resetDropdownPopulators() {
-        this.spritesList = null;
-        this.canvasList = null;
-        this.scrollerList = null;
+        this.guiVarList = null;
     }
     repopulateAllLists() {
-        this.spritesList = [];
-        this.canvasList = [];
-        this.scrollerList = [];
+        this.guiVarList = [];
         let blocks = this._workspace.getAllBlocks();
         // Iterate through every block and find all sprite_element
         for (var x = 0; x < blocks.length; x++) {
             let b = blocks[x];
             let varName: string = null;
-            varName = b.getFieldValue('NAME');
+            varName = b.getFieldValue('var_name');
             // Variable name may be null if the block is only half-built.
             if (varName) {
-                if (b.type == 'sprite_element') {
-                    this.spritesList.push([varName, varName]);
-                } else if (b.type == 'canvas_element') {
-                    this.canvasList.push([varName, varName]);
-                } else if (b.type == 'friendly_scroller_element') {
-                    this.scrollerList.push([varName, varName]);
+                if (b.type == 'create_gui_var'
+                    || b.type == 'create_gui_num_var'
+                    || b.type == 'create_gui_choice_var'
+                    || b.type == 'create_gui_color_var') {
+                    this.guiVarList.push([varName, varName]);
                 }
             }
         }
-
     }
 
-    getSpriteListDropdownPopulator(): string[][] {
-        if (!this.spritesList) {
+    getGuiVarListDropdownPopulator(): string[][] {
+        if (!this.guiVarList) {
             this.repopulateAllLists();
         }
-        if (this.spritesList.length == 0) {
+        if (this.guiVarList.length == 0) {
             return [['--', '--']];
         } else {
-            return this.spritesList;
-        }
-    }
-    getCanvasListDropdownPopulator(): string[][] {
-        if (!this.canvasList) {
-            this.repopulateAllLists();
-        }
-        if (this.canvasList.length == 0) {
-            return [['--', '--']];
-        } else {
-            return this.canvasList;
-        }
-    }
-    getScrollerListDropdownPopulator(): string[][] {
-        if (!this.scrollerList) {
-            this.repopulateAllLists();
-        }
-        if (this.scrollerList.length == 0) {
-            return [['--', '--']];
-        } else {
-            return this.scrollerList;
+            return this.guiVarList;
         }
     }
     //

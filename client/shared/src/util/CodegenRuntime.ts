@@ -85,11 +85,7 @@ export namespace CodegenRuntime {
             renderer.dispose();
             renderer = null;
         }
-        if (datGui) {
-            console.log('destroying datgui');
-            datGui.destroy();
-            datGui = null;
-        }
+        removeDatGui();
     }
 
     export function resetCodeState() {
@@ -105,14 +101,21 @@ export namespace CodegenRuntime {
             }
         }
         datGuiObject = {};
+        removeDatGui();
+
+        clearAllShareVarUpdateHandlers();
+        clearAllIntervalHandlers();
+    }
+
+    function removeDatGui() {
         if (datGui) {
             console.log('destroying datgui');
+            if (cgHost.getRendererHostElement())
+                cgHost.getRendererHostElement().removeChild(datGui.domElement);
             datGui.destroy();
             datGui = null;
         }
 
-        clearAllShareVarUpdateHandlers();
-        clearAllIntervalHandlers();
     }
 
     export function setShareVarSetProc(proc: (name: string, value: any) => void) {

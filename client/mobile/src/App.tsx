@@ -107,8 +107,6 @@ export default class mobile extends React.Component<AppProps, AppState> {
     }
   }
   render() {
-    console.log('appRENDER');
-
     let connectionArea = this.renderConnectionArea();
     let connectionStatus = this.renderConnectionStatus();
     return (

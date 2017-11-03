@@ -52,7 +52,7 @@ export default class PairApp extends React.Component<AppProps, AppState> {
     }
 
     renderConnectionStatus() {
-        console.log('renderConnectionStatus', this.model.connectionState);
+        // console.log('renderConnectionStatus', this.model.connectionState);
         let imageSrc = constants.serverHost + '/media/hardware/ic_phonelink_off_white_48dp.png';
         let imageColor = 'orange';
         if (this.model.connectionState == 'unrecognized pairing code') {
@@ -108,8 +108,6 @@ export default class PairApp extends React.Component<AppProps, AppState> {
         }
     }
     render() {
-        console.log('appRENDER');
-
         let connectionArea = this.renderConnectionArea();
         let connectionStatus = this.renderConnectionStatus();
         return (

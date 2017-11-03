@@ -6,7 +6,7 @@ export function initGuiBlocks(model: AppModel) {
         init: function () {
             this.appendDummyInput()
                 .appendField("create UI variable")
-                .appendField(new Blockly.FieldTextInput("variable name"), "name");
+                .appendField(new Blockly.FieldTextInput("variable name"), "var_name");
             this.appendValueInput("initial_value")
                 .setCheck(null)
                 .appendField("initial value");
@@ -86,7 +86,7 @@ export function initGuiBlocks(model: AppModel) {
         init: function () {
             this.appendDummyInput()
                 .appendField("get UI value")
-                .appendField(new Blockly.FieldDropdown([["option", "OPTIONNAME"], ["option", "OPTIONNAME"], ["option", "OPTIONNAME"]]), "var_name");
+                .appendField(new Blockly.FieldDropdown(() => model.getGuiVarListDropdownPopulator()), "var_name");
             this.setInputsInline(true);
             this.setOutput(true, null);
             this.setColour(230);
@@ -98,7 +98,7 @@ export function initGuiBlocks(model: AppModel) {
     Blockly.Blocks['create_gui_button'] = {
         init: function () {
             this.appendDummyInput()
-                .appendField("create button")
+                .appendField("create UI button")
                 .appendField(new Blockly.FieldTextInput("button name"), "name");
             this.appendStatementInput("button_handler")
                 .setCheck(null);
@@ -111,7 +111,7 @@ export function initGuiBlocks(model: AppModel) {
         }
     };
     Blockly.JavaScript['create_gui_var'] = function (block: Blockly.Block) {
-        let text_name = block.getFieldValue('name');
+        let text_name = block.getFieldValue('var_name');
         let value_initial_value = Blockly.JavaScript.valueToCode(block, 'initial_value', Blockly.JavaScript.ORDER_COMMA);
         if (!value_initial_value || value_initial_value == '')
             value_initial_value = 'null';
@@ -132,32 +132,36 @@ export function initGuiBlocks(model: AppModel) {
         let text_var_name = block.getFieldValue('var_name');
         let value_initial_value = Blockly.JavaScript.valueToCode(block, 'initial_value', Blockly.JavaScript.ORDER_COMMA);
         let value_choices = Blockly.JavaScript.valueToCode(block, 'choices', Blockly.JavaScript.ORDER_COMMA);
-        // TODO: Assemble JavaScript into code variable.
-        let code = '...;\n';
+
+        if (!value_initial_value || value_initial_value == '') {
+            value_initial_value = 'null';
+        }
+        if (!value_choices || value_choices == '') {
+            value_choices = '[]';
+        }
+        let code = `CgRt.createGuiChoiceVariable('${text_var_name}',${value_initial_value},${value_choices});\n`;
         return code;
     };
 
     Blockly.JavaScript['create_gui_color_var'] = function (block: Blockly.Block) {
         let text_var_name = block.getFieldValue('var_name');
         let colour_colorvalue = block.getFieldValue('colorValue');
-        // TODO: Assemble JavaScript into code variable.
-        let code = '...;\n';
+        let code = `CgRt.createGuiColorVariable('${text_var_name}','${colour_colorvalue}');\n`;
         return code;
     };
 
     Blockly.JavaScript['get_gui_var'] = function (block: Blockly.Block) {
         let dropdown_var_name = block.getFieldValue('var_name');
-        // TODO: Assemble JavaScript into code variable.
-        let code = '...';
-        // TODO: Change ORDER_NONE to the correct strength.
-        return [code, Blockly.JavaScript.ORDER_NONE];
+        let code = `CgRt.getGuiVariable('${dropdown_var_name}')`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
 
     Blockly.JavaScript['create_gui_button'] = function (block: Blockly.Block) {
         let text_name = block.getFieldValue('name');
         let statements_button_handler = Blockly.JavaScript.statementToCode(block, 'button_handler');
-        // TODO: Assemble JavaScript into code variable.
-        let code = '...;\n';
+        let code = `CgRt.createGuiButton('${text_name}',function(){\n`;
+        code += statements_button_handler;
+        code += '\n});';
         return code;
     };
 }
