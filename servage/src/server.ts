@@ -21,6 +21,8 @@ var server = http.createServer(function (req, res) {
     } else if (urlObj.pathname == '/downloadapk') {
         pathName = 'app-release.apk';
         isApk = true;
+    // ASSETS : asset uri maps to azure storage uri
+    // ASSETS : support a PUT URI to create new assets
     } else {
         pathName = urlObj.pathname;
     };

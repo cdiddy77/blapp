@@ -12,6 +12,7 @@ import { TestTarget } from './TestTarget';
 // import * as svcConn from '../util/ServiceConnection';
 import { SimplePrompt } from './SimplePrompt';
 import { InputFilePrompt } from './InputFilePrompt';
+import { AddAssetPrompt } from './AddAssetPrompt';
 import * as constants from '../../../shared/src/util/constants';
 
 interface AppProps {
@@ -86,17 +87,20 @@ class App extends React.Component<AppProps, AppState> {
         {previewRendering}
         <SimplePrompt {...modelData.simplePrompt} />
         <InputFilePrompt {...modelData.inputFilePrompt} />
+        <AddAssetPrompt {...modelData.addAssetPrompt}/>
+
         <footer className="footer">
           <div className="container">
-            <button type='button' className='btn btn-primary' onClick={() => this.props.model.clearWorkspace()}>Clear all</button>
+            <button type='button' className='btn btn-primary' onClick={() => this.props.model.clearWorkspace()}>New</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.saveWorkspaceToFile()}>Save</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.loadWorkspaceFromFile(true)}>Clear and Load</button>
-            <button type='button' className='btn btn-primary' onClick={() => this.props.model.togglePreview()}>
-              Preview:{modelData.previewEnabled ? 'ON' : 'OFF'}
-            </button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.loadWorkspaceFromFile(false)}>Add-load</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.undo()}>Undo</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.redo()}>Redo</button>
+            <button type='button' className='btn btn-primary' onClick={() => this.props.model.redo()}>Add Assets</button>
+            <button type='button' className='btn btn-primary' onClick={() => this.props.model.togglePreview()}>
+              Preview:{modelData.previewEnabled ? 'ON' : 'OFF'}
+            </button>
             <CSSTransitionGroup
               transitionName='statusMessage'
               transitionEnterTimeout={0}

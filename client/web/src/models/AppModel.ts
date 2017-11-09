@@ -7,6 +7,7 @@ import * as ConfigGui from '../blocks/ConfigGui';
 import { CodegenRuntime, CodegenHost } from '../../../shared/src/util/CodegenRuntime';
 import { SimplePromptModel } from './SimplePromptModel';
 import { InputFilePromptModel } from './InputFilePromptModel';
+import { AddAssetPromptModel } from './AddAssetPromptModel';
 import * as svcConn from '../util/ServiceConnection';
 import * as ThreeUtil from '../../../shared/src/util/ThreeUtil';
 export interface AppModelData {
@@ -15,6 +16,7 @@ export interface AppModelData {
     pairingCode: string;
     simplePrompt: SimplePromptModel;
     inputFilePrompt: InputFilePromptModel;
+    addAssetPrompt: AddAssetPromptModel;
     statusMessage: string;
     // not implemented in this version
     sharingCode: string;
@@ -31,6 +33,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
             pairingCode: null,
             simplePrompt: null,
             inputFilePrompt: null,
+            addAssetPrompt: null,
             statusMessage: null,
             sharingCode: null,
             previewEnabled: false,
@@ -198,7 +201,23 @@ export class AppModel extends ModelWithEvents<AppModelData>
                 prompt: prompt
             };
             this.setProperty('inputFilePrompt', promptVal);
-        })
+        });
+    }
+    doAddAssetPrompt(): Promise<FileList> {
+        return new Promise<FileList>((resolve, reject) => {
+            let promptVal: AddAssetPromptModel = {
+                isActive: true,
+                okCallback: (input) => {
+                    resolve(input);
+                    this.setProperty('addAssetPrompt', null);
+                },
+                cancelCallback: () => {
+                    resolve(null);
+                    this.setProperty('addAssetPrompt', null);
+                }
+            };
+            this.setProperty('addAssetPrompt', promptVal);
+        });
     }
 
     // SHAREDVARS
@@ -254,6 +273,8 @@ export class AppModel extends ModelWithEvents<AppModelData>
             // and then walk the workspace, find all of the 
             // shared variables, and keep them in our own list
             this.findAllSharedVariables(true);
+            // ASSETS : load up the user's assets list from localStorage
+            // ASSETS : read all of the assets from the different blocks in the document, keep them in a different asset list
         }
     }
     private backupWorkspace() {
@@ -261,7 +282,16 @@ export class AppModel extends ModelWithEvents<AppModelData>
         // Gets the current URL, not including the hash.
         var url = window.location.href.split('#')[0];
         window.localStorage.setItem(url, Blockly.Xml.domToText(xml));
+        // ASSETS : save the user's assets list to localStorage
     }
+
+    // assets ///////////////////////////////////////////////////////////
+    //
+    // ASSETS : persist asset list in localstorage as users add them
+    //
+    // ASSETS : maintain in-memory map between asset names and URLs
+    //
+    /////////////////////////////////////////////////////////////////////
 
     // dropdown populators //////////////////////////////////////////////
     //
@@ -300,6 +330,8 @@ export class AppModel extends ModelWithEvents<AppModelData>
             return this.guiVarList;
         }
     }
+
+    // ASSETS : dropdown populator for assets
     //
     /////////////////////////////////////////////////////////////////////
 
@@ -539,12 +571,18 @@ export class AppModel extends ModelWithEvents<AppModelData>
                 // and then walk the workspace, find all of the 
                 // shared variables, and keep them in our own list
                 this.findAllSharedVariables(true);
-            }
+
+                // ASSETS : find all of the asset references in the file, add them to a list
+            };
             reader.readAsText(files[0]);
         })
     }
     //
     ////////////////////////////////////////////////////////////////////
+    addAssets() {
+        // ASSETS : implement this by prompting user to add assets
+    }
+
     togglePreview() {
         this.setProperty('previewEnabled', !this.data.previewEnabled);
     }

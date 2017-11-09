@@ -1,7 +1,7 @@
 import * as React from 'react';
 import '../App.css';
 import * as jsutil from '../../../shared/src/util/jsutil';
-import { SimplePromptModel } from '../models/SimplePromptModel';
+import { AddAssetPromptModel } from '../models/AddAssetPromptModel';
 import {
     Modal,
     ModalHeader,
@@ -16,14 +16,14 @@ import {
 } from 'react-bootstrap';
 
 
-interface SimplePromptState {
-    currentValue: string;
+interface AddAssetPromptState {
+    currentValue: FileList;
 }
 
-export class SimplePrompt extends React.Component<SimplePromptModel, SimplePromptState>{
-    constructor(props:SimplePromptModel){
+export class AddAssetPrompt extends React.Component<AddAssetPromptModel, AddAssetPromptState>{
+    constructor(props:AddAssetPromptModel){
         super(props);
-        this.state={currentValue:''};
+        this.state={currentValue:null};
     }
     onClickSubmit() {
         this.props.okCallback(this.state.currentValue);
@@ -31,7 +31,7 @@ export class SimplePrompt extends React.Component<SimplePromptModel, SimplePromp
     onClickCancel() {
         this.props.cancelCallback();
     }
-    onTextChange(value: string) {
+    onFilesChange(value: FileList) {
         this.setState({ currentValue: value });
     }
     render() {
@@ -39,14 +39,14 @@ export class SimplePrompt extends React.Component<SimplePromptModel, SimplePromp
         return (
             <Modal show={this.props.isActive} onHide={() => this.onClickCancel()}>
                 <ModalHeader closeButton>
-                    <ModalTitle>{this.props.title}</ModalTitle>
+                    <ModalTitle>Add Assets</ModalTitle>
                 </ModalHeader>
                 <ModalBody>
-                    <label className='control-label' htmlFor='inputControl'>{this.props.prompt}</label>
-                    <input type='text'
+                    <label className='control-label' htmlFor='inputControl'>Asset file</label>
+                    <input type='file'
+                        name='file'
                         className='form-control'
-                        value={this.state.currentValue}
-                        onChange={(ev) => this.onTextChange(ev.target.value)}
+                        onChange={(ev) => this.onFilesChange(ev.target.files)}
                     />
                 </ModalBody>
                 <ModalFooter>
