@@ -87,7 +87,11 @@ class App extends React.Component<AppProps, AppState> {
         {previewRendering}
         <SimplePrompt {...modelData.simplePrompt} />
         <InputFilePrompt {...modelData.inputFilePrompt} />
-        <AddAssetPrompt {...modelData.addAssetPrompt}/>
+        <AddAssetPrompt
+          onStartUpload={(fl) => this.props.model.onStartAssetsUpload(fl)}
+          onCloseModal={() => this.props.model.onCloseAssetModal()}
+          isActive={modelData.addAssetDialogIsActive}
+          events={this.props.model} />
 
         <footer className="footer">
           <div className="container">
@@ -97,7 +101,7 @@ class App extends React.Component<AppProps, AppState> {
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.loadWorkspaceFromFile(false)}>Add-load</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.undo()}>Undo</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.redo()}>Redo</button>
-            <button type='button' className='btn btn-primary' onClick={() => this.props.model.redo()}>Add Assets</button>
+            <button type='button' className='btn btn-primary' onClick={() => this.props.model.addAssets()}>Add Assets</button>
             <button type='button' className='btn btn-primary' onClick={() => this.props.model.togglePreview()}>
               Preview:{modelData.previewEnabled ? 'ON' : 'OFF'}
             </button>

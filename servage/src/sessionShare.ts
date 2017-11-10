@@ -1,15 +1,15 @@
 import * as azStore from 'azure-storage'
 import * as uuid from 'uuid';
+import * as azcore from './azureCore';
 
 const containerName = 'blappshares';
-const azConnectionString = 'DefaultEndpointsProtocol=https;AccountName=blappstore;AccountKey=Bl7d2kFRBGQsjqZ8OGRUbRqnxgy2X/2k4z3nGRYh6lQMJ5AFWNMlKdmR59reoBW8CpemmXj040Ryt3gmCNuiYA==;EndpointSuffix=core.windows.net';
 
 export function storeSession(
     nameHint: string,
     data: any,
     cb: (name: string) => void,
     errcb: (err: Error) => void): void {
-    let blobSvc = azStore.createBlobService(azConnectionString);
+    let blobSvc = azStore.createBlobService(azcore.getAzConnectionString());
 
     blobSvc.createContainerIfNotExists(containerName, (err, res, resp) => {
         if (err) {
@@ -38,7 +38,7 @@ export function storeSession(
 }
 
 export function restoreSessionAsync(sid: string, cb: (data: any, err: Error) => void): void {
-    let blobSvc = azStore.createBlobService(azConnectionString);
+    let blobSvc = azStore.createBlobService(azcore.getAzConnectionString());
     blobSvc.getBlobToText(containerName, sid, (error, text, result, response) => {
         if (error) {
             cb(null, error);

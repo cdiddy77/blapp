@@ -2,10 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var azStore = require("azure-storage");
 var uuid = require("uuid");
+var azcore = require("./azureCore");
 var containerName = 'blappshares';
-var azConnectionString = 'DefaultEndpointsProtocol=https;AccountName=blappstore;AccountKey=Bl7d2kFRBGQsjqZ8OGRUbRqnxgy2X/2k4z3nGRYh6lQMJ5AFWNMlKdmR59reoBW8CpemmXj040Ryt3gmCNuiYA==;EndpointSuffix=core.windows.net';
 function storeSession(nameHint, data, cb, errcb) {
-    var blobSvc = azStore.createBlobService(azConnectionString);
+    var blobSvc = azStore.createBlobService(azcore.getAzConnectionString());
     blobSvc.createContainerIfNotExists(containerName, function (err, res, resp) {
         if (err) {
             errcb(err);
@@ -31,7 +31,7 @@ function storeSession(nameHint, data, cb, errcb) {
 }
 exports.storeSession = storeSession;
 function restoreSessionAsync(sid, cb) {
-    var blobSvc = azStore.createBlobService(azConnectionString);
+    var blobSvc = azStore.createBlobService(azcore.getAzConnectionString());
     blobSvc.getBlobToText(containerName, sid, function (error, text, result, response) {
         if (error) {
             cb(null, error);

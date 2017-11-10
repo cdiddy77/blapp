@@ -1,6 +1,7 @@
 /// <reference path="../localtypings/blockly.d.ts" />
 import * as jsutil from '../../../shared/src/util/jsutil';
 import { ModelWithEvents } from './ModelWithEvents';
+import { KnownEvents, FileUploadProgressEvent } from './EventsProvider';
 import * as BlocklyConfig from '../blocks/BlocklyConfig';
 import * as Config3d from '../blocks/Config3d';
 import * as ConfigGui from '../blocks/ConfigGui';
@@ -10,21 +11,28 @@ import { InputFilePromptModel } from './InputFilePromptModel';
 import { AddAssetPromptModel } from './AddAssetPromptModel';
 import * as svcConn from '../util/ServiceConnection';
 import * as ThreeUtil from '../../../shared/src/util/ThreeUtil';
+
 export interface AppModelData {
     lastEvalError: Error;
     code: string;
     pairingCode: string;
     simplePrompt: SimplePromptModel;
     inputFilePrompt: InputFilePromptModel;
-    addAssetPrompt: AddAssetPromptModel;
     statusMessage: string;
     // not implemented in this version
     sharingCode: string;
     previewEnabled: boolean;
+    addAssetDialogIsActive: boolean;
+}
+
+const blapp3dAssetsKey: string = 'blapp3dAssets';
+interface AssetsModel {
+    namedUris: string[][];
 }
 
 export class AppModel extends ModelWithEvents<AppModelData>
     implements CodegenHost, svcConn.ServiceConnectionHost {
+
 
     constructor() {
         super({
@@ -33,10 +41,10 @@ export class AppModel extends ModelWithEvents<AppModelData>
             pairingCode: null,
             simplePrompt: null,
             inputFilePrompt: null,
-            addAssetPrompt: null,
             statusMessage: null,
             sharingCode: null,
             previewEnabled: false,
+            addAssetDialogIsActive: false
         });
         CodegenRuntime.setCodegenHost(this);
     }
@@ -148,6 +156,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
             BlocklyConfig.initUtilityBlockDefinitions();
             // SHAREDVARS
             this.initSharedVariableBlocks();
+            this.initAssetBlocks();
             BlocklyConfig.initCodeGenerators();
             Config3d.init3dBlocks();
             ConfigGui.initGuiBlocks(this);
@@ -203,22 +212,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
             this.setProperty('inputFilePrompt', promptVal);
         });
     }
-    doAddAssetPrompt(): Promise<FileList> {
-        return new Promise<FileList>((resolve, reject) => {
-            let promptVal: AddAssetPromptModel = {
-                isActive: true,
-                okCallback: (input) => {
-                    resolve(input);
-                    this.setProperty('addAssetPrompt', null);
-                },
-                cancelCallback: () => {
-                    resolve(null);
-                    this.setProperty('addAssetPrompt', null);
-                }
-            };
-            this.setProperty('addAssetPrompt', promptVal);
-        });
-    }
+
 
     // SHAREDVARS
     initDynamicCategories(): void {
@@ -264,32 +258,111 @@ export class AppModel extends ModelWithEvents<AppModelData>
     }
 
     private restoreWorkspace() {
-        var url = window.location.href.split('#')[0];
+        let url = window.location.href.split('#')[0];
         if ('localStorage' in window && window.localStorage[url]) {
-            var xml = Blockly.Xml.textToDom(window.localStorage[url]);
+            let xml = Blockly.Xml.textToDom(window.localStorage[url]);
             Blockly.Xml.domToWorkspace(xml, this._workspace);
             this._performResetOnLoad = true;
             // SHAREDVARS
             // and then walk the workspace, find all of the 
             // shared variables, and keep them in our own list
             this.findAllSharedVariables(true);
-            // ASSETS : load up the user's assets list from localStorage
-            // ASSETS : read all of the assets from the different blocks in the document, keep them in a different asset list
+
+            // load up the user's assets list from localStorage
+            let assetsText = window.localStorage[blapp3dAssetsKey];
+            if (assetsText)
+                this.userAssets = JSON.parse(assetsText);
+
+            // read all of the assets from the different blocks in the document, keep them in a different asset list
+            this.findAllWorkspaceAssetReferences();
         }
     }
     private backupWorkspace() {
         var xml = Blockly.Xml.workspaceToDom(this._workspace);
         // Gets the current URL, not including the hash.
         var url = window.location.href.split('#')[0];
-        window.localStorage.setItem(url, Blockly.Xml.domToText(xml));
-        // ASSETS : save the user's assets list to localStorage
+        if ('localStorage' in window) {
+            window.localStorage.setItem(url, Blockly.Xml.domToText(xml));
+            this.saveUserAssetList();
+        }
     }
 
     // assets ///////////////////////////////////////////////////////////
     //
-    // ASSETS : persist asset list in localstorage as users add them
+    userAssets: AssetsModel = { namedUris: [] };
+    workspaceAssets: AssetsModel = { namedUris: [] };
+
+    saveUserAssetList(): void {
+        // persist asset list in localstorage as users add them
+        window.localStorage[blapp3dAssetsKey] = JSON.stringify(this.userAssets);
+    }
+
+    findAllWorkspaceAssetReferences(): void {
+        // clear previous
+        this.workspaceAssets = { namedUris: [] };
+
+        // implement block walk, looking for asset references. we only
+        // see the URI, so look up URI in user assets. If it isn't found there, 
+        // then create a new workspace asset
+        let blocks = this._workspace.getAllBlocks();
+        for (var x = 0; x < blocks.length; x++) {
+            let b = blocks[x];
+            if (b.type == 'asset_reference') {
+                let uri = b.getFieldValue('asset');
+                // look it up in the list of workspace assets
+                if (!this.workspaceAssets.namedUris.find((v) => {
+                    return v[1] == uri;
+                })) {
+                    // if not found, look it up in the list of user assets
+                    if (!this.userAssets.namedUris.find((v) => {
+                        return v[1] == uri;
+                    })) {
+                        // if still not found, create a new workspace asset
+                        let lastSlash = uri.lastIndexOf('/');
+
+                        let assetName = uri.substr(lastSlash >= 0 ? lastSlash + 1 : 0);
+                        this.workspaceAssets.namedUris.push([assetName, uri]);
+                    }
+                }
+            }
+        }
+    }
+
+    // mapAssetNameToUri(name: string): string {
+    //     // ASSETS : translate the name of an asset to the actual URI for generated code
+    //     return null;
+    // }
+
+    // dropdown populator for assets
     //
-    // ASSETS : maintain in-memory map between asset names and URLs
+    getAssetListDropdownPopulator(): string[][] {
+        if (this.userAssets.namedUris.length + this.workspaceAssets.namedUris.length > 0)
+            this.userAssets.namedUris.concat(this.workspaceAssets.namedUris);
+        else
+            return [['--', '--']];
+    }
+    /////////////////////////////////////////////////////////////////////
+
+    initAssetBlocks(): void {
+        let getAssetListDropdownPopulator = this.getAssetListDropdownPopulator.bind(this);
+
+        Blockly.Blocks['asset_reference'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField("asset")
+                    .appendField(new Blockly.FieldDropdown(getAssetListDropdownPopulator), "asset");
+                this.setOutput(true, "String");
+                this.setColour(75);
+                this.setTooltip("");
+                this.setHelpUrl("");
+            }
+        };
+        Blockly.JavaScript['asset_reference'] = function (block: Blockly.Block) {
+            let dropdown_asset = block.getFieldValue('asset');
+            let code = `"${dropdown_asset}"`;
+            return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+        };
+    }
     //
     /////////////////////////////////////////////////////////////////////
 
@@ -331,10 +404,6 @@ export class AppModel extends ModelWithEvents<AppModelData>
         }
     }
 
-    // ASSETS : dropdown populator for assets
-    //
-    /////////////////////////////////////////////////////////////////////
-
     // shared variable stuffs ///////////////////////////////////////////
     //
     // SHAREDVARS
@@ -369,7 +438,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
         let getSharedVarsListProc = this.getSharedVariablesList.bind(this);
         let getSharedVarsListWithWildcardProc = this.getSharedVariablesListWithWildcard.bind(this);
         Blockly.Blocks['sharvar_get'] = {
-            init: function() {
+            init: function () {
                 this.appendDummyInput()
                     .appendField(new Blockly.FieldImage("media/social/ic_share_white_48dp.png", 16, 16, "*"))
                     .appendField(new Blockly.FieldDropdown(getSharedVarsListProc), "varname");
@@ -380,7 +449,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
             }
         };
         Blockly.Blocks['sharvar_set'] = {
-            init: function() {
+            init: function () {
                 this.appendValueInput("value")
                     .setCheck(null)
                     .appendField(new Blockly.FieldImage("media/social/ic_share_white_48dp.png", 16, 16, "*"))
@@ -396,7 +465,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
             }
         };
         Blockly.Blocks['sharvar_force_update'] = {
-            init: function() {
+            init: function () {
                 this.appendDummyInput()
                     .appendField(new Blockly.FieldImage("media/social/ic_share_white_48dp.png", 16, 16, "*"))
                     .appendField("update shared")
@@ -409,7 +478,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
             }
         };
         Blockly.Blocks['on_sharvar_change'] = {
-            init: function() {
+            init: function () {
                 this.appendStatementInput("statements")
                     .setCheck(null)
                     .appendField(new Blockly.FieldImage("media/social/ic_share_white_48dp.png", 16, 16, "*"))
@@ -572,15 +641,98 @@ export class AppModel extends ModelWithEvents<AppModelData>
                 // shared variables, and keep them in our own list
                 this.findAllSharedVariables(true);
 
-                // ASSETS : find all of the asset references in the file, add them to a list
+                // find all of the asset references in the file, add them to a list
+                this.findAllWorkspaceAssetReferences();
             };
             reader.readAsText(files[0]);
-        })
+        });
     }
     //
     ////////////////////////////////////////////////////////////////////
     addAssets() {
-        // ASSETS : implement this by prompting user to add assets
+        // ASSETS : implement this by prompting user to add assets then upload
+        this.setProperty('addAssetDialogIsActive', true);
+    }
+    onCloseAssetModal() {
+        // ASSETS : implement this.
+        this.setProperty('addAssetDialogIsActive', false);
+    }
+
+
+    onStartAssetsUpload(files: FileList) {
+
+        if (!files || files.length == 0) {
+            return;
+        }
+
+        for (let i: number = 0; i < files.length; i++) {
+            let originalAssetName = files[i].name;
+            let assetName = originalAssetName;
+            let suffix: number = 1;
+            while (this.userAssets.namedUris.find(v => v[0] == assetName)) {
+                assetName = originalAssetName + '_' + suffix++;
+            }
+            let fileState: FileUploadProgressEvent = {
+                index: i,
+                assetName: assetName,
+                pctComplete: 0,
+                statusText: 'not started',
+                done: false
+            };
+
+            this.fire(KnownEvents.fileUploadProgressEvent, fileState);
+
+            // let formData = new FormData();
+            // formData.append('files[]', files[i], assetName);
+            let file = files[i];
+            file
+            let reader = new FileReader();
+            reader.onload = (evt) => {
+                let data = (<any>evt.target).result;
+                let xhr = new XMLHttpRequest();
+                xhr.open('POST', '/assets/' + assetName, true);
+                xhr.onprogress = (evt) => {
+                    fileState.pctComplete = evt.loaded / evt.total;
+                    fileState.statusText = 'in progress';
+                    this.fire(KnownEvents.fileUploadProgressEvent, fileState);
+                    console.log('xhr.onProgress:', fileState.pctComplete);
+                };
+                xhr.onload = (evt) => {
+                    if (xhr.status == 200) {
+                        fileState.pctComplete = 1;
+                        fileState.statusText = 'complete';
+                        let response = JSON.parse(xhr.responseText);
+                        if (response) {
+                            if (response.error) {
+                                fileState.statusText = 'failed';
+                            } else if (response.name) {
+                                fileState.statusText = 'complete';
+                                // now take this name and add it to the local storage
+                            }
+                        }
+                    } else {
+                        fileState.statusText = 'failed';
+                    }
+                    fileState.done = true;
+                    this.fire(KnownEvents.fileUploadProgressEvent, fileState);
+                    console.log('xhr.onload:', xhr.responseText);
+                };
+                xhr.onerror = (evt) => {
+                    fileState.statusText = 'failed';
+                    fileState.done = true;
+                    this.fire(KnownEvents.fileUploadProgressEvent, fileState);
+                    console.log('xhr.onerror:', evt.error);
+                };
+                xhr.send(data);
+            };
+            reader.onerror = (evt) => {
+                fileState.pctComplete = 1;
+                fileState.statusText = 'read failed';
+                fileState.done = true;
+                console.log('reader.onerror:', evt.error);
+            };
+            reader.readAsBinaryString(file);
+        }
     }
 
     togglePreview() {
@@ -588,10 +740,12 @@ export class AppModel extends ModelWithEvents<AppModelData>
     }
 
     undo() {
-        this._workspace.undo();
+        if (this._workspace.undo)
+            this._workspace.undo();
     }
     redo() {
-        this._workspace.redo();
+        if (this._workspace.redo)
+            this._workspace.redo();
     }
     resetApplication() {
         let resetProc = CodegenRuntime.getResetApplicationProc();

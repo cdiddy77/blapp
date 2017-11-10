@@ -426,6 +426,7 @@
     <block type="get_gui_var"/>
   </category>
   <category name="Utility" colour="#5CA65C">
+    <block type="asset_reference"/>
     <block type="console_log">
       <value name="message">
         <shadow type="text">
