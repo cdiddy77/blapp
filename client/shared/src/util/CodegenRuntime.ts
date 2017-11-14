@@ -10,6 +10,8 @@ import * as Rto from './RuntimeObjects';
 
 import 'three/examples/js/loaders/MTLLoader';
 import 'three/examples/js/loaders/OBJLoader';
+import 'three/examples/js/loaders/FBXLoader';
+import 'three/examples/js/loaders/STLLoader';
 
 export interface CodegenHost {
     insertRendererElement(domElement: HTMLCanvasElement): void;
@@ -353,7 +355,7 @@ export namespace CodegenRuntime {
             var objLoader = new THREE.OBJLoader();
             objLoader.setMaterials(materials);
             objLoader.setPath(objInfo.path);
-            objLoader.load(objInfo.objname + '.obj', function(object) {
+            objLoader.load(objInfo.objname + '.obj', function (object) {
                 let oldobj = result.o3d;
                 object.receiveShadow = true;
                 object.castShadow = true;
@@ -364,12 +366,97 @@ export namespace CodegenRuntime {
             },
                 (ev) => { },
                 (err) => {
-                    console.log('error downloading:', JSON.stringify(err));
+                    console.log('error downloading:', err.message);
                 });
 
         }, (ev) => { },
             (errEv) => {
-                console.log('error downloading:', JSON.stringify(errEv));
+                console.log('error downloading:', errEv.message);
+            });
+
+        return result;
+    }
+
+    export function loadOBJMTL(objUri: string, mtlUri: string): Rto.SceneObject {
+        if (!objUri || objUri.length == 0 || !mtlUri || mtlUri.length == 0) return null;
+
+        let material = createMeshBasicMaterial("#00ff00", false);
+        let result = createMesh(new THREE.TorusKnotGeometry(10), material);
+        var mtlLoader = new THREE.MTLLoader();
+        mtlLoader.setPath('');
+        mtlLoader.load(mtlUri, (materials) => {
+            materials.preload();
+
+            var objLoader = new THREE.OBJLoader();
+            objLoader.setMaterials(materials);
+            objLoader.setPath('');
+            objLoader.load(objUri, function (object) {
+                let oldobj = result.o3d;
+                object.receiveShadow = true;
+                object.castShadow = true;
+                result.o3d = object;
+                result.copyProps(oldobj);
+                result.updateInScene(scene);
+                // objInfo.cache = object;
+            },
+                (ev) => { },
+                (err) => {
+                    console.log('error downloading:', err.message);
+                });
+
+        }, (ev) => { },
+            (errEv) => {
+                console.log('error downloading:', errEv.message);
+            });
+
+        return result;
+    }
+    export function loadFBX(uri: string): Rto.SceneObject {
+        if (!uri || uri.length == 0) return null;
+
+        let material = createMeshBasicMaterial("#00ff00", false);
+        let result = createMesh(new THREE.TorusKnotGeometry(10), material);
+        let loader: THREE.FBXLoader = new THREE.FBXLoader();
+        loader.load(uri, function (object) {
+            console.log('succeeded downloading and parsing fbx');
+            let oldobj = result.o3d;
+            object.receiveShadow = true;
+            object.castShadow = true;
+            result.o3d = object;
+            result.copyProps(oldobj);
+            result.updateInScene(scene);
+
+        },
+            (ev) => { },
+            (err) => {
+                console.log('error downloading:', err.message);
+            });
+
+        return result;
+    }
+    export function loadSTL(uri: string, material: string | THREE.Material): Rto.SceneObject {
+        if (!uri || uri.length == 0) return null;
+
+        if (!(material instanceof THREE.Material)) {
+            material = createMeshBasicMaterial(material, false);
+        }
+
+        let result = createMesh(new THREE.TorusKnotGeometry(10), material);
+        let loader: any = new THREE.STLLoader();
+        loader.load(uri, function (geom: THREE.Geometry) {
+            console.log('succeeded downloading and parsing stl');
+            let oldobj = result.o3d;
+            let object = new THREE.Mesh(geom, <THREE.Material>material);
+            object.receiveShadow = true;
+            object.castShadow = true;
+            result.o3d = object;
+            result.copyProps(oldobj);
+            result.updateInScene(scene);
+
+        },
+            (ev: any) => { },
+            (err: any) => {
+                console.log('error downloading:', err.message);
             });
 
         return result;

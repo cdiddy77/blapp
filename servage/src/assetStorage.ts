@@ -31,3 +31,16 @@ export function storeFile(
     });
 
 }
+
+export function getFile(fileName: string, callback: (err: Error, stream: any) => void): void {
+    let blobSvc = azStore.createBlobService(azcore.getAzConnectionString());
+    let readStream = blobSvc.createReadStream(containerName, fileName, (err, result, response) => {
+        if (err)
+            callback(err, null);
+    });
+    // (error: Error, result: azStore.BlobService.BlobResult, response: azStore.ServiceResponse): void=>{
+    //     callback(error,result.st)
+    // });
+    callback(null, readStream);
+
+}

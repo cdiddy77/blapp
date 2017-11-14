@@ -22,24 +22,37 @@ var server = http.createServer(function (req, res) {
         pathName = 'app-release.apk';
         isApk = true;
     }
-    else if (urlObj.pathname.indexOf('/assets') == 0) {
-        var fileName = urlObj.pathname.substr('/assets/'.length);
+    else if (urlObj.pathname.indexOf('/userassets') == 0) {
+        var fileName = urlObj.pathname.substr('/userassets/'.length);
+        console.log("now serving " + req.method + ":" + urlObj.pathname);
         if (req.method == 'POST') {
             // ASSETS : support a PUT URI to create new assets
             assetStorage.storeFile(fileName, req, function (name) {
                 // return name to the client
                 console.log('storeFile success', name);
                 res.writeHead(200);
-                res.end("{name:'" + name + "',error:null}");
+                res.end("{\"name\":\"" + name + "\",\"error\":null}");
             }, function (err) {
                 // return error to the client
                 console.log('storeFile error', JSON.stringify(err));
                 res.writeHead(200);
-                res.end("{name:null,error:'" + err.message + "'}");
+                res.end("{\"name\":null,\"error\":\"" + err.message + "\"}");
             });
         }
         else if (req.method == 'GET') {
             // ASSETS : asset uri maps to azure storage uri
+            assetStorage.getFile(fileName, function (err, result) {
+                if (err) {
+                    res.writeHead(500);
+                }
+                else {
+                    console.log('piping blob to http response');
+                    result.on('error', function (error) {
+                        res.writeHead(error.statusCode);
+                    });
+                    result.pipe(res);
+                }
+            });
         }
     }
     else {

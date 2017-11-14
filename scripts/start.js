@@ -215,6 +215,14 @@ function addMiddleware(devServer) {
 
 function runDevServer(host, port, protocol) {
   var devServer = new WebpackDevServer(compiler, {
+    // added this so that we can test our server code. If you have 
+    // other URI paths that need testing, add them below
+    proxy: {
+      '/userassets': {
+        target: 'http://localhost:8080',
+        secure: false
+      }
+    },
     // Enable gzip compression of generated files.
     compress: true,
     // Silence WebpackDevServer's own logs since they're generally not useful.

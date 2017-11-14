@@ -337,7 +337,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
     //
     getAssetListDropdownPopulator(): string[][] {
         if (this.userAssets.namedUris.length + this.workspaceAssets.namedUris.length > 0)
-            this.userAssets.namedUris.concat(this.workspaceAssets.namedUris);
+            return this.userAssets.namedUris.concat(this.workspaceAssets.namedUris);
         else
             return [['--', '--']];
     }
@@ -690,7 +690,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
             reader.onload = (evt) => {
                 let data = (<any>evt.target).result;
                 let xhr = new XMLHttpRequest();
-                xhr.open('POST', '/assets/' + assetName, true);
+                xhr.open('POST', '/userassets/' + assetName, true);
                 xhr.onprogress = (evt) => {
                     fileState.pctComplete = evt.loaded / evt.total;
                     fileState.statusText = 'in progress';
@@ -698,22 +698,31 @@ export class AppModel extends ModelWithEvents<AppModelData>
                     console.log('xhr.onProgress:', fileState.pctComplete);
                 };
                 xhr.onload = (evt) => {
+                    fileState.pctComplete = 1;
+                    fileState.statusText = 'failed'; // pessimistic
+                    fileState.done = true;
+
                     if (xhr.status == 200) {
-                        fileState.pctComplete = 1;
-                        fileState.statusText = 'complete';
-                        let response = JSON.parse(xhr.responseText);
-                        if (response) {
-                            if (response.error) {
-                                fileState.statusText = 'failed';
-                            } else if (response.name) {
-                                fileState.statusText = 'complete';
-                                // now take this name and add it to the local storage
+                        try {
+                            let response = JSON.parse(xhr.responseText);
+                            if (response) {
+                                if (response.error) {
+                                    fileState.statusText = 'failed';
+                                } else if (response.name) {
+                                    fileState.statusText = 'complete';
+                                    // now take this name and add it to the local storage
+                                    console.log(`saving to local storage:${assetName}:${response.name}`);
+                                    this.userAssets.namedUris.push([assetName, '/userassets/' + response.name]);
+                                }
                             }
+                        } catch (ex) { 
+                            console.log(ex);
                         }
                     } else {
                         fileState.statusText = 'failed';
                     }
                     fileState.done = true;
+
                     this.fire(KnownEvents.fileUploadProgressEvent, fileState);
                     console.log('xhr.onload:', xhr.responseText);
                 };
@@ -731,7 +740,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
                 fileState.done = true;
                 console.log('reader.onerror:', evt.error);
             };
-            reader.readAsBinaryString(file);
+            reader.readAsArrayBuffer(file);
         }
     }
 

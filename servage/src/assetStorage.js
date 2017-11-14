@@ -23,4 +23,16 @@ function storeFile(fileName, req, cb, errcb) {
     });
 }
 exports.storeFile = storeFile;
+function getFile(fileName, callback) {
+    var blobSvc = azStore.createBlobService(azcore.getAzConnectionString());
+    var readStream = blobSvc.createReadStream(containerName, fileName, function (err, result, response) {
+        if (err)
+            callback(err, null);
+    });
+    // (error: Error, result: azStore.BlobService.BlobResult, response: azStore.ServiceResponse): void=>{
+    //     callback(error,result.st)
+    // });
+    callback(null, readStream);
+}
+exports.getFile = getFile;
 //# sourceMappingURL=assetStorage.js.map
