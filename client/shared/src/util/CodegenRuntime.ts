@@ -10,6 +10,9 @@ import * as Rto from './RuntimeObjects';
 
 import 'three/examples/js/loaders/MTLLoader';
 import 'three/examples/js/loaders/OBJLoader';
+// needed for fbxloader
+// import {Zlib} from 'three/examples/js/libs/inflate.min';
+// (<any>window).Zlib = Zlib;
 import 'three/examples/js/loaders/FBXLoader';
 import 'three/examples/js/loaders/STLLoader';
 
