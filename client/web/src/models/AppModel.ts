@@ -260,6 +260,11 @@ export class AppModel extends ModelWithEvents<AppModelData>
     private restoreWorkspace() {
         let url = window.location.href.split('#')[0];
         if ('localStorage' in window && window.localStorage[url]) {
+            // load up the user's assets list from localStorage
+            let assetsText = window.localStorage[blapp3dAssetsKey];
+            if (assetsText)
+                this.userAssets = JSON.parse(assetsText);
+
             let xml = Blockly.Xml.textToDom(window.localStorage[url]);
             Blockly.Xml.domToWorkspace(xml, this._workspace);
             this._performResetOnLoad = true;
@@ -267,11 +272,6 @@ export class AppModel extends ModelWithEvents<AppModelData>
             // and then walk the workspace, find all of the 
             // shared variables, and keep them in our own list
             this.findAllSharedVariables(true);
-
-            // load up the user's assets list from localStorage
-            let assetsText = window.localStorage[blapp3dAssetsKey];
-            if (assetsText)
-                this.userAssets = JSON.parse(assetsText);
 
             // read all of the assets from the different blocks in the document, keep them in a different asset list
             this.findAllWorkspaceAssetReferences();
