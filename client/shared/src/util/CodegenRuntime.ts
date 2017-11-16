@@ -13,7 +13,8 @@ import 'three/examples/js/loaders/OBJLoader';
 // needed for fbxloader
 // import {Zlib} from 'three/examples/js/libs/inflate.min';
 // (<any>window).Zlib = Zlib;
-import 'three/examples/js/loaders/FBXLoader';
+//import 'three/examples/js/loaders/FBXLoader';
+import './AltFBXLoader';
 import 'three/examples/js/loaders/STLLoader';
 
 export interface CodegenHost {

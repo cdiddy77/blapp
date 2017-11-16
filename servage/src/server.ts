@@ -42,18 +42,30 @@ var server = http.createServer(function (req, res) {
                     res.end(`{"name":null,"error":"${err.message}"}`);
                 });
         } else if (req.method == 'GET') {
-            // ASSETS : asset uri maps to azure storage uri
-            assetStorage.getFile(fileName, (err, result) => {
-                if (err) {
-                    res.writeHead(500);
-                } else {
-                    console.log('piping blob to http response');
-                    result.on('error', function (error: any) {
-                        res.writeHead(error.statusCode);
-                    });
-                    result.pipe(res);
-                }
-            });
+            console.log('request headers:', JSON.stringify(req.headers));
+            if (req.headers['if-none-match'] == 'immutable'
+                || req.headers['If-None-Match'] == 'immutable') {
+                console.log('found etag, returning 304');
+                res.setHeader('Cache-Control', 'max-age=5');
+                res.setHeader('ETag', 'immutable');
+                res.writeHead(304);
+                res.end();
+            } else {
+                // ASSETS : asset uri maps to azure storage uri
+                assetStorage.getFile(fileName, (err, result) => {
+                    if (err) {
+                        res.writeHead(500);
+                    } else {
+                        res.setHeader('Cache-Control', 'max-age=5');
+                        res.setHeader('ETag', 'immutable');
+                        console.log('piping blob to http response');
+                        result.on('error', function (error: any) {
+                            res.writeHead(error.statusCode);
+                        });
+                        result.pipe(res);
+                    }
+                });
+            }
         }
     } else {
         pathName = urlObj.pathname;
