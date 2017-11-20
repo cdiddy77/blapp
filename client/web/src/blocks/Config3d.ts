@@ -423,23 +423,23 @@ export function init3dBlocks() {
         }
     };
     Blockly.Blocks['load_stl'] = {
-        init: function() {
-          this.appendDummyInput()
-              .appendField("load STL file");
-          this.appendValueInput("stl_uri")
-              .setCheck("String")
-              .setAlign(Blockly.ALIGN_RIGHT)
-              .appendField("URI");
-          this.appendValueInput("material")
-              .setCheck(null)
-              .setAlign(Blockly.ALIGN_RIGHT)
-              .appendField("material");
-          this.setOutput(true, null);
-          this.setColour(230);
-       this.setTooltip("");
-       this.setHelpUrl("");
+        init: function () {
+            this.appendDummyInput()
+                .appendField("load STL file");
+            this.appendValueInput("stl_uri")
+                .setCheck("String")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("URI");
+            this.appendValueInput("material")
+                .setCheck(null)
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("material");
+            this.setOutput(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
         }
-      };
+    };
     Blockly.Blocks['load_file'] = {
         init: function () {
             this.appendDummyInput()
@@ -590,6 +590,35 @@ export function init3dBlocks() {
     Blockly.JavaScript['scene_elements'] = function (block: Blockly.Block) {
         let code = `CgRt.getSceneElements()`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+
+    Blockly.Blocks['set_scene_fog'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("set scene fog")
+                .appendField("color")
+                .appendField(new Blockly.FieldColour("#ffffff"), "color");
+            this.appendValueInput("near_value")
+                .setCheck("Number")
+                .appendField("near");
+            this.appendValueInput("far_value")
+                .setCheck("Number")
+                .appendField("far");
+            this.setInputsInline(true);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+
+    Blockly.JavaScript['set_scene_fog'] = function (block: Blockly.Block) {
+        var colour_color = block.getFieldValue('color');
+        var value_near_value = Blockly.JavaScript.valueToCode(block, 'near_value', Blockly.JavaScript.ORDER_ATOMIC);
+        var value_far_value = Blockly.JavaScript.valueToCode(block, 'far_value', Blockly.JavaScript.ORDER_ATOMIC);
+        let code = `CgRt.setSceneFog('${colour_color}',${value_near_value},${value_far_value});\n`;
+        return code;
     };
 
     Blockly.Blocks['set_rotation'] = {
@@ -799,6 +828,39 @@ export function init3dBlocks() {
         let code = `CgRt.setRotationZ(${value_object},${value_value});\n`;
         return code;
     };
+    Blockly.Blocks['set_rotation_axis'] = {
+        init: function () {
+            this.appendValueInput("object")
+                .setCheck(null)
+                .appendField("object");
+            this.appendDummyInput()
+                .appendField("set rotation")
+                .appendField(new Blockly.FieldDropdown([["X", "X"], ["Y", "Y"], ["Z", "Z"]]), "axis");
+            this.appendValueInput("value")
+                .setCheck("Number");
+            this.setInputsInline(true);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['set_rotation_axis'] = function (block: Blockly.Block) {
+        var value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
+        var dropdown_axis = block.getFieldValue('axis');
+        var value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
+        if (!block.parentBlock_ || !value_object || value_object == '')
+            return '';
+        let code: string;
+        if (dropdown_axis == 'X')
+            code = `CgRt.setRotationX(${value_object},${value_value});\n`;
+        else if (dropdown_axis == 'Y')
+            code = `CgRt.setRotationY(${value_object},${value_value});\n`;
+        else if (dropdown_axis == 'Z')
+            code = `CgRt.setRotationZ(${value_object},${value_value});\n`;
+        return code;
+    };
     Blockly.Blocks['set_position_x'] = {
         init: function () {
             this.appendValueInput("object")
@@ -872,6 +934,39 @@ export function init3dBlocks() {
         if (!block.parentBlock_ || !value_object || value_object == '')
             return '';
         let code = `CgRt.setPositionZ(${value_object},${value_value});\n`;
+        return code;
+    };
+    Blockly.Blocks['set_position_axis'] = {
+        init: function () {
+            this.appendValueInput("object")
+                .setCheck(null)
+                .appendField("object");
+            this.appendDummyInput()
+                .appendField("set position")
+                .appendField(new Blockly.FieldDropdown([["X", "X"], ["Y", "Y"], ["Z", "Z"]]), "axis");
+            this.appendValueInput("value")
+                .setCheck("Number");
+            this.setInputsInline(true);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['set_position_axis'] = function (block: Blockly.Block) {
+        var value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
+        var dropdown_axis = block.getFieldValue('axis');
+        var value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
+        if (!block.parentBlock_ || !value_object || value_object == '')
+            return '';
+        let code: string;
+        if (dropdown_axis == 'X')
+            code = `CgRt.setPositionX(${value_object},${value_value});\n`;
+        else if (dropdown_axis == 'Y')
+            code = `CgRt.setPositionY(${value_object},${value_value});\n`;
+        else if (dropdown_axis == 'Z')
+            code = `CgRt.setPositionZ(${value_object},${value_value});\n`;
         return code;
     };
 
@@ -951,6 +1046,40 @@ export function init3dBlocks() {
         let code = `CgRt.changeRotationZ(${value_object},${value_value});\n`;
         return code;
     };
+    Blockly.Blocks['change_rotation_axis'] = {
+        init: function () {
+            this.appendValueInput("object")
+                .setCheck(null)
+                .appendField("object");
+            this.appendDummyInput()
+                .appendField("change rotation")
+                .appendField(new Blockly.FieldDropdown([["X", "X"], ["Y", "Y"], ["Z", "Z"]]), "axis");
+            this.appendValueInput("value")
+                .setCheck("Number");
+            this.setInputsInline(true);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['change_rotation_axis'] = function (block: Blockly.Block) {
+        var value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
+        var dropdown_axis = block.getFieldValue('axis');
+        var value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
+        if (!block.parentBlock_ || !value_object || value_object == '')
+            return '';
+        let code: string;
+        if (dropdown_axis == 'X')
+            code = `CgRt.changeRotationX(${value_object},${value_value});\n`;
+        else if (dropdown_axis == 'Y')
+            code = `CgRt.changeRotationY(${value_object},${value_value});\n`;
+        else if (dropdown_axis == 'Z')
+            code = `CgRt.changeRotationZ(${value_object},${value_value});\n`;
+        return code;
+    };
+
     Blockly.Blocks['change_position_x'] = {
         init: function () {
             this.appendValueInput("object")
@@ -1027,6 +1156,40 @@ export function init3dBlocks() {
         return code;
     };
 
+    Blockly.Blocks['change_position_axis'] = {
+        init: function () {
+            this.appendValueInput("object")
+                .setCheck(null)
+                .appendField("object");
+            this.appendDummyInput()
+                .appendField("change position")
+                .appendField(new Blockly.FieldDropdown([["X", "X"], ["Y", "Y"], ["Z", "Z"]]), "axis");
+            this.appendValueInput("value")
+                .setCheck("Number");
+            this.setInputsInline(true);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['change_position_axis'] = function (block: Blockly.Block) {
+        var value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
+        var dropdown_axis = block.getFieldValue('axis');
+        var value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
+        if (!block.parentBlock_ || !value_object || value_object == '')
+            return '';
+        let code: string;
+        if (dropdown_axis == 'X')
+            code = `CgRt.changePositionX(${value_object},${value_value});\n`;
+        else if (dropdown_axis == 'Y')
+            code = `CgRt.changePositionY(${value_object},${value_value});\n`;
+        else if (dropdown_axis == 'Z')
+            code = `CgRt.changePositionZ(${value_object},${value_value});\n`;
+        return code;
+    };
+
     ///////////////////////////////////////////
     Blockly.Blocks['object_position'] = {
         init: function () {
@@ -1065,6 +1228,20 @@ export function init3dBlocks() {
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
 
+    Blockly.Blocks['camera_object'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("Camera");
+            this.setOutput(true, "CameraControls");
+            this.setColour(90);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['camera_object'] = function (block: Blockly.Block) {
+        let code = `CgRt.getCameraObject()`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
     Blockly.Blocks['camera_position'] = {
         init: function () {
             this.appendDummyInput()
@@ -1189,7 +1366,32 @@ export function init3dBlocks() {
         let code = `CgRt.cameraLookAtPosition(${value_value});\n`;
         return code;
     };
-
+    Blockly.Blocks['object_lookat'] = {
+        init: function () {
+            this.appendValueInput("object")
+                .setCheck(null)
+                .appendField("point object");
+            this.appendValueInput("value")
+                .setCheck(null)
+                .appendField("towards");
+            this.setInputsInline(true);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['object_lookat'] = function (block: Blockly.Block) {
+        var value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
+        var value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
+        if (!block.parentBlock_)
+            return '';
+        if (!value_object || value_object == '') value_object = 'null';
+        if (!value_value || value_value == '') value_value = 'null';
+        let code = `CgRt.objectLookAt(${value_object},${value_value});\n`;
+        return code;
+    };
     Blockly.Blocks['trackball_controls'] = {
         init: function () {
             this.appendDummyInput()

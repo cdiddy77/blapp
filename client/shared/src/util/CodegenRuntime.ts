@@ -294,6 +294,8 @@ export namespace CodegenRuntime {
     }
 
     export function createMesh(geometry: THREE.Geometry | THREE.BufferGeometry, material: THREE.Material): Rto.SceneObject {
+        if (!geometry || !material)
+            return null;
         var result = new THREE.Mesh(geometry, material);
         result.receiveShadow = true;
         result.castShadow = true;
@@ -510,6 +512,16 @@ export namespace CodegenRuntime {
         if (obj) obj.o3d.rotation.z = value;
     }
 
+    export function objectLookAt(obj: Rto.SceneObject, pos: Rto.SceneObject | THREE.Vector3) {
+        if (!obj || !obj.o3d) return;
+        if (!pos) return;
+
+        if (pos instanceof Rto.SceneObject) {
+            pos = pos.o3d.position;
+        }
+        obj.o3d.lookAt(pos);
+    }
+
     export function setPositionX(obj: Rto.SceneObject, value: number) {
         if (obj) obj.o3d.position.x = value;
     }
@@ -556,6 +568,14 @@ export namespace CodegenRuntime {
         return scene.position;
     }
 
+    export function setSceneFog(color: string, near: number, far: number): void {
+        if (!scene) return;
+        if (!color) color = '0xffffff';
+        let colorNum: number = parseInt(color.substr(1), 16);
+        scene.fog = new THREE.Fog(colorNum, near, far);
+        //        scene.fog = new THREE.FogExp2(colorNum, near);
+    }
+
     export function definePosition(x: number, y: number, z: number): THREE.Vector3 {
         return new THREE.Vector3(x, y, z);
     }
@@ -563,6 +583,10 @@ export namespace CodegenRuntime {
     export function getSceneElements(): Rto.SceneObject[] {
         if (!scene) return [];
         return scene.children.map(v => new Rto.SceneObject(v));
+    }
+
+    export function getCameraObject(): Rto.SceneObject {
+        return camera;
     }
 
     export function getCameraPosition(): THREE.Vector3 {
