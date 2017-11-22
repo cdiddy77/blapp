@@ -51,11 +51,13 @@ export namespace CodegenRuntime {
     var renderer: THREE.WebGLRenderer = null;
     var scene: THREE.Scene = null;
     var camera: Rto.CameraObject = null;
+    var defaultAmbientLight: THREE.AmbientLight;
     var stats: { update: () => void } = null;
     var cameraControls: Rto.CameraControls = null;
     var clock: THREE.Clock = null;
     var datGui: dat.GUI = null;
     var datGuiObject: any = {};
+    var requestFrameHandle: number = null;
 
     var shareVarUpdateWildCardHandlers: ShareVarUpdatedCallback[] = [];
     var shareVarUpdateHandlers: jsutil.Map<ShareVarUpdatedCallback[]> = {};
@@ -99,12 +101,14 @@ export namespace CodegenRuntime {
         setOnStartProc(null);
         setOnFrameProc(null);
         resetKeyEventProcs();
+        cancelNextFrame();
 
         camera = null;
         if (scene) {
             while (scene.children.length > 0) {
                 scene.remove(scene.children[0]);
             }
+            prepareScene();
         }
         datGuiObject = {};
         removeDatGui();
@@ -202,12 +206,12 @@ export namespace CodegenRuntime {
         let height = cgHost.getRenderHeight();
         console.log('CodegenRuntime.initialize', width, height);
         if (!renderer) {
-            renderer = new THREE.WebGLRenderer({
-                clearColor: 0xeeeeee
-            });
-            renderer.shadowMap.enabled = true;
-            // renderer.shadowMapType = THREE.PCFSoftShadowMap;
-            // renderer.shadowMapType=THREE.PCFShadowMap;
+            renderer = new THREE.WebGLRenderer();
+            renderer.setClearColor(new THREE.Color(0xddddddd), 1.0);
+            // renderer.shadowMap.enabled = true;
+            renderer.shadowMapEnabled = true;
+            renderer.shadowMapType = THREE.PCFSoftShadowMap;
+            // renderer.shadowMapType=THREE.BasicShadowMap;
             cgHost.insertRendererElement(renderer.domElement);
             renderer.domElement.addEventListener('keydown', onKeyEvent);
         }
@@ -215,6 +219,7 @@ export namespace CodegenRuntime {
 
         if (!scene) {
             scene = new THREE.Scene();
+            prepareScene();
         }
 
         if (cameraControls && camera)
@@ -236,9 +241,16 @@ export namespace CodegenRuntime {
         renderScene();
     }
 
+    function prepareScene() {
+        if (!scene) return;
+        defaultAmbientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(defaultAmbientLight);
+
+    }
+
     function renderScene() {
         if (!renderer) return;
-        window.requestAnimationFrame(renderScene);
+        if (stats) stats.update();
         let width = cgHost.getRenderWidth();
         let height = cgHost.getRenderHeight();
         if (width != renderer.getSize().width || height != renderer.getSize().height) {
@@ -266,16 +278,27 @@ export namespace CodegenRuntime {
         } catch (e) {
             cgHost.setExecutionError(e);
         }
-        if (stats) stats.update();
+        requestNextFrame();
         if (renderer && scene && camera) {
             renderer.render(scene, camera.getCamera());
+        }
+    }
+
+    function requestNextFrame() {
+        requestFrameHandle = window.requestAnimationFrame(renderScene);
+    }
+
+    function cancelNextFrame() {
+        if (requestFrameHandle) {
+            window.cancelAnimationFrame(requestFrameHandle);
+            requestFrameHandle = null;
         }
     }
 
     // start of 3d apis ///////////////////////////////////////////////////////////
     //
     export function createPlaneGeometry(width: number, height: number): THREE.BufferGeometry {
-        return new THREE.PlaneBufferGeometry(width, height);
+        return new THREE.PlaneBufferGeometry(width, height,1,1);
     }
 
     export function createCubeGeometry(width: number, height: number, depth: number): THREE.Geometry {
@@ -471,7 +494,9 @@ export namespace CodegenRuntime {
     export function createSpotlight(color: string): Rto.LightObject {
         var result = new THREE.SpotLight(color);
         result.castShadow = true;
-        result.shadow.mapSize.height = 4096;
+        let shadowMapRes: number = 2048;
+        result.shadow.mapSize.width = shadowMapRes;
+        result.shadow.mapSize.height = shadowMapRes;
         return new Rto.LightObject(result);
     }
 

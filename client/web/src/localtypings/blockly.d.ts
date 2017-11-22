@@ -200,6 +200,19 @@ declare namespace Blockly {
          */
         provideFunction_(desiredName: string, code: string[]): string;
 
+        /**
+         * Common tasks for generating code from blocks.  This is called from
+         * blockToCode and is called on every block, not just top level blocks.
+         * Subclasses may override this, e.g. to generate code for statements following
+         * the block, or to handle comments for the specified block and any connected
+         * value blocks.
+         * @param {!Blockly.Block} block The current block.
+         * @param {string} code The JavaScript code created for this block.
+         * @return {string} JavaScript code with comments and subsequent blocks added.
+         * @private
+         */
+        scrub_(block: Blockly.Block, code: string): string;
+
     }
 
     class JavaScriptGenerator extends Generator {
@@ -288,6 +301,7 @@ declare namespace Blockly {
         previousConnection: Connection;
         workspace: Workspace;
         valueConnection_?: any;
+        startHat_: boolean;
 
         // CPROP : When everything is working, get rid of itemCount_
         mutateInfo_?: any;
@@ -461,7 +475,7 @@ declare namespace Blockly {
         scrollbar: ScrollbarPair;
         svgBlockCanvas_: SVGGElement;
 
-        variableList:string[];
+        variableList: string[];
 
         newBlock(prototypeName: string, opt_id?: string): Block;
         render(): void;
@@ -572,7 +586,7 @@ declare namespace Blockly {
     namespace Variables {
         function allVariables(wp: Workspace): string[];
         let flyoutCategory: (wp: Workspace) => HTMLElement[];
-        const NAME_TYPE:string;
+        const NAME_TYPE: string;
     }
 
     namespace ContextMenu {

@@ -143,6 +143,24 @@ export class AppModel extends ModelWithEvents<AppModelData>
                 // }
             };
             this._workspace = Blockly.inject(container, options);
+
+            // the purpose of this block is to make it so that any
+            // code that is outside of event handlers is not generated.
+            //
+            let super_scrub = Blockly.JavaScript.scrub_;
+            Blockly.JavaScript.scrub_ = (b, c) => {
+                c = super_scrub(b, c);
+                if (b.parentBlock_ == null && !b.startHat_) {
+                    // console.log('ignoring', b.type, c);
+                    c = '';
+                } else if (b.parentBlock_ == null) {
+                    // console.log(b.type, c);
+                }
+                return c;
+            };
+            //
+            ////////////////////////////////////////////////////////////
+
             this._workspace.addChangeListener((e) => {
                 this.setProperty('code', Blockly.JavaScript.workspaceToCode(this._workspace));
                 this.backupWorkspace();
@@ -715,7 +733,7 @@ export class AppModel extends ModelWithEvents<AppModelData>
                                     this.userAssets.namedUris.push([assetName, '/userassets/' + response.name]);
                                 }
                             }
-                        } catch (ex) { 
+                        } catch (ex) {
                             console.log(ex);
                         }
                     } else {
