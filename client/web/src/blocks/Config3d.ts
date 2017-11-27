@@ -224,7 +224,23 @@ export function init3dBlocks() {
         let code = `CgRt.createMeshBasicMaterial("${colour_color}",${checkbox_wireframe})`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
-
+   Blockly.Blocks['create_mesh_color_material'] = {
+        init: function() {
+          this.appendValueInput("object")
+            //   .setCheck("String")
+              .appendField("create color material");
+          this.setOutput(true, null);
+          this.setColour(230);
+       this.setTooltip("");
+       this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['create_mesh_color_material'] = function(block:Blockly.Block) {
+        var value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_COMMA);
+        let code = `CgRt.createMeshBasicMaterial(${value_object},false)`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+      };
+ 
     Blockly.Blocks['create_mesh'] = {
         init: function () {
             this.appendDummyInput()
@@ -321,11 +337,11 @@ export function init3dBlocks() {
         }
     };
     Blockly.JavaScript['create_cube'] = function (block: Blockly.Block) {
-        var value_width = Blockly.JavaScript.valueToCode(block, 'width', Blockly.JavaScript.ORDER_COMMA);
-        var value_height = Blockly.JavaScript.valueToCode(block, 'height', Blockly.JavaScript.ORDER_COMMA);
-        var value_depth = Blockly.JavaScript.valueToCode(block, 'depth', Blockly.JavaScript.ORDER_COMMA);
-        var value_material = Blockly.JavaScript.valueToCode(block, 'material', Blockly.JavaScript.ORDER_COMMA);
-        var value_position = Blockly.JavaScript.valueToCode(block, 'position', Blockly.JavaScript.ORDER_COMMA);
+        let value_width = Blockly.JavaScript.valueToCode(block, 'width', Blockly.JavaScript.ORDER_COMMA);
+        let value_height = Blockly.JavaScript.valueToCode(block, 'height', Blockly.JavaScript.ORDER_COMMA);
+        let value_depth = Blockly.JavaScript.valueToCode(block, 'depth', Blockly.JavaScript.ORDER_COMMA);
+        let value_material = Blockly.JavaScript.valueToCode(block, 'material', Blockly.JavaScript.ORDER_COMMA);
+        let value_position = Blockly.JavaScript.valueToCode(block, 'position', Blockly.JavaScript.ORDER_COMMA);
         let code = `CgRt.createCube(${value_width},${value_height},${value_depth},${value_material},${value_position})`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
@@ -362,11 +378,11 @@ export function init3dBlocks() {
         }
     };
     Blockly.JavaScript['create_sphere'] = function (block: Blockly.Block) {
-        var value_radius = Blockly.JavaScript.valueToCode(block, 'radius', Blockly.JavaScript.ORDER_ATOMIC);
-        var value_width_segments = Blockly.JavaScript.valueToCode(block, 'width_segments', Blockly.JavaScript.ORDER_ATOMIC);
-        var value_height_segments = Blockly.JavaScript.valueToCode(block, 'height_segments', Blockly.JavaScript.ORDER_ATOMIC);
-        var value_material = Blockly.JavaScript.valueToCode(block, 'material', Blockly.JavaScript.ORDER_ATOMIC);
-        var value_position = Blockly.JavaScript.valueToCode(block, 'position', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_radius = Blockly.JavaScript.valueToCode(block, 'radius', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_width_segments = Blockly.JavaScript.valueToCode(block, 'width_segments', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_height_segments = Blockly.JavaScript.valueToCode(block, 'height_segments', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_material = Blockly.JavaScript.valueToCode(block, 'material', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_position = Blockly.JavaScript.valueToCode(block, 'position', Blockly.JavaScript.ORDER_ATOMIC);
         let code = `CgRt.createSphere(${value_radius},${value_width_segments},${value_height_segments},${value_material},${value_position})`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
@@ -385,7 +401,7 @@ export function init3dBlocks() {
     };
 
     Blockly.JavaScript['load_object'] = function (block: Blockly.Block) {
-        var dropdown_asset = block.getFieldValue('asset');
+        let dropdown_asset = block.getFieldValue('asset');
         let code = `CgRt.createOBJ(CgRt.knownObjs['${dropdown_asset}'])`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
@@ -455,8 +471,8 @@ export function init3dBlocks() {
         }
     };
     Blockly.JavaScript['load_objmtl'] = function (block: Blockly.Block) {
-        var value_obj_uri = Blockly.JavaScript.valueToCode(block, 'obj_uri', Blockly.JavaScript.ORDER_COMMA);
-        var value_mtl_uri = Blockly.JavaScript.valueToCode(block, 'mtl_uri', Blockly.JavaScript.ORDER_COMMA);
+        let value_obj_uri = Blockly.JavaScript.valueToCode(block, 'obj_uri', Blockly.JavaScript.ORDER_COMMA);
+        let value_mtl_uri = Blockly.JavaScript.valueToCode(block, 'mtl_uri', Blockly.JavaScript.ORDER_COMMA);
         if (!value_obj_uri || value_obj_uri == '') value_obj_uri = '""';
         if (!value_mtl_uri || value_mtl_uri == '') value_mtl_uri = '""';
         let code = `CgRt.loadOBJMTL(${value_obj_uri},${value_mtl_uri})`;
@@ -464,23 +480,23 @@ export function init3dBlocks() {
     };
 
     Blockly.JavaScript['load_fbx'] = function (block: Blockly.Block) {
-        var value_fbx_uri = Blockly.JavaScript.valueToCode(block, 'fbx_uri', Blockly.JavaScript.ORDER_COMMA);
+        let value_fbx_uri = Blockly.JavaScript.valueToCode(block, 'fbx_uri', Blockly.JavaScript.ORDER_COMMA);
         if (!value_fbx_uri || value_fbx_uri == '') value_fbx_uri = '""';
         let code = `CgRt.loadFBX(${value_fbx_uri})`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
 
     Blockly.JavaScript['load_stl'] = function (block: Blockly.Block) {
-        var value_stl_uri = Blockly.JavaScript.valueToCode(block, 'stl_uri', Blockly.JavaScript.ORDER_COMMA);
+        let value_stl_uri = Blockly.JavaScript.valueToCode(block, 'stl_uri', Blockly.JavaScript.ORDER_COMMA);
         if (!value_stl_uri || value_stl_uri == '') value_stl_uri = '""';
-        var value_material = Blockly.JavaScript.valueToCode(block, 'material', Blockly.JavaScript.ORDER_COMMA);
+        let value_material = Blockly.JavaScript.valueToCode(block, 'material', Blockly.JavaScript.ORDER_COMMA);
         let code = `CgRt.loadSTL(${value_stl_uri},${value_material})`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
 
     Blockly.JavaScript['load_file'] = function (block: Blockly.Block) {
-        var dropdown_format = block.getFieldValue('format');
-        var value_uri = Blockly.JavaScript.valueToCode(block, 'uri', Blockly.JavaScript.ORDER_COMMA);
+        let dropdown_format = block.getFieldValue('format');
+        let value_uri = Blockly.JavaScript.valueToCode(block, 'uri', Blockly.JavaScript.ORDER_COMMA);
         if (!value_uri || value_uri == '') value_uri = '""';
         let code: string;
         if (dropdown_format == 'FBX') {
@@ -490,6 +506,26 @@ export function init3dBlocks() {
         } else {
             code = 'null';
         }
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+
+    Blockly.Blocks['is_of_type'] = {
+        init: function () {
+            this.appendValueInput("object")
+                .setCheck(null);
+            this.appendDummyInput()
+                .appendField("is a ")
+                .appendField(new Blockly.FieldDropdown([["object", "OBJECT"], ["camera", "CAMERA"], ["light", "LIGHT"]]), "type");
+            this.setOutput(true, "Boolean");
+            this.setColour(45);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['is_of_type'] = function (block: Blockly.Block) {
+        let value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_COMMA);
+        let dropdown_type = block.getFieldValue('type');
+        let code = `CgRt.isOfType(${value_object},CgRt.KnownTypes.${dropdown_type})`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
 
@@ -614,9 +650,9 @@ export function init3dBlocks() {
     };
 
     Blockly.JavaScript['set_scene_fog'] = function (block: Blockly.Block) {
-        var colour_color = block.getFieldValue('color');
-        var value_near_value = Blockly.JavaScript.valueToCode(block, 'near_value', Blockly.JavaScript.ORDER_ATOMIC);
-        var value_far_value = Blockly.JavaScript.valueToCode(block, 'far_value', Blockly.JavaScript.ORDER_ATOMIC);
+        let colour_color = block.getFieldValue('color');
+        let value_near_value = Blockly.JavaScript.valueToCode(block, 'near_value', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_far_value = Blockly.JavaScript.valueToCode(block, 'far_value', Blockly.JavaScript.ORDER_ATOMIC);
         let code = `CgRt.setSceneFog('${colour_color}',${value_near_value},${value_far_value});\n`;
         return code;
     };
@@ -847,9 +883,9 @@ export function init3dBlocks() {
         }
     };
     Blockly.JavaScript['set_rotation_axis'] = function (block: Blockly.Block) {
-        var value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
-        var dropdown_axis = block.getFieldValue('axis');
-        var value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
+        let dropdown_axis = block.getFieldValue('axis');
+        let value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
         if (!block.parentBlock_ || !value_object || value_object == '')
             return '';
         let code: string;
@@ -955,9 +991,9 @@ export function init3dBlocks() {
         }
     };
     Blockly.JavaScript['set_position_axis'] = function (block: Blockly.Block) {
-        var value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
-        var dropdown_axis = block.getFieldValue('axis');
-        var value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
+        let dropdown_axis = block.getFieldValue('axis');
+        let value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
         if (!block.parentBlock_ || !value_object || value_object == '')
             return '';
         let code: string;
@@ -1065,9 +1101,9 @@ export function init3dBlocks() {
         }
     };
     Blockly.JavaScript['change_rotation_axis'] = function (block: Blockly.Block) {
-        var value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
-        var dropdown_axis = block.getFieldValue('axis');
-        var value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
+        let dropdown_axis = block.getFieldValue('axis');
+        let value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
         if (!block.parentBlock_ || !value_object || value_object == '')
             return '';
         let code: string;
@@ -1175,9 +1211,9 @@ export function init3dBlocks() {
         }
     };
     Blockly.JavaScript['change_position_axis'] = function (block: Blockly.Block) {
-        var value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
-        var dropdown_axis = block.getFieldValue('axis');
-        var value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
+        let dropdown_axis = block.getFieldValue('axis');
+        let value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
         if (!block.parentBlock_ || !value_object || value_object == '')
             return '';
         let code: string;
@@ -1383,8 +1419,8 @@ export function init3dBlocks() {
         }
     };
     Blockly.JavaScript['object_lookat'] = function (block: Blockly.Block) {
-        var value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
-        var value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_value = Blockly.JavaScript.valueToCode(block, 'value', Blockly.JavaScript.ORDER_ATOMIC);
         if (!block.parentBlock_)
             return '';
         if (!value_object || value_object == '') value_object = 'null';

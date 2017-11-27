@@ -14,8 +14,23 @@ export class SceneObject {
         return `obj${SceneObject.nameCounter++}`;
     }
 
+    private static setRuntimeOwner(o: THREE.Object3D, owner: SceneObject) {
+        if (owner) {
+            (<any>o)._runtimeOwner = owner;
+        } else {
+            delete (<any>o)._runtimeOwner;
+        }
+    }
+    public static getRuntimeOwner(o: THREE.Object3D): SceneObject {
+        let owner = (<any>o)._runtimeOwner;
+        if (owner)
+            return owner;
+        else return new SceneObject(o);
+    }
+
     constructor(o: THREE.Object3D) {
         this.o3d = o;
+        SceneObject.setRuntimeOwner(this.o3d, this);
         if (!this.o3d.name || this.o3d.name == '') {
             this.uname = SceneObject.getUniqueName();
             this.o3d.name = this.uname;
@@ -47,11 +62,13 @@ export class SceneObject {
         let old = s.getObjectByName(this.uname);
         if (old) {
             s.remove(old);
+            SceneObject.setRuntimeOwner(old, null);
         }
 
         if (this.o3d) {
             this.o3d.name = this.uname;
             s.add(this.o3d);
+            SceneObject.setRuntimeOwner(this.o3d, this);
         }
     }
 }

@@ -26,6 +26,13 @@ export interface CodegenHost {
 }
 
 export namespace CodegenRuntime {
+
+    export enum KnownTypes {
+        OBJECT,
+        CAMERA,
+        LIGHT
+    }
+
     type ShareVarUpdatedCallback = () => void;
 
     type MouseEventValue = "DOWN" | "MOVE" | "UP";
@@ -298,7 +305,7 @@ export namespace CodegenRuntime {
     // start of 3d apis ///////////////////////////////////////////////////////////
     //
     export function createPlaneGeometry(width: number, height: number): THREE.BufferGeometry {
-        return new THREE.PlaneBufferGeometry(width, height,1,1);
+        return new THREE.PlaneBufferGeometry(width, height, 1, 1);
     }
 
     export function createCubeGeometry(width: number, height: number, depth: number): THREE.Geometry {
@@ -491,6 +498,21 @@ export namespace CodegenRuntime {
         return result;
     }
 
+    export function isOfType(obj: any, typ: KnownTypes): boolean {
+        if (!obj) return false;
+        if (typ == KnownTypes.CAMERA) {
+            return obj instanceof Rto.CameraObject;
+        } else if (typ == KnownTypes.LIGHT) {
+            return obj instanceof Rto.LightObject;
+        } else if (typ == KnownTypes.OBJECT) {
+            return obj instanceof Rto.SceneObject
+                && (<Rto.SceneObject>obj).o3d
+                && (<Rto.SceneObject>obj).o3d instanceof THREE.Mesh;
+        } else {
+            return false;
+        }
+    }
+
     export function createSpotlight(color: string): Rto.LightObject {
         var result = new THREE.SpotLight(color);
         result.castShadow = true;
@@ -607,7 +629,7 @@ export namespace CodegenRuntime {
 
     export function getSceneElements(): Rto.SceneObject[] {
         if (!scene) return [];
-        return scene.children.map(v => new Rto.SceneObject(v));
+        return scene.children.map(v => Rto.SceneObject.getRuntimeOwner(v));
     }
 
     export function getCameraObject(): Rto.SceneObject {

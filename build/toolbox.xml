@@ -182,6 +182,7 @@
       </value>
     </block>
     <block type="create_mesh_basic_material"/>
+    <block type="create_mesh_color_material"/>
     <block type="create_mesh"/>
   </category>
   <category name="Motion">
@@ -400,6 +401,7 @@
   </category>
   <category name="Utility" colour="#5CA65C">
     <block type="asset_reference"/>
+    <block type="is_of_type"/>
     <block type="console_log">
       <value name="message">
         <shadow type="text">
