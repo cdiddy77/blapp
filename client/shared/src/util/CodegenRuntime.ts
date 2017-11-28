@@ -16,6 +16,9 @@ import 'three/examples/js/loaders/OBJLoader';
 //import 'three/examples/js/loaders/FBXLoader';
 import './AltFBXLoader';
 import 'three/examples/js/loaders/STLLoader';
+import 'three/examples/js/QuickHull';
+import 'three/examples/js/geometries/ConvexGeometry';
+import 'three/examples/js/ParametricGeometries';
 
 export interface CodegenHost {
     insertRendererElement(domElement: HTMLCanvasElement): void;
@@ -58,6 +61,9 @@ export namespace CodegenRuntime {
     var renderer: THREE.WebGLRenderer = null;
     var scene: THREE.Scene = null;
     var camera: Rto.CameraObject = null;
+
+    var defaultAmbientLightColor: THREE.Color = new THREE.Color(0xffffff);
+    var defaultAmbientLightOpacity: number = 0.3;
     var defaultAmbientLight: THREE.AmbientLight;
     var stats: { update: () => void } = null;
     var cameraControls: Rto.CameraControls = null;
@@ -215,9 +221,9 @@ export namespace CodegenRuntime {
         if (!renderer) {
             renderer = new THREE.WebGLRenderer();
             renderer.setClearColor(new THREE.Color(0xddddddd), 1.0);
-            // renderer.shadowMap.enabled = true;
-            renderer.shadowMapEnabled = true;
-            renderer.shadowMapType = THREE.PCFSoftShadowMap;
+            renderer.shadowMap.enabled = true;
+            // renderer.shadowMapEnabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             // renderer.shadowMapType=THREE.BasicShadowMap;
             cgHost.insertRendererElement(renderer.domElement);
             renderer.domElement.addEventListener('keydown', onKeyEvent);
@@ -250,7 +256,14 @@ export namespace CodegenRuntime {
 
     function prepareScene() {
         if (!scene) return;
-        defaultAmbientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        defaultAmbientLight = new THREE.AmbientLight(
+            defaultAmbientLightColor,
+            defaultAmbientLightOpacity
+        );
+        const name = 'defaultAmbientLight';
+        if (scene.getObjectByName(name))
+            scene.remove(scene.getObjectByName(name));
+        defaultAmbientLight.name = name;
         scene.add(defaultAmbientLight);
 
     }
@@ -308,12 +321,48 @@ export namespace CodegenRuntime {
         return new THREE.PlaneBufferGeometry(width, height, 1, 1);
     }
 
-    export function createCubeGeometry(width: number, height: number, depth: number): THREE.Geometry {
-        return new THREE.CubeGeometry(width, height, depth);
+    export function createCubeGeometry(width: number, height: number, depth: number): THREE.BufferGeometry {
+        return new THREE.BoxBufferGeometry(width, height, depth);
     }
 
     export function createSphereGeometry(radius: number, width: number, height: number): THREE.BufferGeometry {
         return new THREE.SphereBufferGeometry(radius, width, height);
+    }
+
+    export function createCylinderGeometry(radiusTop: number, radiusBottom: number, height: number): THREE.BufferGeometry {
+        return new THREE.CylinderBufferGeometry(radiusTop, radiusBottom, height);
+    }
+
+    export function createIcosahedronGeometry(radius: number, detail?: number): THREE.Geometry {
+        return new THREE.IcosahedronGeometry(radius, detail);
+    }
+
+    export function createOctohedronGeometry(radius: number): THREE.Geometry {
+        return new THREE.OctahedronGeometry(radius, null);
+    }
+
+    export function createParametricGeometry(type: 'klein' | 'mobius' | 'mobius3d'): THREE.Geometry {
+        return new THREE.ParametricGeometry((<any>THREE).ParametricGeometries[type], 20, 10);
+    }
+
+    export function createConvexGeometry(points: THREE.Vector3[]): THREE.Geometry {
+        return new (<any>THREE).ConvexGeometry(points);
+    }
+
+    export function createTetrahedronGeometry(radius: number): THREE.Geometry {
+        return new THREE.TetrahedronGeometry(radius, null);
+    }
+
+    export function createTorusGeometry(radius: number, tube: number, radialSegments: number, tubularSegments: number): THREE.BufferGeometry {
+        return new THREE.TorusBufferGeometry(radius, tube, radialSegments, tubularSegments, null);
+    }
+
+    export function createTorusKnotGeometry(radius: number, tube: number, radialSegments: number, tubularSegments: number): THREE.BufferGeometry {
+        return new THREE.TorusKnotBufferGeometry(radius, tube, radialSegments, tubularSegments);
+    }
+
+    export function createLatheGeometry(points: THREE.Vector3[], segments: number): THREE.BufferGeometry {
+        return new THREE.LatheBufferGeometry(points);
     }
 
     export function createMeshBasicMaterial(color: string, wireframe: boolean) {
@@ -623,8 +672,25 @@ export namespace CodegenRuntime {
         //        scene.fog = new THREE.FogExp2(colorNum, near);
     }
 
+    export function setSceneOverrideMaterial(material: string | THREE.Material): void {
+        if (!(material instanceof THREE.Material)) {
+            material = createMeshBasicMaterial(material, false);
+        }
+        scene.overrideMaterial = material;
+    }
+
+    export function setSceneAmbientLight(color: string, opacity: number): void {
+        defaultAmbientLightColor = new THREE.Color(color);
+        defaultAmbientLightOpacity = Math.min(1, Math.max(0, opacity));
+        prepareScene();
+    }
+
     export function definePosition(x: number, y: number, z: number): THREE.Vector3 {
         return new THREE.Vector3(x, y, z);
+    }
+
+    export function defineFace(a: number, b: number, c: number): THREE.Face3 {
+        return new THREE.Face3(a,b,c)
     }
 
     export function getSceneElements(): Rto.SceneObject[] {

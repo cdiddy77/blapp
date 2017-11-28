@@ -135,57 +135,419 @@
       </value>
     </block>
     <!-- <block type="load_file"/> -->
-    <block type="create_plane_geometry">
-      <value name="width">
-        <shadow type="math_number">
-          <field name="NUM">10</field>
-        </shadow>
-      </value>
-      <value name="height">
-        <shadow type="math_number">
-          <field name="NUM">10</field>
-        </shadow>
-      </value>
-    </block>
-    <block type="create_cube_geometry">
-      <value name="width">
-        <shadow type="math_number">
-          <field name="NUM">10</field>
-        </shadow>
-      </value>
-      <value name="height">
-        <shadow type="math_number">
-          <field name="NUM">10</field>
-        </shadow>
-      </value>
-      <value name="depth">
-        <shadow type="math_number">
-          <field name="NUM">10</field>
-        </shadow>
-      </value>
-    </block>
-    <block type="create_sphere_geometry">
-      <value name="radius">
-        <shadow type="math_number">
-          <field name="NUM">10</field>
-        </shadow>
-      </value>
-      <value name="width">
-        <shadow type="math_number">
-          <field name="NUM">10</field>
-        </shadow>
-      </value>
-      <value name="height">
-        <shadow type="math_number">
-          <field name="NUM">10</field>
-        </shadow>
-      </value>
-    </block>
     <block type="create_mesh_basic_material"/>
-    <block type="create_mesh_color_material"/>
+    <block type="create_mesh_color_material">
+      <value name="object">
+        <shadow type="colour_picker">
+          <field name="COLOUR">#ff0000</field>
+        </shadow>
+      </value>
+    </block>
     <block type="create_mesh"/>
+    <category name="Geometries">
+      <block type="create_plane_geometry">
+        <value name="width">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+        <value name="height">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="create_cube_geometry">
+        <value name="width">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+        <value name="height">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+        <value name="depth">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="create_sphere_geometry">
+        <value name="radius">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+        <value name="width">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+        <value name="height">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="create_cylinder_geometry">
+        <value name="radius_top">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+        <value name="radius_bottom">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+        <value name="height">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="create_torus_geometry">
+        <value name="radius">
+          <shadow type="math_number">
+            <field name="NUM">3</field>
+          </shadow>
+        </value>
+        <value name="tube">
+          <shadow type="math_number">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+        <value name="radial_segments">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+        <value name="tubular_segments">
+          <shadow type="math_number">
+            <field name="NUM">20</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="create_torus_knot_geometry">
+        <value name="radius">
+          <shadow type="math_number">
+            <field name="NUM">3</field>
+          </shadow>
+        </value>
+        <value name="tube">
+          <shadow type="math_number">
+            <field name="NUM">1</field>
+          </shadow>
+        </value>
+        <value name="radial_segments">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+        <value name="tubular_segments">
+          <shadow type="math_number">
+            <field name="NUM">20</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="create_icosahedron_geometry">
+        <value name="radius">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="create_octohedron_geometry">
+        <value name="radius">
+          <shadow type="math_number">
+            <field name="NUM">5</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="create_tetrahedron_geometry">
+        <value name="radius">
+          <shadow type="math_number">
+            <field name="NUM">5</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="create_parametric_geometry"></block>
+      <block type="create_convex_geometry">
+        <value name="points">
+          <shadow type="lists_create_with">
+            <mutation items="4"/>
+            <value name="ADD0">
+              <shadow type="def_position">
+                <value name="x">
+                  <shadow type="math_number">
+                    <field name="NUM">-1</field>
+                  </shadow>
+                </value>
+                <value name="y">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="z">
+                  <shadow type="math_number">
+                    <field name="NUM">-1</field>
+                  </shadow>
+                </value>
+              </shadow>
+            </value>
+            <value name="ADD1">
+              <shadow type="def_position">
+                <value name="x">
+                  <shadow type="math_number">
+                    <field name="NUM">1</field>
+                  </shadow>
+                </value>
+                <value name="y">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="z">
+                  <shadow type="math_number">
+                    <field name="NUM">-1</field>
+                  </shadow>
+                </value>
+              </shadow>
+            </value>
+            <value name="ADD2">
+              <shadow type="def_position">
+                <value name="x">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="y">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="z">
+                  <shadow type="math_number">
+                    <field name="NUM">1</field>
+                  </shadow>
+                </value>
+              </shadow>
+            </value>
+            <value name="ADD3">
+              <shadow type="def_position">
+                <value name="x">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="y">
+                  <shadow type="math_number">
+                    <field name="NUM">2</field>
+                  </shadow>
+                </value>
+                <value name="z">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+              </shadow>
+            </value>
+          </shadow>
+        </value>
+      </block>
+      <block type="create_lathe_geometry">
+        <value name="points">
+          <shadow type="lists_create_with">
+            <mutation items="5"/>
+            <value name="ADD0">
+              <shadow type="def_position">
+                <value name="x">
+                  <shadow type="math_number">
+                    <field name="NUM">4</field>
+                  </shadow>
+                </value>
+                <value name="y">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="z">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+              </shadow>
+            </value>
+            <value name="ADD1">
+              <shadow type="def_position">
+                <value name="x">
+                  <shadow type="math_number">
+                    <field name="NUM">3</field>
+                  </shadow>
+                </value>
+                <value name="y">
+                  <shadow type="math_number">
+                    <field name="NUM">1</field>
+                  </shadow>
+                </value>
+                <value name="z">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+              </shadow>
+            </value>
+            <value name="ADD2">
+              <shadow type="def_position">
+                <value name="x">
+                  <shadow type="math_number">
+                    <field name="NUM">2</field>
+                  </shadow>
+                </value>
+                <value name="y">
+                  <shadow type="math_number">
+                    <field name="NUM">2</field>
+                  </shadow>
+                </value>
+                <value name="z">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+              </shadow>
+            </value>
+            <value name="ADD3">
+              <shadow type="def_position">
+                <value name="x">
+                  <shadow type="math_number">
+                    <field name="NUM">1</field>
+                  </shadow>
+                </value>
+                <value name="y">
+                  <shadow type="math_number">
+                    <field name="NUM">3</field>
+                  </shadow>
+                </value>
+                <value name="z">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+              </shadow>
+            </value>
+            <value name="ADD4">
+              <shadow type="def_position">
+                <value name="x">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+                <value name="y">
+                  <shadow type="math_number">
+                    <field name="NUM">4</field>
+                  </shadow>
+                </value>
+                <value name="z">
+                  <shadow type="math_number">
+                    <field name="NUM">0</field>
+                  </shadow>
+                </value>
+              </shadow>
+            </value>
+          </shadow>
+        </value>
+        <value name="segments">
+          <shadow type="math_number">
+            <field name="NUM">10</field>
+          </shadow>
+        </value>
+      </block>
+      <block type="lists_create_with">
+        <mutation items="4"/>
+        <value name="ADD0">
+          <shadow type="def_position">
+            <value name="x">
+              <shadow type="math_number">
+                <field name="NUM">-1</field>
+              </shadow>
+            </value>
+            <value name="y">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="z">
+              <shadow type="math_number">
+                <field name="NUM">-1</field>
+              </shadow>
+            </value>
+          </shadow>
+        </value>
+        <value name="ADD1">
+          <shadow type="def_position">
+            <value name="x">
+              <shadow type="math_number">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+            <value name="y">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="z">
+              <shadow type="math_number">
+                <field name="NUM">-1</field>
+              </shadow>
+            </value>
+          </shadow>
+        </value>
+        <value name="ADD2">
+          <shadow type="def_position">
+            <value name="x">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="y">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="z">
+              <shadow type="math_number">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+          </shadow>
+        </value>
+        <value name="ADD3">
+          <shadow type="def_position">
+            <value name="x">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+            <value name="y">
+              <shadow type="math_number">
+                <field name="NUM">2</field>
+              </shadow>
+            </value>
+            <value name="z">
+              <shadow type="math_number">
+                <field name="NUM">0</field>
+              </shadow>
+            </value>
+          </shadow>
+        </value>
+      </block>
+    </category>
+    <category name="Models"></category>
+    <category name="Materials"></category>
   </category>
-  <category name="Motion">
+  <category name="Position">
     <block type="set_position">
       <value name="x">
         <shadow type="math_number">
@@ -293,6 +655,23 @@
         </shadow>
       </value>
     </block>
+    <block type="def_face">
+      <value name="a">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+      <value name="b">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+      <value name="c">
+        <shadow type="math_number">
+          <field name="NUM">1</field>
+        </shadow>
+      </value>
+    </block>
     <block type="object_lookat"/>
     <block type="object_position"/>
     <block type="scene_position"/>
@@ -313,31 +692,29 @@
         </shadow>
       </value>
     </block>
+    <block type="scene_set_override_material">
+      <value name="material">
+        <shadow type="colour_picker">
+          <field name="COLOUR">#ff0000</field>
+        </shadow>
+      </value>
+    </block>
+    <block type="scene_set_ambient_light">
+      <value name="color">
+        <shadow type="colour_picker">
+          <field name="COLOUR">#ff0000</field>
+        </shadow>
+      </value>
+      <value name="opacity">
+        <shadow type="math_number">
+          <field name="NUM">0.3</field>
+        </shadow>
+      </value>
+    </block>
   </category>
   <category name="Camera">
     <block type="camera_object"/>
-    <!-- <block type="camera_lookat"/>
-    <block type="camera_set_position_x">
-      <value name="value">
-        <shadow type="math_number">
-          <field name="NUM">0</field>
-        </shadow>
-      </value>
-    </block>
-    <block type="camera_set_position_y">
-      <value name="value">
-        <shadow type="math_number">
-          <field name="NUM">0</field>
-        </shadow>
-      </value>
-    </block>
-    <block type="camera_set_position_z">
-      <value name="value">
-        <shadow type="math_number">
-          <field name="NUM">0</field>
-        </shadow>
-      </value>
-    </block> -->
+    <!-- <block type="camera_lookat"/><block type="camera_set_position_x"><value name="value"><shadow type="math_number"><field name="NUM">0</field></shadow></value></block><block type="camera_set_position_y"><value name="value"><shadow type="math_number"><field name="NUM">0</field></shadow></value></block><block type="camera_set_position_z"><value name="value"><shadow type="math_number"><field name="NUM">0</field></shadow></value></block> -->
     <block type="camera_position"/>
     <block type="camera_enable_controls"/>
     <block type="camera_disable_controls"/>

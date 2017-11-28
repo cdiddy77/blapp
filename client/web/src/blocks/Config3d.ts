@@ -203,6 +203,249 @@ export function init3dBlocks() {
         let code = `CgRt.createSphereGeometry(${value_radius},${value_width},${value_height})`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
+    Blockly.Blocks['create_cylinder_geometry'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("create cylinder geometry");
+            this.appendValueInput("radius_top")
+                .setCheck("Number")
+                .appendField("top");
+            this.appendValueInput("radius_bottom")
+                .setCheck("Number")
+                .appendField("bottom");
+            this.appendValueInput("height")
+                .setCheck("Number")
+                .appendField("height");
+            this.setInputsInline(true);
+            this.setOutput(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['create_cylinder_geometry'] = function (block: Blockly.Block) {
+        let value_radius_top = Blockly.JavaScript.valueToCode(block, 'radius_top', Blockly.JavaScript.ORDER_COMMA);
+        let value_radius_bottom = Blockly.JavaScript.valueToCode(block, 'radius_bottom', Blockly.JavaScript.ORDER_COMMA);
+        let value_height = Blockly.JavaScript.valueToCode(block, 'height', Blockly.JavaScript.ORDER_COMMA);
+        let code = `CgRt.createCylinderGeometry(${value_radius_top},${value_radius_bottom},${value_height})`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+    Blockly.Blocks['create_torus_geometry'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("create torus geometry");
+            this.appendValueInput("radius")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("radius");
+            this.appendValueInput("tube")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("tube");
+            this.appendValueInput("radial_segments")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("radial segments");
+            this.appendValueInput("tubular_segments")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("tubular segments");
+            // this.appendValueInput("arc")
+            //     .setCheck("Number")
+            //     .setAlign(Blockly.ALIGN_RIGHT)
+            //     .appendField("arc");
+            this.setOutput(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['create_torus_geometry'] = function (block: Blockly.Block) {
+        let value_radius = Blockly.JavaScript.valueToCode(block, 'radius', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_tube = Blockly.JavaScript.valueToCode(block, 'tube', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_radial_segments = Blockly.JavaScript.valueToCode(block, 'radial_segments', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_tubular_segments = Blockly.JavaScript.valueToCode(block, 'tubular_segments', Blockly.JavaScript.ORDER_ATOMIC);
+        let code = `CgRt.createTorusGeometry(${value_radius},${value_tube},${value_radial_segments},${value_tubular_segments})`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };   Blockly.Blocks['create_torus_knot_geometry'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("create torus knot geometry");
+            this.appendValueInput("radius")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("radius");
+            this.appendValueInput("tube")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("tube");
+            this.appendValueInput("radial_segments")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("radial segments");
+            this.appendValueInput("tubular_segments")
+                .setCheck("Number")
+                .setAlign(Blockly.ALIGN_RIGHT)
+                .appendField("tubular segments");
+            // this.appendValueInput("arc")
+            //     .setCheck("Number")
+            //     .setAlign(Blockly.ALIGN_RIGHT)
+            //     .appendField("arc");
+            this.setOutput(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['create_torus_knot_geometry'] = function (block: Blockly.Block) {
+        let value_radius = Blockly.JavaScript.valueToCode(block, 'radius', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_tube = Blockly.JavaScript.valueToCode(block, 'tube', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_radial_segments = Blockly.JavaScript.valueToCode(block, 'radial_segments', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_tubular_segments = Blockly.JavaScript.valueToCode(block, 'tubular_segments', Blockly.JavaScript.ORDER_ATOMIC);
+        let code = `CgRt.createTorusKnotGeometry(${value_radius},${value_tube},${value_radial_segments},${value_tubular_segments})`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+    Blockly.Blocks['create_icosahedron_geometry'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("create icosahedron geometry");
+            this.appendValueInput("radius")
+                .setCheck("Number")
+                .appendField("radius");
+            this.setInputsInline(true);
+            this.setOutput(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['create_icosahedron_geometry'] = function (block: Blockly.Block) {
+        let value_radius = Blockly.JavaScript.valueToCode(block, 'radius', Blockly.JavaScript.ORDER_COMMA);
+        if (!value_radius || value_radius == '')
+            value_radius = 'null';
+        let code = `CgRt.createIcosahedronGeometry(${value_radius},null)`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+
+    Blockly.Blocks['create_octohedron_geometry'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("create octohedron geometry");
+            this.appendValueInput("radius")
+                .setCheck("Number")
+                .appendField("radius");
+            // this.appendValueInput("detail")
+            //     .setCheck("Number")
+            //     .appendField("detail");
+            this.setInputsInline(true);
+            this.setOutput(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['create_octohedron_geometry'] = function (block: Blockly.Block) {
+        let value_radius = Blockly.JavaScript.valueToCode(block, 'radius', Blockly.JavaScript.ORDER_COMMA);
+        // let value_detail = Blockly.JavaScript.valueToCode(block, 'detail', Blockly.JavaScript.ORDER_COMMA);
+        if (!value_radius || value_radius == '')
+            value_radius = 'null';
+        // if (!value_detail || value_detail == '')
+        //     value_detail = 'null';
+        let code = `CgRt.createOctohedronGeometry(${value_radius})`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+    Blockly.Blocks['create_tetrahedron_geometry'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("create tetrahedron geometry");
+            this.appendValueInput("radius")
+                .setCheck("Number")
+                .appendField("radius");
+            // this.appendValueInput("detail")
+            //     .setCheck("Number")
+            //     .appendField("detail");
+            this.setInputsInline(true);
+            this.setOutput(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['create_tetrahedron_geometry'] = function (block: Blockly.Block) {
+        let value_radius = Blockly.JavaScript.valueToCode(block, 'radius', Blockly.JavaScript.ORDER_COMMA);
+        // let value_detail = Blockly.JavaScript.valueToCode(block, 'detail', Blockly.JavaScript.ORDER_COMMA);
+        if (!value_radius || value_radius == '')
+            value_radius = 'null';
+        // if (!value_detail || value_detail == '')
+        //     value_detail = 'null';
+        let code = `CgRt.createTetrahedronGeometry(${value_radius})`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+    Blockly.Blocks['create_parametric_geometry'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("create parametric geometry")
+                .appendField(new Blockly.FieldDropdown([["mobius", "mobius"], ["mobius3d", "mobius3d"], ["klein", "klein"]]), "type");
+            this.setInputsInline(false);
+            this.setOutput(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['create_parametric_geometry'] = function (block: Blockly.Block) {
+        let dropdown_type = block.getFieldValue('type');
+        let code = `CgRt.createParametricGeometry('${dropdown_type}')`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+    Blockly.Blocks['create_convex_geometry'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("create convex geometry");
+            this.appendValueInput("points")
+                .setCheck("Array")
+                .appendField("points");
+            this.setInputsInline(false);
+            this.setOutput(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['create_convex_geometry'] = function (block: Blockly.Block) {
+        let value_points = Blockly.JavaScript.valueToCode(block, 'points', Blockly.JavaScript.ORDER_COMMA);
+        if (!value_points || value_points == '')
+            value_points = 'null';
+        let code = `CgRt.createConvexGeometry(${value_points})`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+    Blockly.Blocks['create_lathe_geometry'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("create lathe geometry");
+            this.appendValueInput("points")
+                .setCheck("Array")
+                .appendField("points");
+            this.appendValueInput("segments")
+                .setCheck("Number")
+                .appendField("segments");
+            this.setInputsInline(false);
+            this.setOutput(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['create_lathe_geometry'] = function (block: Blockly.Block) {
+        let value_points = Blockly.JavaScript.valueToCode(block, 'points', Blockly.JavaScript.ORDER_COMMA);
+        let value_segments = Blockly.JavaScript.valueToCode(block, 'segments', Blockly.JavaScript.ORDER_COMMA);
+        if (!value_points || value_points == '')
+            value_points = 'null';
+        if (!value_segments || value_segments == '')
+            value_segments = 'null';
+        let code = `CgRt.createLatheGeometry(${value_points},${value_segments})`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
     Blockly.Blocks['create_mesh_basic_material'] = {
         init: function () {
             this.appendDummyInput()
@@ -224,23 +467,23 @@ export function init3dBlocks() {
         let code = `CgRt.createMeshBasicMaterial("${colour_color}",${checkbox_wireframe})`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
-   Blockly.Blocks['create_mesh_color_material'] = {
-        init: function() {
-          this.appendValueInput("object")
-            //   .setCheck("String")
-              .appendField("create color material");
-          this.setOutput(true, null);
-          this.setColour(230);
-       this.setTooltip("");
-       this.setHelpUrl("");
+    Blockly.Blocks['create_mesh_color_material'] = {
+        init: function () {
+            this.appendValueInput("object")
+                //   .setCheck("String")
+                .appendField("create color material");
+            this.setOutput(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
         }
     };
-    Blockly.JavaScript['create_mesh_color_material'] = function(block:Blockly.Block) {
-        var value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_COMMA);
+    Blockly.JavaScript['create_mesh_color_material'] = function (block: Blockly.Block) {
+        let value_object = Blockly.JavaScript.valueToCode(block, 'object', Blockly.JavaScript.ORDER_COMMA);
         let code = `CgRt.createMeshBasicMaterial(${value_object},false)`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
-      };
- 
+    };
+
     Blockly.Blocks['create_mesh'] = {
         init: function () {
             this.appendDummyInput()
@@ -654,6 +897,54 @@ export function init3dBlocks() {
         let value_near_value = Blockly.JavaScript.valueToCode(block, 'near_value', Blockly.JavaScript.ORDER_ATOMIC);
         let value_far_value = Blockly.JavaScript.valueToCode(block, 'far_value', Blockly.JavaScript.ORDER_ATOMIC);
         let code = `CgRt.setSceneFog('${colour_color}',${value_near_value},${value_far_value});\n`;
+        return code;
+    };
+
+    Blockly.Blocks['scene_set_override_material'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("set override scene material");
+            this.appendValueInput("material")
+                .setCheck(null);
+            this.setInputsInline(true);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['scene_set_override_material'] = function (block: Blockly.Block) {
+        let value_object = Blockly.JavaScript.valueToCode(block, 'material', Blockly.JavaScript.ORDER_ATOMIC);
+        if (!value_object || value_object == '') {
+            return '';
+        }
+        let code = `CgRt.setSceneOverrideMaterial(${value_object});\n`;
+        return code;
+    };
+
+    Blockly.Blocks['scene_set_ambient_light'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("set ambient light");
+            this.appendValueInput("color")
+                .setCheck(null)
+                .appendField("color");
+            this.appendValueInput("opacity")
+                .setCheck("Number")
+                .appendField("opacity");
+            this.setInputsInline(true);
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+    Blockly.JavaScript['scene_set_ambient_light'] = function (block: Blockly.Block) {
+        let value_color = Blockly.JavaScript.valueToCode(block, 'color', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_opacity = Blockly.JavaScript.valueToCode(block, 'opacity', Blockly.JavaScript.ORDER_ATOMIC);
+        let code = `CgRt.setSceneAmbientLight(${value_color},${value_opacity});\n`;
         return code;
     };
 
@@ -1320,6 +1611,35 @@ export function init3dBlocks() {
         let value_y = Blockly.JavaScript.valueToCode(block, 'y', Blockly.JavaScript.ORDER_ATOMIC);
         let value_z = Blockly.JavaScript.valueToCode(block, 'z', Blockly.JavaScript.ORDER_ATOMIC);
         let code = `CgRt.definePosition(${value_x},${value_y},${value_z})`;
+        return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
+    };
+
+    Blockly.Blocks['def_face'] = {
+        init: function () {
+            this.appendDummyInput()
+                .appendField("face");
+            this.appendValueInput("a")
+                .setCheck("Number")
+                .appendField("a");
+            this.appendValueInput("b")
+                .setCheck("Number")
+                .appendField("b");
+            this.appendValueInput("c")
+                .setCheck(null)
+                .appendField("c");
+            this.setInputsInline(true);
+            this.setOutput(true, "Face");
+            this.setColour(230);
+            this.setTooltip("");
+            this.setHelpUrl("");
+        }
+    };
+
+    Blockly.JavaScript['def_face'] = function (block: Blockly.Block) {
+        let value_x = Blockly.JavaScript.valueToCode(block, 'a', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_y = Blockly.JavaScript.valueToCode(block, 'b', Blockly.JavaScript.ORDER_ATOMIC);
+        let value_z = Blockly.JavaScript.valueToCode(block, 'c', Blockly.JavaScript.ORDER_ATOMIC);
+        let code = `CgRt.defineFace(${value_x},${value_y},${value_z})`;
         return [code, Blockly.JavaScript.ORDER_FUNCTION_CALL];
     };
 
